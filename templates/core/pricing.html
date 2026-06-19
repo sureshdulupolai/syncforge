@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="py-24 md:py-32">
+    <div class="max-w-container mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h1 class="text-4xl font-bold tracking-tight mb-4">Simple, transparent pricing.</h1>
+            <p class="text-lg text-brand-secondary">Pay only for the database calls you actually make. Stop paying for empty polling requests.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Plan 1 -->
+            <div class="border border-brand-border p-8 rounded-[4px]">
+                <h3 class="font-bold text-xl mb-2">Developer</h3>
+                <div class="text-brand-muted text-sm mb-6">Perfect for side projects.</div>
+                <div class="text-4xl font-bold tracking-tight mb-8">$0<span class="text-base font-normal text-brand-muted">/mo</span></div>
+                
+                <ul class="space-y-4 text-sm text-brand-secondary mb-8 border-t border-brand-border pt-8">
+                    <li>Up to 3 Sync Tables</li>
+                    <li>Manual & Schedule Modes</li>
+                    <li>Community Support</li>
+                </ul>
+                <a href="{% url 'login' %}" class="block w-full text-center border border-brand-border py-3 font-medium hover:border-brand-primary transition-subtle rounded-[4px]">Start Free</a>
+            </div>
+            
+            <!-- Plan 2 -->
+            <div class="border border-brand-primary p-8 rounded-[4px] relative">
+                <div class="absolute top-0 right-8 transform -translate-y-1/2 bg-brand-primary text-white text-xs font-bold px-3 py-1 rounded-[2px] uppercase tracking-wider">Most Popular</div>
+                <h3 class="font-bold text-xl mb-2">Startup</h3>
+                <div class="text-brand-muted text-sm mb-6">For production applications.</div>
+                <div class="text-4xl font-bold tracking-tight mb-8">$49<span class="text-base font-normal text-brand-muted">/mo</span></div>
+                
+                <ul class="space-y-4 text-sm text-brand-secondary mb-8 border-t border-brand-border pt-8">
+                    <li>Unlimited Sync Tables</li>
+                    <li>All Sync Modes (Event + Hybrid)</li>
+                    <li>Real-time Dashboard Analytics</li>
+                    <li>Priority Email Support</li>
+                </ul>
+                <a href="{% url 'login' %}" class="block w-full text-center bg-brand-primary text-white py-3 font-medium hover:bg-black transition-subtle rounded-[4px]">Get Started</a>
+            </div>
+            
+            <!-- Plan 3 -->
+            <div class="border border-brand-border p-8 rounded-[4px]">
+                <h3 class="font-bold text-xl mb-2">Enterprise</h3>
+                <div class="text-brand-muted text-sm mb-6">For massive scale.</div>
+                <div class="text-4xl font-bold tracking-tight mb-8">Custom</div>
+                
+                <ul class="space-y-4 text-sm text-brand-secondary mb-8 border-t border-brand-border pt-8">
+                    <li>Dedicated Infrastructure</li>
+                    <li>Custom SLA & Compliance</li>
+                    <li>White-glove Onboarding</li>
+                    <li>24/7 Phone Support</li>
+                </ul>
+                <a href="#" class="block w-full text-center border border-brand-border py-3 font-medium hover:border-brand-primary transition-subtle rounded-[4px]">Contact Sales</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

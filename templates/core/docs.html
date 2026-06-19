@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="py-24">
+    <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+        
+        <!-- Sidebar -->
+        <div class="hidden md:block border-r border-brand-border pr-8">
+            <h4 class="font-bold text-sm mb-4">Getting Started</h4>
+            <ul class="space-y-3 text-sm text-brand-secondary mb-8">
+                <li><a href="#" class="text-brand-primary font-medium">Introduction</a></li>
+                <li><a href="#" class="hover:text-brand-primary transition-subtle">Authentication</a></li>
+                <li><a href="#" class="hover:text-brand-primary transition-subtle">Sync Modes</a></li>
+            </ul>
+            <h4 class="font-bold text-sm mb-4">SDKs</h4>
+            <ul class="space-y-3 text-sm text-brand-secondary">
+                <li><a href="#" class="hover:text-brand-primary transition-subtle">Python / Django</a></li>
+                <li><a href="#" class="hover:text-brand-primary transition-subtle">Node.js</a></li>
+                <li><a href="#" class="hover:text-brand-primary transition-subtle">Go</a></li>
+            </ul>
+        </div>
+        
+        <!-- Content -->
+        <div class="md:col-span-3">
+            <h1 class="text-3xl font-bold tracking-tight mb-4">Introduction to SyncForge</h1>
+            <p class="text-lg text-brand-secondary mb-12 max-w-2xl leading-relaxed">
+                SyncForge empowers you to control exactly when data is synchronized between your database and your client applications. 
+            </p>
+            
+            <h2 class="text-2xl font-bold tracking-tight mb-6">Triggering a Manual Refresh (Django Example)</h2>
+            <p class="text-brand-secondary mb-6 leading-relaxed max-w-2xl">
+                When you're using "Manual Mode" or "Hybrid Mode", you need to inform SyncForge when your database changes. 
+                You can easily integrate this into your existing Django application using our official Python SDK.
+            </p>
+            
+            <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none mb-12">
+                <span class="text-[#6A9955]"># views.py</span><br><br>
+                <span class="text-[#569CD6]">from</span> django.shortcuts <span class="text-[#569CD6]">import</span> render<br>
+                <span class="text-[#569CD6]">from</span> .models <span class="text-[#569CD6]">import</span> Product<br>
+                <span class="text-[#569CD6]">import</span> syncforge<br><br>
+                <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">create_product</span>(request):<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># 1. Update your local database</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;Product.objects.create(name=<span class="text-[#CE9178]">'New Premium Item'</span>, price=<span class="text-[#B5CEA8]">99.99</span>)<br><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># 2. Tell SyncForge that the 'products' table has changed</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;client = syncforge.Client(api_key=<span class="text-[#CE9178]">'sf_live_YOUR_API_KEY'</span>)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;client.refresh(<span class="text-[#CE9178]">'products'</span>)<br><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> render(request, <span class="text-[#CE9178]">'success.html'</span>)
+            </div>
+            
+            <h2 class="text-2xl font-bold tracking-tight mb-6">How it works</h2>
+            <p class="text-brand-secondary mb-6 leading-relaxed max-w-2xl">
+                The moment you call <code>client.refresh('products')</code>, SyncForge immediately invalidates its internal cache for that table. 
+                The next time a client device requests the products data, SyncForge will fetch the fresh Delta from your server, cache it, and distribute it globally.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,5 @@
+Django==4.2.28
+asgiref
+sqlparse
+tzdata
+PyJWT>=2.0

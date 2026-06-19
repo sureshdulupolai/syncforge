@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen" style="background:#f8faff;">
+
+<!-- Top breadcrumb bar -->
+<div class="bg-white border-b border-brand-border sticky top-16 z-40">
+    <div class="max-w-container mx-auto px-6 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sm">
+            <a href="/dashboard/" class="text-brand-muted hover:text-brand-primary transition-subtle flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                Projects
+            </a>
+            <svg class="w-4 h-4 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-semibold text-brand-primary">{{ project.name }}</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="refreshData()"
+                    class="text-xs text-brand-muted hover:text-brand-primary flex items-center gap-1 transition-subtle" id="refresh-btn">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Refresh
+            </button>
+            <form method="post" action="/dashboard/projects/{{ project.slug }}/delete/"
+                  onsubmit="return confirm('Delete project {{ project.name }}? This cannot be undone.')">
+                {% csrf_token %}
+                <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium transition-subtle">Delete Project</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Project header -->
+<div class="bg-white border-b border-brand-border">
+    <div class="max-w-container mx-auto px-6 py-6">
+        <div class="flex items-start gap-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+                 style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-brand-primary">{{ project.name }}</h1>
+                <p class="text-brand-secondary text-sm mt-1">{{ project.description|default:'No description provided.' }}</p>
+                <div class="flex items-center gap-4 mt-3">
+                    <span class="text-xs text-brand-muted">Slug: <code class="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{{ project.slug }}</code></span>
+                    <span class="text-xs text-brand-muted">Created {{ project.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+            <!-- Stats -->
+            <div class="hidden md:flex items-center gap-6">
+                <div class="text-center">
+                    <div class="text-xl font-bold text-brand-primary" id="p-stat-tables">{{ tables.count }}</div>
+                    <div class="text-xs text-brand-muted">Tables</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xl font-bold text-green-600" id="p-stat-calls">0</div>
+                    <div class="text-xs text-brand-muted">Calls Saved</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xl font-bold text-brand-primary" id="p-stat-keys">{{ api_keys.count }}</div>
+                    <div class="text-xs text-brand-muted">API Keys</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-0 mt-6 border-b border-brand-border -mb-px">
+            <button onclick="switchTab('tables')" id="tab-tables"
+                    class="tab-btn px-5 py-2.5 text-sm font-semibold border-b-2 transition-all">
+                Tables
+            </button>
+            <button onclick="switchTab('apikeys')" id="tab-apikeys"
+                    class="tab-btn px-5 py-2.5 text-sm font-semibold border-b-2 transition-all">
+                API Keys
+            </button>
+            <button onclick="switchTab('integration')" id="tab-integration"
+                    class="tab-btn px-5 py-2.5 text-sm font-semibold border-b-2 transition-all">
+                Integration
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Tab content -->
+<div class="max-w-container mx-auto px-6 py-8">
+
+    <!-- ── TABLES TAB ──────────────────────────────────────────────────────── -->
+    <div id="pane-tables" class="tab-pane">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-lg font-bold">Database Tables</h2>
+                <p class="text-xs text-brand-muted mt-0.5">Configure sync behaviour per table</p>
+            </div>
+            <button onclick="openAddTable()"
+                    class="flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:opacity-90"
+                    style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Table
+            </button>
+        </div>
+
+        <div id="tables-loading" class="text-center py-12 text-brand-muted text-sm">Loading…</div>
+        <div id="tables-empty" class="hidden text-center py-12">
+            <p class="text-brand-muted text-sm mb-4">No tables configured yet. Add your first database table.</p>
+            <button onclick="openAddTable()" class="text-sm text-brand-accent font-semibold hover:underline">+ Add Table</button>
+        </div>
+        <div id="tables-list" class="hidden space-y-3"></div>
+    </div>
+
+    <!-- ── API KEYS TAB ───────────────────────────────────────────────────── -->
+    <div id="pane-apikeys" class="tab-pane hidden">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-lg font-bold">API Keys</h2>
+                <p class="text-xs text-brand-muted mt-0.5">Use these keys with <code class="font-mono text-xs bg-gray-100 px-1 rounded">X-API-Key</code> header</p>
+            </div>
+            <button onclick="createApiKey()"
+                    class="flex items-center gap-2 text-sm font-semibold border border-brand-border px-4 py-2 rounded-xl hover:border-brand-primary transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                Generate Key
+            </button>
+        </div>
+        <!-- Quick usage example -->
+        <div class="mb-6 bg-[#1A1A1A] rounded-xl p-5 text-sm font-mono text-[#D4D4D4]">
+            <div class="text-[#6A9955] mb-2"># Use your API key — works with any HTTP client</div>
+            <span class="text-[#569CD6]">curl</span> -X POST https://yoursite.com/api/v1/sync/products/ \<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#CE9178]">-H "X-API-Key: sf_live_your_key_here"</span>
+        </div>
+
+        <div id="keys-loading" class="text-center py-12 text-brand-muted text-sm">Loading…</div>
+        <div id="keys-empty" class="hidden text-center py-12 text-brand-muted text-sm">No active API keys. Generate one above.</div>
+        <div id="keys-list" class="hidden space-y-3"></div>
+    </div>
+
+    <!-- ── INTEGRATION TAB ────────────────────────────────────────────────── -->
+    <div id="pane-integration" class="tab-pane hidden">
+        <h2 class="text-lg font-bold mb-6">Integration Guide</h2>
+        <div class="space-y-6">
+            <!-- Step 1 -->
+            <div class="bg-white rounded-2xl p-6 border border-brand-border">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-7 h-7 rounded-full bg-brand-primary text-white text-xs font-bold flex items-center justify-center">1</div>
+                    <h3 class="font-bold">Install SyncForge</h3>
+                </div>
+                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
+                    <span class="text-[#6A9955]"># pip</span><br>
+                    pip install <span class="text-[#4EC9B0]">syncforge</span><br><br>
+                    <span class="text-[#6A9955]"># npm</span><br>
+                    npm install <span class="text-[#4EC9B0]">syncforge</span>
+                </div>
+            </div>
+            <!-- Step 2 -->
+            <div class="bg-white rounded-2xl p-6 border border-brand-border">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-7 h-7 rounded-full bg-brand-primary text-white text-xs font-bold flex items-center justify-center">2</div>
+                    <h3 class="font-bold">Initialize with your API Key</h3>
+                </div>
+                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
+                    <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
+                    <span class="text-[#6A9955]"># Dead simple — like FastAPI</span><br>
+                    app = <span class="text-[#4EC9B0]">SyncForge</span>(api_key=<span class="text-[#CE9178]">'sf_live_your_key'</span>)
+                </div>
+            </div>
+            <!-- Step 3 -->
+            <div class="bg-white rounded-2xl p-6 border border-brand-border">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-7 h-7 rounded-full bg-brand-primary text-white text-xs font-bold flex items-center justify-center">3</div>
+                    <h3 class="font-bold">Push updates instantly</h3>
+                </div>
+                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
+                    <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">save_product</span>(data):<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;Product.objects.create(**data)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Push delta to all clients ⚡</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;app.push(<span class="text-[#CE9178]">'products'</span>)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> <span class="text-[#CE9178]">'Synced instantly — zero polling'</span>
+                </div>
+            </div>
+            <!-- REST API -->
+            <div class="bg-white rounded-2xl p-6 border border-brand-border">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-7 h-7 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center">✓</div>
+                    <h3 class="font-bold">Or use the REST API directly</h3>
+                </div>
+                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
+                    <span class="text-[#6A9955]"># Trigger sync via HTTP — works from any language</span><br>
+                    curl -X POST {{ request.scheme }}://{{ request.get_host }}/api/v1/sync/products/ \<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;-H <span class="text-[#CE9178]">"X-API-Key: sf_live_your_key"</span><br><br>
+                    <span class="text-[#6A9955]"># Health check</span><br>
+                    curl {{ request.scheme }}://{{ request.get_host }}/api/v1/health/
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Table Modal -->
+<div id="modal-add-table" class="fixed inset-0 z-50 hidden flex items-center justify-center px-4"
+     style="background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);">
+    <div class="bg-white rounded-2xl w-full max-w-md p-8" style="box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <h3 class="text-xl font-bold mb-1">Add Table</h3>
+        <p class="text-brand-secondary text-sm mb-6">Configure sync mode for a database table.</p>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1.5">Table Name *</label>
+                <input type="text" id="at-name" placeholder="e.g. products, users, orders"
+                       class="w-full border border-brand-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-accent bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1.5">Sync Mode</label>
+                <select id="at-mode" class="w-full border border-brand-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-accent bg-gray-50">
+                    <option value="manual">Manual — Refresh Button Only</option>
+                    <option value="schedule_5m">Schedule — Every 5 Minutes</option>
+                    <option value="schedule_1h">Schedule — Every 1 Hour</option>
+                    <option value="schedule_1d">Schedule — Every 1 Day</option>
+                    <option value="event">Event — On INSERT/UPDATE/DELETE</option>
+                    <option value="hybrid">Hybrid — Event + 24h Verification</option>
+                </select>
+            </div>
+            <div id="at-error" class="hidden text-red-500 text-sm"></div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeAddTable()" class="flex-1 py-3 rounded-xl border border-brand-border text-sm font-semibold hover:bg-gray-50">Cancel</button>
+                <button onclick="submitAddTable()" class="flex-1 py-3 rounded-xl text-white text-sm font-semibold hover:opacity-90"
+                        style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">Add Table</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SLUG = '{{ project.slug }}';
+const CSRF = () => document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+const CACHE_KEY = `sf_proj_${SLUG}_v1`;
+const CACHE_TTL = 3 * 60 * 1000;
+
+// ── Cache ─────────────────────────────────────────────────────────────────────
+function getCached() {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(CACHE_KEY); return null; }
+        return data;
+    } catch { return null; }
+}
+function setCache(data) { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); }
+function invalidateCache() { localStorage.removeItem(CACHE_KEY); localStorage.removeItem('sf_projects_v1'); }
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+let currentTab = 'tables';
+function switchTab(name) {
+    currentTab = name;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.style.borderBottomColor = 'transparent';
+        b.style.color = '#888';
+    });
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+    const btn = document.getElementById(`tab-${name}`);
+    btn.style.borderBottomColor = '#1E3A8A';
+    btn.style.color = '#111';
+    document.getElementById(`pane-${name}`).classList.remove('hidden');
+}
+switchTab('tables');
+
+// ── Load project data ─────────────────────────────────────────────────────────
+async function loadData(forceRefresh = false) {
+    const cached = !forceRefresh ? getCached() : null;
+    if (cached) { renderData(cached); return; }
+
+    const res  = await fetch(`/dashboard/api/projects/${SLUG}/`, { credentials: 'same-origin' });
+    const json = await res.json();
+    setCache(json);
+    renderData(json);
+}
+
+function renderData({ tables, api_keys }) {
+    renderTables(tables);
+    renderKeys(api_keys);
+    // Update stats
+    const calls = tables.reduce((s, t) => s + (t.database_calls_saved || 0), 0);
+    document.getElementById('p-stat-tables').textContent = tables.length;
+    document.getElementById('p-stat-calls').textContent  = calls.toLocaleString();
+    document.getElementById('p-stat-keys').textContent   = api_keys.length;
+}
+
+const MODE_BADGE = {
+    manual:       'bg-amber-100 text-amber-700',
+    schedule_5m:  'bg-blue-100 text-blue-700',
+    schedule_1h:  'bg-blue-100 text-blue-700',
+    schedule_1d:  'bg-blue-100 text-blue-700',
+    schedule_30d: 'bg-blue-100 text-blue-700',
+    event:        'bg-green-100 text-green-700',
+    hybrid:       'bg-purple-100 text-purple-700',
+};
+
+// ── Render tables ─────────────────────────────────────────────────────────────
+function renderTables(tables) {
+    document.getElementById('tables-loading').classList.add('hidden');
+    if (!tables.length) { document.getElementById('tables-empty').classList.remove('hidden'); return; }
+    const list = document.getElementById('tables-list');
+    list.classList.remove('hidden');
+    list.innerHTML = tables.map(t => `
+        <div class="bg-white rounded-xl border border-brand-border p-5 flex items-center gap-4 hover:border-blue-200 transition-all" id="trow-${t.id}">
+            <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-brand-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm text-brand-primary font-mono">${escHtml(t.table_name)}</div>
+                <div class="flex items-center gap-3 mt-1">
+                    <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full font-medium ${MODE_BADGE[t.sync_mode] || 'bg-gray-100 text-gray-600'}">${escHtml(t.sync_mode)}</span>
+                    <span class="text-xs text-brand-muted">${t.rows_count} rows</span>
+                    <span class="text-xs text-green-600 font-semibold">${(t.database_calls_saved||0).toLocaleString()} calls saved</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <select onchange="updateTableMode(${t.id}, this.value)"
+                        class="text-xs border border-brand-border rounded-lg px-2 py-1.5 outline-none focus:border-brand-accent bg-gray-50">
+                    <option value="manual"      ${t.sync_mode==='manual'?'selected':''}>Manual</option>
+                    <option value="schedule_5m" ${t.sync_mode==='schedule_5m'?'selected':''}>5 min</option>
+                    <option value="schedule_1h" ${t.sync_mode==='schedule_1h'?'selected':''}>1 hour</option>
+                    <option value="schedule_1d" ${t.sync_mode==='schedule_1d'?'selected':''}>1 day</option>
+                    <option value="event"       ${t.sync_mode==='event'?'selected':''}>Event</option>
+                    <option value="hybrid"      ${t.sync_mode==='hybrid'?'selected':''}>Hybrid</option>
+                </select>
+                <button onclick="deleteTable(${t.id})"
+                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── Render API keys ───────────────────────────────────────────────────────────
+function renderKeys(keys) {
+    document.getElementById('keys-loading').classList.add('hidden');
+    if (!keys.length) { document.getElementById('keys-empty').classList.remove('hidden'); return; }
+    const list = document.getElementById('keys-list');
+    list.classList.remove('hidden');
+    list.innerHTML = keys.map(k => `
+        <div class="bg-white rounded-xl border border-brand-border p-5" id="krow-${k.id}">
+            <div class="flex items-center justify-between mb-3">
+                <div class="font-semibold text-sm">${escHtml(k.name)}</div>
+                <button onclick="revokeKey(${k.id})"
+                        class="text-xs text-red-500 hover:text-red-700 font-medium transition-subtle">Revoke</button>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-3 border border-brand-border">
+                <code class="text-sm font-mono text-brand-secondary flex-1 select-all" id="key-display-${k.id}">${escHtml(k.key_prefix)}</code>
+                <button onclick="revealKey(${k.id}, '${escHtml(k.key_full)}')"
+                        id="reveal-btn-${k.id}"
+                        class="text-xs text-brand-accent font-semibold hover:underline flex-shrink-0">Reveal</button>
+                <button onclick="copyKey('${escHtml(k.key_full)}')"
+                        class="flex-shrink-0 text-xs bg-brand-accent text-white px-3 py-1.5 rounded-lg font-semibold hover:opacity-90 transition-all">Copy</button>
+            </div>
+            <div class="flex items-center gap-4 mt-2 text-xs text-brand-muted">
+                <span>Created ${k.created_at.split('T')[0]}</span>
+                ${k.last_used ? `<span>Last used ${k.last_used.split('T')[0]}</span>` : '<span>Never used</span>'}
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function revealKey(id, fullKey) {
+    document.getElementById(`key-display-${id}`).textContent = fullKey;
+    document.getElementById(`reveal-btn-${id}`).textContent = 'Hide';
+    document.getElementById(`reveal-btn-${id}`).onclick = () => {
+        document.getElementById(`key-display-${id}`).textContent = fullKey.slice(0,18) + '...';
+        document.getElementById(`reveal-btn-${id}`).textContent = 'Reveal';
+        document.getElementById(`reveal-btn-${id}`).onclick = () => revealKey(id, fullKey);
+    };
+}
+
+function copyKey(key) {
+    navigator.clipboard.writeText(key).then(() => {
+        showToast('API key copied to clipboard!');
+    });
+}
+
+async function createApiKey() {
+    const name = prompt('Key name (e.g. Production, Development):') || 'New Key';
+    const fd = new FormData();
+    fd.append('name', name);
+    const res  = await fetch(`/dashboard/api/projects/${SLUG}/keys/create/`, { method:'POST', body:fd, headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' });
+    const json = await res.json();
+    if (json.status === 'created') {
+        invalidateCache();
+        showToast('New API key created!');
+        refreshData();
+    } else {
+        showToast(json.error || 'Error', true);
+    }
+}
+
+async function revokeKey(id) {
+    if (!confirm('Revoke this API key? Apps using it will stop working.')) return;
+    const res  = await fetch(`/dashboard/api/projects/${SLUG}/keys/${id}/revoke/`, { method:'POST', headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' });
+    const json = await res.json();
+    if (json.status === 'revoked') {
+        invalidateCache();
+        document.getElementById(`krow-${id}`)?.remove();
+        showToast('Key revoked.');
+    }
+}
+
+function openAddTable()  { document.getElementById('modal-add-table').classList.remove('hidden'); document.getElementById('at-name').focus(); }
+function closeAddTable() { document.getElementById('modal-add-table').classList.add('hidden'); }
+
+async function submitAddTable() {
+    const name = document.getElementById('at-name').value.trim();
+    const mode = document.getElementById('at-mode').value;
+    const err  = document.getElementById('at-error');
+    if (!name) { err.textContent='Table name required.'; err.classList.remove('hidden'); return; }
+    const fd = new FormData();
+    fd.append('table_name', name); fd.append('sync_mode', mode);
+    const res  = await fetch(`/dashboard/api/projects/${SLUG}/tables/add/`, { method:'POST', body:fd, headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' });
+    const json = await res.json();
+    if (json.status === 'added') {
+        invalidateCache();
+        closeAddTable();
+        refreshData();
+        showToast(`Table "${name}" added!`);
+    } else {
+        err.textContent = json.error; err.classList.remove('hidden');
+    }
+}
+
+async function deleteTable(id) {
+    if (!confirm('Remove this table from the project?')) return;
+    const res  = await fetch(`/dashboard/api/projects/${SLUG}/tables/${id}/delete/`, { method:'POST', headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' });
+    const json = await res.json();
+    if (json.status === 'deleted') {
+        invalidateCache();
+        document.getElementById(`trow-${id}`)?.remove();
+        showToast('Table removed.');
+    }
+}
+
+async function updateTableMode(id, mode) {
+    const fd = new FormData();
+    fd.append('sync_mode', mode);
+    const res  = await fetch(`/dashboard/api/projects/${SLUG}/tables/${id}/update/`, { method:'POST', body:fd, headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' });
+    const json = await res.json();
+    if (json.status === 'updated') { invalidateCache(); showToast(`Sync mode updated to "${json.display}"`); }
+}
+
+async function refreshData() {
+    document.getElementById('refresh-btn').querySelector('svg').classList.add('animate-spin');
+    invalidateCache();
+    await loadData(true);
+    document.getElementById('refresh-btn').querySelector('svg').classList.remove('animate-spin');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, isErr = false) {
+    const t = document.createElement('div');
+    t.className = 'fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg transition-all';
+    t.style.cssText = `background:${isErr?'#ef4444':'#1E3A8A'}; color:white;`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+// ── Backdrop close ────────────────────────────────────────────────────────────
+document.getElementById('modal-add-table').addEventListener('click', e => { if (e.target===e.currentTarget) closeAddTable(); });
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadData();
+setInterval(() => {
+    fetch('/dashboard/auth/token/refresh/', { method:'POST', headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' }).catch(()=>{});
+}, 13 * 60 * 1000);
+</script>
+{% endblock %}

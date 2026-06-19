@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div id="app" class="min-h-screen" style="background:#f8faff;">
+
+<!-- Top bar -->
+<div class="bg-white border-b border-brand-border sticky top-16 z-40">
+    <div class="max-w-container mx-auto px-6 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img src="{% static 'logo_icon.png' %}" class="w-6 h-6" alt="">
+            <span class="font-semibold text-sm">{{ user.username }}</span>
+            <span class="text-brand-muted text-sm">/ Projects</span>
+        </div>
+        <button onclick="openNewProject()"
+                class="flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:opacity-90"
+                style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            New Project
+        </button>
+    </div>
+</div>
+
+<!-- Hero stats bar -->
+<div class="bg-white border-b border-brand-border">
+    <div class="max-w-container mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div><div class="text-2xl font-bold text-brand-primary" id="stat-projects">—</div><div class="text-xs text-brand-muted mt-1">Total Projects</div></div>
+        <div><div class="text-2xl font-bold text-brand-primary" id="stat-tables">—</div><div class="text-xs text-brand-muted mt-1">Tables Monitored</div></div>
+        <div><div class="text-2xl font-bold text-green-600" id="stat-calls">—</div><div class="text-xs text-brand-muted mt-1">DB Calls Saved</div></div>
+        <div><div class="text-2xl font-bold text-brand-primary" id="stat-keys">—</div><div class="text-xs text-brand-muted mt-1">Active API Keys</div></div>
+    </div>
+</div>
+
+<!-- Projects Grid -->
+<div class="max-w-container mx-auto px-6 py-10">
+    <div id="projects-loading" class="text-center py-20 text-brand-muted text-sm">
+        <svg class="w-8 h-8 mx-auto mb-3 animate-spin text-brand-accent" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        Loading your projects…
+    </div>
+
+    <div id="projects-empty" class="hidden text-center py-24">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+            <svg class="w-10 h-10 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+        </div>
+        <h2 class="text-xl font-bold text-brand-primary mb-2">No projects yet</h2>
+        <p class="text-brand-secondary text-sm mb-6 max-w-sm mx-auto">Create your first project to start managing database sync configurations and API keys.</p>
+        <button onclick="openNewProject()"
+                class="inline-flex items-center gap-2 text-sm font-semibold text-white px-6 py-3 rounded-xl"
+                style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Create First Project
+        </button>
+    </div>
+
+    <div id="projects-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</div>
+
+<!-- New Project Modal -->
+<div id="modal-new-project" class="fixed inset-0 z-50 hidden flex items-center justify-center px-4"
+     style="background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);">
+    <div class="bg-white rounded-2xl w-full max-w-md p-8" style="box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <h3 class="text-xl font-bold mb-1">New Project</h3>
+        <p class="text-brand-secondary text-sm mb-6">Each project has its own API keys and table configurations.</p>
+        <form id="form-new-project">
+            {% csrf_token %}
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Project Name *</label>
+                    <input type="text" id="np-name" placeholder="e.g. My E-Commerce App"
+                           class="w-full border border-brand-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-accent bg-gray-50 focus:bg-white transition-all" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Description <span class="text-brand-muted font-normal">(optional)</span></label>
+                    <textarea id="np-desc" rows="2" placeholder="What does this project do?"
+                              class="w-full border border-brand-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-accent bg-gray-50 focus:bg-white transition-all resize-none"></textarea>
+                </div>
+                <div id="np-error" class="hidden text-red-500 text-sm"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeNewProject()"
+                            class="flex-1 py-3 rounded-xl border border-brand-border font-semibold text-sm hover:bg-gray-50 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="flex-1 py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90"
+                            style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
+                        Create Project
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+</div>
+
+<script>
+// ── Smart Cache (localStorage, 5 min TTL) ─────────────────────────────────────
+const CACHE_KEY = 'sf_projects_v1';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCached() {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(CACHE_KEY); return null; }
+        return data;
+    } catch { return null; }
+}
+
+function setCache(data) {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+}
+
+function invalidateCache() {
+    localStorage.removeItem(CACHE_KEY);
+}
+
+// ── Fetch projects ────────────────────────────────────────────────────────────
+async function loadProjects(forceRefresh = false) {
+    const cached = !forceRefresh ? getCached() : null;
+    if (cached) {
+        renderProjects(cached);
+        return;
+    }
+
+    try {
+        const res  = await fetch('/dashboard/api/projects/', { credentials: 'same-origin' });
+        const json = await res.json();
+        setCache(json.projects);
+        renderProjects(json.projects);
+    } catch (e) {
+        document.getElementById('projects-loading').innerHTML =
+            '<p class="text-red-500 text-sm">Failed to load projects. <a href="" class="underline">Retry</a></p>';
+    }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+const modeColors = {
+    manual: 'bg-amber-100 text-amber-700',
+    schedule_5m: 'bg-blue-100 text-blue-700',
+    schedule_1h: 'bg-blue-100 text-blue-700',
+    schedule_1d: 'bg-blue-100 text-blue-700',
+    schedule_30d:'bg-blue-100 text-blue-700',
+    event:       'bg-green-100 text-green-700',
+    hybrid:      'bg-purple-100 text-purple-700',
+};
+
+function renderProjects(projects) {
+    document.getElementById('projects-loading').classList.add('hidden');
+    const grid  = document.getElementById('projects-grid');
+    const empty = document.getElementById('projects-empty');
+
+    // Update stats
+    const totalTables = projects.reduce((s, p) => s + p.table_count, 0);
+    const totalCalls  = projects.reduce((s, p) => s + p.calls_saved, 0);
+    const totalKeys   = projects.reduce((s, p) => s + p.api_key_count, 0);
+    document.getElementById('stat-projects').textContent = projects.length;
+    document.getElementById('stat-tables').textContent   = totalTables;
+    document.getElementById('stat-calls').textContent    = totalCalls.toLocaleString();
+    document.getElementById('stat-keys').textContent     = totalKeys;
+
+    if (!projects.length) { empty.classList.remove('hidden'); return; }
+
+    grid.classList.remove('hidden');
+    grid.innerHTML = projects.map(p => `
+        <a href="/dashboard/projects/${p.slug}/"
+           class="block bg-white rounded-2xl p-6 border border-brand-border hover:border-blue-300 transition-all group"
+           style="box-shadow:0 2px 12px rgba(0,0,0,0.04);">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style="background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+                    <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                </div>
+                <svg class="w-4 h-4 text-brand-muted group-hover:text-brand-accent transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+            <h3 class="font-bold text-brand-primary mb-1 group-hover:text-brand-accent transition-all">${escHtml(p.name)}</h3>
+            <p class="text-xs text-brand-muted mb-4 line-clamp-2">${escHtml(p.description || 'No description')}</p>
+            <div class="flex items-center gap-4 text-xs text-brand-secondary">
+                <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"/></svg>
+                    ${p.table_count} tables
+                </span>
+                <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    ${p.api_key_count} keys
+                </span>
+                <span class="flex items-center gap-1 text-green-600 font-semibold ml-auto">
+                    ${p.calls_saved.toLocaleString()} calls saved
+                </span>
+            </div>
+        </a>
+    `).join('');
+}
+
+function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── New project form ──────────────────────────────────────────────────────────
+function openNewProject()  { document.getElementById('modal-new-project').classList.remove('hidden'); document.getElementById('np-name').focus(); }
+function closeNewProject() { document.getElementById('modal-new-project').classList.add('hidden'); }
+
+document.getElementById('form-new-project').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('np-name').value.trim();
+    const desc = document.getElementById('np-desc').value.trim();
+    const err  = document.getElementById('np-error');
+    if (!name) { err.textContent = 'Project name is required.'; err.classList.remove('hidden'); return; }
+
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('description', desc);
+    fd.append('csrfmiddlewaretoken', document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '');
+
+    const res  = await fetch('/dashboard/projects/create/', { method: 'POST', body: fd, credentials: 'same-origin' });
+    const json = await res.json();
+
+    if (json.status === 'created') {
+        invalidateCache();
+        closeNewProject();
+        window.location.href = `/dashboard/projects/${json.project.slug}/`;
+    } else {
+        err.textContent = json.error || 'Something went wrong.';
+        err.classList.remove('hidden');
+    }
+});
+
+// Close modal on backdrop click
+document.getElementById('modal-new-project').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeNewProject();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadProjects();
+
+// JWT auto-refresh at 13 min
+setInterval(() => {
+    fetch('/dashboard/auth/token/refresh/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '' },
+        credentials: 'same-origin',
+    }).catch(() => {});
+}, 13 * 60 * 1000);
+</script>
+{% endblock %}

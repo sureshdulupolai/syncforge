@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="py-24 md:py-32 border-b border-brand-border" style="overflow: hidden;">
+    <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        <!-- Left: Heading with watermark logo behind -->
+        <div class="relative">
+            <!-- Watermark Logo: large, faded, positioned behind the text -->
+            <div class="absolute -left-8 -top-8 pointer-events-none select-none" style="z-index: 0;">
+                <img src="{% static 'logo_icon.png' %}" alt="" 
+                     style="width: 320px; height: 320px; opacity: 0.06; filter: blur(1px);"
+                     aria-hidden="true">
+            </div>
+            <!-- Text content on top of watermark -->
+            <div style="position: relative; z-index: 1;">
+                <div class="flex items-center gap-3 mb-5">
+                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" style="width: 36px; height: 36px;">
+                    <span class="text-sm font-semibold tracking-widest uppercase text-brand-accent">SyncForge</span>
+                </div>
+                <h1 class="text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
+                    Build once.<br>
+                    Sync smart.<br>
+                    Scale safely.
+                </h1>
+                <p class="text-xl text-brand-secondary mb-10 max-w-lg leading-relaxed">
+                    A premium, developer-controlled smart data synchronization platform. Take full control over when and how your applications sync data, saving millions of unnecessary database calls.
+                </p>
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'login' %}" class="bg-brand-primary text-white px-6 py-3 rounded-[4px] font-medium hover:bg-black transition-subtle">
+                        Start Building
+                    </a>
+                    <a href="{% url 'docs' %}" class="px-6 py-3 border border-brand-border rounded-[4px] font-medium hover:border-brand-secondary transition-subtle">
+                        Read Documentation
+                    </a>
+                </div>
+                <div class="mt-12 flex items-center gap-6 text-brand-muted text-sm font-medium uppercase tracking-widest">
+                    <span>Trusted by modern teams</span>
+                    <div class="h-px bg-brand-border flex-grow"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Minimal Code Snippet Display -->
+        <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
+            <div class="flex gap-2 mb-4">
+                <div class="w-3 h-3 rounded-full bg-[#4A4A4A]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#4A4A4A]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#4A4A4A]"></div>
+            </div>
+            <div>
+                <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
+                <span class="text-[#6A9955]"># One-line init — just like FastAPI</span><br>
+                app = <span class="text-[#4EC9B0]">SyncForge</span>(api_key=<span class="text-[#CE9178]">'sf_live_a1b2c3d4'</span>)<br><br>
+                <span class="text-[#6A9955]"># Push updates — zero polling required</span><br>
+                <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">update_catalog</span>():<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;app.update(<span class="text-[#CE9178]">'products'</span>, data)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;app.push(<span class="text-[#CE9178]">'products'</span>)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> <span class="text-[#CE9178]">'All clients synced instantly ⚡'</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sync Engine / Features Section -->
+<section class="py-24 bg-brand-secbg border-b border-brand-border">
+    <div class="max-w-container mx-auto px-6">
+        <div class="mb-16 max-w-2xl">
+            <h2 class="text-3xl font-bold tracking-tight mb-4">Developer-Controlled Sync Engine</h2>
+            <p class="text-lg text-brand-secondary leading-relaxed">
+                Stop relying on dumb polling or expensive real-time sockets for static data. 
+                Configure granular sync modes per table directly from the dashboard.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Feature 1 -->
+            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
+                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
+                    <span class="font-mono text-xs font-bold">01</span>
+                </div>
+                <h3 class="font-semibold text-lg mb-3">Manual Mode</h3>
+                <p class="text-brand-secondary text-sm leading-relaxed">
+                    Zero database calls until you explicitly click "Refresh" or trigger the API. Perfect for static configurations.
+                </p>
+            </div>
+            <!-- Feature 2 -->
+            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
+                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
+                    <span class="font-mono text-xs font-bold">02</span>
+                </div>
+                <h3 class="font-semibold text-lg mb-3">Schedule Mode</h3>
+                <p class="text-brand-secondary text-sm leading-relaxed">
+                    Set fixed intervals (5m, 1h, 30d). We handle the caching layer and only hit your database when the TTL expires.
+                </p>
+            </div>
+            <!-- Feature 3 -->
+            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
+                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
+                    <span class="font-mono text-xs font-bold">03</span>
+                </div>
+                <h3 class="font-semibold text-lg mb-3">Event Mode</h3>
+                <p class="text-brand-secondary text-sm leading-relaxed">
+                    Sync strictly on INSERT, UPDATE, or DELETE. Maximum efficiency for frequently changing, high-volume tables.
+                </p>
+            </div>
+            <!-- Feature 4 -->
+            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
+                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
+                    <span class="font-mono text-xs font-bold">04</span>
+                </div>
+                <h3 class="font-semibold text-lg mb-3">Hybrid Mode</h3>
+                <p class="text-brand-secondary text-sm leading-relaxed">
+                    Combine Event-based triggers with a 24-hour verification schedule to ensure perfect data consistency.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Analytics & Performance Section -->
+<section class="py-24 border-b border-brand-border">
+    <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        <!-- Pure HTML Table representing Analytics -->
+        <div class="border border-brand-border rounded-[4px] overflow-hidden text-sm">
+            <div class="bg-brand-secbg p-4 border-b border-brand-border font-semibold">
+                Table: Products
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-y-4">
+                    <div class="text-brand-muted">Mode</div>
+                    <div class="font-medium text-right">Manual</div>
+                    
+                    <div class="text-brand-muted">Rows</div>
+                    <div class="font-medium text-right font-mono">300</div>
+                    
+                    <div class="text-brand-muted">Client Devices</div>
+                    <div class="font-medium text-right font-mono">12,483</div>
+                    
+                    <div class="text-brand-muted pt-4 border-t border-brand-border">Calls Saved</div>
+                    <div class="font-medium text-right text-green-600 font-mono pt-4 border-t border-brand-border">1,854,211</div>
+                    
+                    <div class="text-brand-muted">Bandwidth Saved</div>
+                    <div class="font-medium text-right text-brand-primary font-mono">87.4 GB</div>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h2 class="text-3xl font-bold tracking-tight mb-4">Unprecedented Efficiency</h2>
+            <p class="text-lg text-brand-secondary leading-relaxed mb-8">
+                By taking back control of your synchronization layer, you instantly cut out redundant API requests. Watch your server costs plummet as we absorb the polling traffic.
+            </p>
+            <ul class="space-y-4 text-brand-secondary">
+                <li class="flex items-center gap-3">
+                    <div class="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
+                    <span>Zero unnecessary database checks</span>
+                </li>
+                <li class="flex items-center gap-3">
+                    <div class="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
+                    <span>Instant Delta generation and delivery</span>
+                </li>
+                <li class="flex items-center gap-3">
+                    <div class="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
+                    <span>Lighthouse performance score of 99+</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Security Diagram Section -->
+<section class="py-24 bg-brand-secbg border-b border-brand-border">
+    <div class="max-w-container mx-auto px-6 text-center">
+        <h2 class="text-3xl font-bold tracking-tight mb-4">Enterprise-Grade Security</h2>
+        <p class="text-brand-secondary text-lg mb-16 max-w-xl mx-auto">Every data packet is encrypted, authenticated, and routed through our secure middleware layer.</p>
+        
+        <!-- Clean Architecture Flow Diagram -->
+        <div class="max-w-4xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-0">
+
+                <!-- Node 1: Client Device -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-white border border-brand-border rounded-[6px] p-6 w-44 text-center">
+                        <div class="w-10 h-10 mx-auto mb-3 flex items-center justify-center bg-gray-100 rounded-full">
+                            <svg class="w-5 h-5 text-brand-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div class="font-semibold text-sm text-brand-primary mb-1">Client Device</div>
+                        <div class="text-xs text-brand-muted font-mono bg-gray-50 px-2 py-1 rounded mt-2">JWT Auth</div>
+                    </div>
+                </div>
+
+                <!-- Connector 1 -->
+                <div class="hidden md:flex flex-col items-center mx-2 flex-shrink-0">
+                    <span class="text-[10px] font-semibold text-brand-accent tracking-widest uppercase mb-2 whitespace-nowrap">Encrypted</span>
+                    <div class="flex items-center gap-1">
+                        <div class="w-12 h-px bg-brand-border"></div>
+                        <svg class="w-4 h-4 text-brand-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] text-brand-muted font-mono mt-2 whitespace-nowrap">Delta Payload</span>
+                </div>
+
+                <!-- Mobile Connector -->
+                <div class="md:hidden flex flex-col items-center my-3">
+                    <span class="text-[10px] text-brand-accent font-semibold tracking-widest uppercase">Encrypted Delta</span>
+                    <svg class="w-4 h-4 text-brand-accent mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Node 2: SyncForge Core (CENTER - highlighted) -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-brand-accent rounded-[6px] p-6 w-48 text-center" style="box-shadow: 0 0 0 4px rgba(30,58,138,0.12);">
+                        <div class="w-10 h-10 mx-auto mb-3 flex items-center justify-center bg-white/20 rounded-full">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </div>
+                        <div class="font-bold text-sm text-white mb-1">SyncForge Core</div>
+                        <div class="text-xs font-mono text-blue-200 bg-white/10 px-2 py-1 rounded mt-2">Middleware</div>
+                    </div>
+                    <div class="mt-3 text-[10px] font-semibold text-brand-accent tracking-widest uppercase">Secure Hub</div>
+                </div>
+
+                <!-- Connector 2 -->
+                <div class="hidden md:flex flex-col items-center mx-2 flex-shrink-0">
+                    <span class="text-[10px] font-semibold text-brand-accent tracking-widest uppercase mb-2 whitespace-nowrap">Verified</span>
+                    <div class="flex items-center gap-1">
+                        <div class="w-12 h-px bg-brand-border"></div>
+                        <svg class="w-4 h-4 text-brand-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] text-brand-muted font-mono mt-2 whitespace-nowrap">X-API-Key</span>
+                </div>
+
+                <!-- Mobile Connector 2 -->
+                <div class="md:hidden flex flex-col items-center my-3">
+                    <span class="text-[10px] text-brand-accent font-semibold tracking-widest uppercase">X-API-Key</span>
+                    <svg class="w-4 h-4 text-brand-accent mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Node 3: Your Database -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-white border border-brand-border rounded-[6px] p-6 w-44 text-center">
+                        <div class="w-10 h-10 mx-auto mb-3 flex items-center justify-center bg-gray-100 rounded-full">
+                            <svg class="w-5 h-5 text-brand-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                            </svg>
+                        </div>
+                        <div class="font-semibold text-sm text-brand-primary mb-1">Your Database</div>
+                        <div class="text-xs text-brand-muted font-mono bg-gray-50 px-2 py-1 rounded mt-2">Isolated</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Security badges row -->
+            <div class="flex flex-wrap justify-center gap-4 mt-12">
+                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
+                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1l2.39 4.843 5.343.776-3.866 3.769.912 5.318L10 13.347l-4.779 2.359.912-5.318L2.267 6.619l5.343-.776L10 1z" clip-rule="evenodd"/></svg>
+                    End-to-End Encrypted
+                </div>
+                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
+                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    JWT Authentication
+                </div>
+                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
+                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"/></svg>
+                    API Key Validation
+                </div>
+                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
+                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
+                    Database Isolation
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Detailed SDK Integration Section -->
+<section class="py-24 border-b border-brand-border bg-[#FAFAFA]">
+    <div class="max-w-container mx-auto px-6">
+        <div class="mb-16 max-w-2xl text-center mx-auto">
+            <h2 class="text-3xl font-bold tracking-tight mb-4">How to Use SyncForge</h2>
+            <p class="text-lg text-brand-secondary leading-relaxed">
+                Integrate our framework into your application in less than 5 minutes. No complex infrastructure changes required.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 max-w-5xl mx-auto">
+            
+            <!-- Step 1 -->
+            <div class="md:col-span-5 flex flex-col justify-center">
+                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">1</div>
+                <h3 class="text-xl font-bold mb-3">Install the Framework</h3>
+                <p class="text-brand-secondary leading-relaxed">
+                    Add SyncForge to your project. Our SDK acts as a lightweight wrapper around your existing database calls, capturing mutations without adding overhead.
+                </p>
+            </div>
+            <div class="md:col-span-7">
+                <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
+                    <span class="text-[#6A9955]"># Install via pip — just like FastAPI</span><br>
+                    pip install <span class="text-[#4EC9B0]">syncforge</span><br><br>
+                    <span class="text-[#6A9955]"># Or for Node.js</span><br>
+                    npm install <span class="text-[#4EC9B0]">syncforge</span>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="md:col-span-5 flex flex-col justify-center mt-8 md:mt-0">
+                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">2</div>
+                <h3 class="text-xl font-bold mb-3">Initialize with your API Key</h3>
+                <p class="text-brand-secondary leading-relaxed">
+                    Create a free Developer Account, generate an API key in the Dashboard, and instantiate the client in your backend.
+                </p>
+            </div>
+            <div class="md:col-span-7 mt-8 md:mt-0">
+                <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
+                    <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
+                    <span class="text-[#6A9955]"># Dead simple — like Flask or FastAPI</span><br>
+                    app = <span class="text-[#4EC9B0]">SyncForge</span>(<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;api_key=<span class="text-[#CE9178]">'sf_live_a1b2c3d4'</span>,<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;env=<span class="text-[#CE9178]">'production'</span><br>
+                    )
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="md:col-span-5 flex flex-col justify-center mt-8 md:mt-0">
+                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">3</div>
+                <h3 class="text-xl font-bold mb-3">Configure Table Modes</h3>
+                <p class="text-brand-secondary leading-relaxed">
+                    Go to the SyncForge Dashboard. For each table, decide the behavior: <strong>Manual</strong> for static tables, <strong>Schedule</strong> for semi-static, or <strong>Event</strong> for high-velocity data.
+                </p>
+            </div>
+            <div class="md:col-span-7 mt-8 md:mt-0 border border-brand-border rounded-[4px] bg-white p-6 flex flex-col justify-center">
+                <div class="flex items-center justify-between border-b border-brand-border pb-4 mb-4">
+                    <span class="font-semibold">Table: products</span>
+                    <span class="bg-brand-border px-2 py-1 text-xs rounded font-medium">Edit Mode</span>
+                </div>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="mode_demo" checked class="accent-brand-primary">
+                        <span class="text-sm font-medium">Manual (Refresh Button Only)</span>
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="mode_demo" class="accent-brand-primary">
+                        <span class="text-sm font-medium">Schedule (Every 1 Hour)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="md:col-span-5 flex flex-col justify-center mt-8 md:mt-0">
+                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">4</div>
+                <h3 class="text-xl font-bold mb-3">Trigger Manual Updates</h3>
+                <p class="text-brand-secondary leading-relaxed">
+                    If you selected <strong>Manual Mode</strong>, automatic polling is turned off. Your clients will never hit your database until you explicitly call the `refresh` method.
+                </p>
+            </div>
+            <div class="md:col-span-7 mt-8 md:mt-0">
+                <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
+                    <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">admin_update_product</span>(request):<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;Product.objects.create(name=<span class="text-[#CE9178]">'New Item'</span>)<br><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Broadcast delta to all connected clients</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Zero database polling required.</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;client.refresh(<span class="text-[#CE9178]">'products'</span>)<br><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> success_response()
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncForge — Smart Data Sync for Developers</title>
+    <link rel="icon" type="image/png" href="{% static 'logo_icon.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'logo_icon.png' %}">
+    
+    <!-- SEO & Meta Tags -->
+    <meta name="description" content="pip install syncforge — The developer-first data sync framework. Like FastAPI for your database layer. Zero polling, instant deltas, full control.">
+    <meta property="og:title" content="SyncForge — Smart Data Sync for Developers">
+    <meta property="og:description" content="pip install syncforge — The FastAPI of data synchronization. Build once. Sync smart. Scale safely.">
+    <meta property="og:image" content="{% static 'logo_icon.png' %}">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (via CDN for simplicity, purely vanilla logic) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Configuration for strict design language -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#FFFFFF',
+                            secbg: '#FAFAFA',
+                            border: '#E8E8E8',
+                            primary: '#111111',
+                            secondary: '#555555',
+                            muted: '#888888',
+                            accent: '#1E3A8A', // Deep Blue
+                            accenthover: '#172554',
+                        }
+                    },
+                    spacing: {
+                        '8px': '8px',
+                    },
+                    maxWidth: {
+                        'container': '1280px',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Strict Design Rules Enforcement */
+        body {
+            background-color: #FFFFFF;
+            color: #111111;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        * {
+            box-shadow: none !important; /* NO box shadows anywhere */
+        }
+        
+        .transition-subtle {
+            transition: all 250ms ease-in-out; /* Subtle animation max 250ms */
+        }
+        
+        /* Utility for 8px layout precision if needed */
+        .spacing-system {
+            margin-bottom: 24px; /* multiples of 8 */
+        }
+    </style>
+</head>
+<body class="bg-brand-bg text-brand-primary min-h-screen flex flex-col">
+
+    <!-- Sticky Navbar -->
+    <header class="sticky top-0 z-50 bg-brand-bg border-b border-brand-border">
+        <div class="max-w-container mx-auto px-6 h-16 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <a href="{% url 'home' %}" class="flex items-center gap-2.5 group">
+                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-8 h-8 transition-subtle group-hover:scale-105" style="transition: transform 250ms ease-in-out;">
+                    <span class="font-bold text-lg tracking-tight">SyncForge</span>
+                </a>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-brand-secondary">
+                <a href="{% url 'docs' %}" class="hover:text-brand-primary transition-subtle">Documentation</a>
+                <a href="{% url 'pricing' %}" class="hover:text-brand-primary transition-subtle">Pricing</a>
+                <a href="https://github.com/syncforge" target="_blank" class="hover:text-brand-primary transition-subtle flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+                    GitHub
+                </a>
+            </nav>
+            
+            <!-- Auth -->
+            <div class="flex items-center gap-4 text-sm font-medium">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="text-brand-secondary hover:text-brand-primary transition-subtle">Dashboard</a>
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-brand-secondary hover:text-brand-primary transition-subtle">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-brand-secondary hover:text-brand-primary transition-subtle">Login</a>
+                    <a href="{% url 'register' %}" class="bg-brand-accent text-white px-4 py-2 rounded-[4px] hover:bg-brand-accenthover transition-subtle">Sign Up</a>
+                {% endif %}
+            </div>
+            
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brand-secbg border-t border-brand-border py-16 mt-24">
+        <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div>
+                <div class="flex items-center gap-2 mb-6">
+                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-6 h-6 opacity-60">
+                    <span class="font-bold text-base tracking-tight text-brand-secondary">SyncForge</span>
+                </div>
+                <p class="text-sm text-brand-muted leading-relaxed">
+                    Developer-Controlled Smart Data Synchronization Platform.
+                    Build once. Sync smart. Scale safely.
+                </p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-sm mb-4">Product</h4>
+                <ul class="space-y-3 text-sm text-brand-muted">
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Features</a></li>
+                    <li><a href="{% url 'pricing' %}" class="hover:text-brand-primary transition-subtle">Pricing</a></li>
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Status</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold text-sm mb-4">Developers</h4>
+                <ul class="space-y-3 text-sm text-brand-muted">
+                    <li><a href="{% url 'docs' %}" class="hover:text-brand-primary transition-subtle">Documentation</a></li>
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">API Reference</a></li>
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">SDKs</a></li>
+                    <li><a href="https://github.com/syncforge" class="hover:text-brand-primary transition-subtle">GitHub</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold text-sm mb-4">Company</h4>
+                <ul class="space-y-3 text-sm text-brand-muted">
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Blog</a></li>
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Contact</a></li>
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Privacy</a></li>
+                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
