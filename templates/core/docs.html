@@ -384,6 +384,24 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
     name = models.CharField(max_length=<span class="text-[#B5CEA8]">100</span>)</pre>
         </div>
 
+        <div class="bg-gray-50 border border-brand-border rounded-xl p-5 mb-8">
+            <h4 class="font-bold text-brand-primary mb-2 text-sm">Understanding the Imports</h4>
+            <ul class="space-y-3 text-sm text-brand-secondary">
+                <li>
+                    <code class="font-mono bg-white border border-brand-border px-1.5 py-0.5 rounded text-xs">from syncforge import sf</code>
+                    <p class="mt-1">
+                        <b>What is sf?</b> It is your globally initialized SyncForge client instance (usually defined in your project root). We pass this instance to the decorator so it knows which project's API key to use when broadcasting changes.
+                    </p>
+                </li>
+                <li>
+                    <code class="font-mono bg-white border border-brand-border px-1.5 py-0.5 rounded text-xs">from syncforge.django import sync_model</code>
+                    <p class="mt-1">
+                        <b>What is sync_model?</b> This is the magic Django decorator. It listens to Django's built-in database signals (<code class="font-mono bg-white px-1 rounded text-xs">post_save</code> and <code class="font-mono bg-white px-1 rounded text-xs">post_delete</code>) and automatically tells the <code class="font-mono bg-white px-1 rounded text-xs">sf</code> client to trigger a sync event whenever the model data changes, saving you from writing repetitive code in your views.
+                    </p>
+                </li>
+            </ul>
+        </div>
+
         <h3 id="middleware" class="text-lg font-bold tracking-tight text-brand-primary mb-3 flex items-center gap-2">
             <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
             2. Security Middleware (WAF & Logging)
