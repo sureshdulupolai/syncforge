@@ -6,63 +6,93 @@
 
 **Created by Suresh Dullu Polai**
 
-SyncForge is the **FastAPI of data synchronization**. It is a premium, developer-controlled smart data synchronization platform and Web Application Firewall (WAF). 
+SyncForge is a **developer-controlled data synchronisation platform**. It
+reduces unnecessary database reads by intelligently serving previously fetched
+data until the developer explicitly signals that the underlying data has changed.
 
-Stop relying on dumb polling or expensive real-time sockets for static data. With SyncForge, you take full control over exactly when and how your applications sync data, saving millions of unnecessary database calls and drastically reducing server costs.
+```
+Developer writes to database
+          ↓
+sf.refresh("products")
+          ↓
+SyncForge invalidates cached data
+          ↓
+Next request fetches fresh data from DB → cached again
+```
+
+Unlike time-based expiration, **the developer controls when data becomes stale**
+— not a TTL clock.
 
 ---
 
-## 🌟 Best Features (A to Z)
+## How It Works
 
-- **Zero-Polling Architecture**: Clients never hit your database to check for updates. They only get notified when *you* tell SyncForge that data has changed.
-- **Built-in Web Application Firewall (WAF)**: Instantly protect your application from SQL Injection, Cross-Site Scripting (XSS), and Path Traversal attacks with a single line of code.
-- **Zero-Code Django Auto-Sync**: Use our `@sync_model` decorator to automatically sync data across all your client devices whenever a Django model is created, updated, or deleted.
-- **Precision Logging**: The middleware tracks request methods, paths, response statuses, and execution times in milliseconds.
-- **Framework Agnostic**: First-class support for Django, FastAPI, Flask, or pure Python scripts.
-- **Zero External Dependencies**: Built entirely on the Python Standard Library (`urllib`, `json`, `threading`).
+```
+First request
+─────────────
+Client → cache_query() → cache MISS → DB query → store in cache → return data
+
+Subsequent requests (until refresh)
+────────────────────────────────────
+Client → cache_query() → cache HIT → return data  ← no DB query
+
+After sf.refresh("products")
+─────────────────────────────
+cache_query() → cache MISS again → DB query → store → return fresh data
+```
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ```bash
 pip install syncforge
 ```
 
+No external dependencies — the SDK is built entirely on the Python Standard Library
+(`urllib`, `json`, `threading`, `hashlib`, `hmac`).
+
 ---
 
-## 🛡️ Built-in WAF Security Middleware (Django)
+## Quick Start
 
-SyncForge SDK includes a professional-grade Web Application Firewall (WAF) and request logger. By adding just one line to your `settings.py`, your entire application is instantly protected from hackers.
-
-### Features of the WAF:
-1. **SQL Injection Protection**: Blocks `UNION SELECT`, `OR 1=1`, and other common SQLi payloads.
-2. **XSS Protection**: Blocks `<script>` tags and malicious javascript injections.
-3. **Path Traversal Protection**: Blocks `../` directory traversal attempts.
-4. **Security Headers**: Automatically injects strict `X-Content-Type-Options: nosniff`.
-5. **Performance Logging**: Logs response times beautifully (e.g., `[GET] /api/ - 200 (12.4ms)`).
-
-### How to Install:
-Add it to your Django `MIDDLEWARE` list in `settings.py`:
+### Step 1 — Initialise the client
 
 ```python
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    
-    # Add SyncForge Security Firewall right after Django's built-in security
-    'syncforge.middleware.SyncForgeSecurityMiddleware',
-    
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    # ...
-]
+# syncforge.py  (project root — one instance per project)
+import os
+from syncforge import SyncForge
+
+sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
 ```
-*No further configuration needed! Your app is now secure.*
+
+### Step 2 — Signal data changes
+
+```python
+# After any database write, call sf.refresh()
+from syncforge import sf
+
+product = Product.objects.create(name="Widget", price=9.99)
+sf.refresh("products")   # Tell SyncForge this table changed
+```
+
+### Step 3 — Read with cache (optional)
+
+```python
+# cache_query serves from cache; hits DB only on miss or after refresh
+products = sf.cache_query(
+    table_name="core_product",
+    cache_key="all_active_products",
+    queryset=Product.objects.filter(active=True).order_by("name"),
+    timeout=3600,   # Fallback TTL in seconds (None = developer-only invalidation)
+)
+```
 
 ---
 
-## 🔄 The `@sync_model` Decorator (Django Auto-Sync)
+## Django Integration
 
-If you use Django, you never have to manually trigger a sync again. Use the `@sync_model` decorator. It hooks into Django's `post_save` and `post_delete` signals to automatically broadcast changes to all connected clients.
+### Automatic sync with `@sync_model`
 
 ```python
 # models.py
@@ -70,86 +100,335 @@ from django.db import models
 from syncforge import sf
 from syncforge.django import sync_model
 
-# 1. Zero-code Django auto-sync
-@sync_model(sf, sync_mode='event')
+@sync_model(sf, sync_mode="event")
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name  = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        db_table = "core_product"
 ```
-Whenever you call `Product.objects.create(...)` or `product.delete()`, SyncForge automatically invalidates the cache and pushes the new delta to every single user's device.
+
+`@sync_model` hooks into Django's `post_save` and `post_delete` signals.
+When a `Product` is created, updated, or deleted:
+
+1. The local cache for `core_product` is **immediately invalidated** (synchronous).
+2. The SyncForge server is **notified asynchronously** (background thread — never
+   blocks the request or the database write).
+
+### Using the cached data in a view
+
+```python
+# views.py
+from django.shortcuts import render
+from syncforge import sf
+from .models import Product
+
+def product_list(request):
+    products = sf.cache_query(
+        table_name="core_product",
+        cache_key="all_active_products",
+        queryset=Product.objects.filter(active=True).order_by("name"),
+        timeout=3600,
+    )
+    return render(request, "products/list.html", {
+        "products": products,          # list of Product model instances
+        "count":    len(products),
+    })
+```
+
+```html
+<!-- products/list.html -->
+{% for product in products %}
+    <div>{{ product.name }} — ₹{{ product.price }}</div>
+{% empty %}
+    <p>No products found.</p>
+{% endfor %}
+```
+
+> `cache_query` returns a standard Python `list` of Django model instances —
+> identical to `list(Product.objects.filter(...))`. All model fields and
+> methods are accessible.
+
+### Security middleware (WAF + response headers)
+
+```python
+# settings.py
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'syncforge.middleware.SyncForgeSecurityMiddleware',  # ← add here
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    # ...
+]
+```
+
+This adds:
+
+| Feature | Detail |
+|---|---|
+| Basic WAF | Regex-based scan for SQLi, XSS, path traversal in URL + POST body |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | Disables camera, mic, geolocation, payment |
+| `Content-Security-Policy` | Restrictive default; configurable |
+| `Strict-Transport-Security` | Injected over HTTPS connections |
+| Request timing | Logs method, path, status, duration (ms) |
+
+> **Note**: The WAF provides defence-in-depth against common, unsophisticated
+> attacks. It does not replace Django's CSRF protection, ORM parameterisation,
+> or template auto-escaping. Always validate and sanitise input in your
+> application code.
 
 ---
 
-## ⚡ FastAPI & Flask Integration
+## FastAPI / Flask Integration
 
-SyncForge isn't just for Django. You can trigger manual updates from any Python backend.
+SyncForge works with any Python web framework:
 
-### FastAPI Example:
+### FastAPI
+
 ```python
 import os
 from fastapi import FastAPI
 from syncforge import SyncForge
 
-# Initialize once
-sf = SyncForge(api_key=os.environ.get('SYNCFORGE_API_KEY'))
+sf  = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
 app = FastAPI()
 
-@app.post("/api/products/")
-async def create_product(name: str):
-    # 1. Database operation
-    db.execute("INSERT INTO products (name) VALUES (?)", (name,))
-    
-    # 2. Trigger sync — Non-blocking, instant broadcast
-    sf.refresh('products')
-    
-    return {"status": "success"}
+@app.post("/products/")
+async def create_product(name: str, price: float):
+    db.execute("INSERT INTO products (name, price) VALUES (?, ?)", (name, price))
+    sf.refresh("products")   # Signal data change
+    return {"status": "created"}
+```
+
+### Flask
+
+```python
+import os
+from flask import Flask
+from syncforge import SyncForge
+
+sf  = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
+app = Flask(__name__)
+
+@app.post("/products/")
+def create_product():
+    db.execute("INSERT INTO products ...")
+    sf.refresh("products")
+    return {"status": "created"}
+```
+
+### Plain Python
+
+```python
+import os
+from syncforge import SyncForge
+
+sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
+sf.refresh("products")
 ```
 
 ---
 
-## 📚 Core API Reference
+## API Reference
 
-### `SyncForge(api_key, base_url, timeout, silent, async_mode)`
+### `SyncForge(api_key, base_url, timeout, silent, async_mode, sign_requests)`
 
-| Parameter    | Default                        | Description                                          |
-|--------------|-------------------------------|------------------------------------------------------|
-| `api_key`    | required                       | Your API key from the developer dashboard            |
-| `base_url`   | `https://syncforge.dev/api`   | Override for local dev / self-hosted                 |
-| `timeout`    | `10`                           | HTTP timeout in seconds                              |
-| `silent`     | `False`                        | Suppress errors — logs warnings instead of crashing  |
-| `async_mode` | `False`                        | Fire-and-forget — refresh runs in a background thread|
+| Parameter | Default | Description |
+|---|---|---|
+| `api_key` | required | API key from your dashboard (`sf_live_...`) |
+| `base_url` | `https://syncforge.dev/api` | Override for local dev or self-hosted |
+| `timeout` | `10` | HTTP timeout (seconds) per request |
+| `silent` | `False` | Suppress exceptions — logs warnings instead |
+| `async_mode` | `False` | Fire-and-forget `refresh()` — returns `None` immediately |
+| `sign_requests` | `True` | Add HMAC-SHA256 signature headers for replay protection |
 
 ### `sf.refresh(*tables)` → `SyncResult | list[SyncResult]`
 
-Broadcasts a refresh signal for the specified tables.
+Signal that data has changed in one or more tables.
 
 ```python
-sf.refresh('products')                         # single table
-sf.refresh('products', 'categories', 'orders') # multiple at once
+sf.refresh("products")                              # single table
+sf.refresh("products", "categories", "inventory")  # multiple tables
 
-result = sf.refresh('products')
-print(result.ok)           # True
-print(result.calls_saved)  # 1854211 (Analytics data from SyncForge servers)
-print(result.sync_mode)    # 'Event — On INSERT / UPDATE / DELETE'
+result = sf.refresh("products")
+print(result.ok)            # True/False
+print(result.calls_saved)   # DB reads saved (from server analytics)
+print(result.version_number)# Current table version
 ```
 
-### Advanced Usage
+### `sf.cache_query(table_name, cache_key, queryset, timeout)` → `list`
+
+Serve data from cache; query the database on miss or after invalidation.
 
 ```python
-# Silent mode — SyncForge errors never crash your app
-sf = SyncForge(api_key='sf_live_...', silent=True)
+data = sf.cache_query(
+    table_name="core_product",
+    cache_key="active_products",
+    queryset=Product.objects.filter(active=True),
+    timeout=3600,    # seconds; None = no automatic expiration
+)
+```
 
-# Async mode — fire-and-forget, returns immediately
-sf = SyncForge(api_key='sf_live_...', async_mode=True)
-sf.refresh('products')  # returns None, syncs in background
+### `sf.ping()` → `bool`
+
+Check connectivity and API key validity.
+
+### `sf.list_tables()` → `list[dict]`
+
+Return all registered tables and their statistics.
+
+### `sf.create_table(table_name, sync_mode)` → `bool`
+
+Register a table programmatically (called automatically by `@sync_model`).
+
+---
+
+## Timeout Strategy
+
+| Use Case | Configuration |
+|---|---|
+| Standard data (changes regularly) | `timeout=3600` (1 hour) |
+| Developer-only invalidation | `timeout=None` + `sf.refresh()` after writes |
+| Monthly refresh | `timeout=None`, rotate `cache_key` by year/month |
+| Permanent static data | `timeout=None`, never call `sf.refresh()` |
+
+### Monthly rotation example
+
+```python
+import datetime
+
+now = datetime.date.today()
+data = sf.cache_query(
+    table_name="core_config",
+    cache_key=f"config_{now.year}_{now.month}",  # New key each month
+    queryset=Config.objects.filter(active=True),
+    timeout=None,
+)
 ```
 
 ---
 
-## 👨‍💻 About the Author
+## Production Deployment
 
-**SyncForge** is passionately built and maintained by **Suresh Dullu Polai**. 
-Designed to bring Enterprise-Grade data synchronization and security to developers worldwide, entirely out of the box.
+### Redis (Required for multi-worker deployments)
 
-## 📄 License
+With Gunicorn / uWSGI running multiple workers, each worker has its own
+in-process memory. Without a shared cache backend, `sf.refresh()` in Worker 1
+will not invalidate caches in Workers 2, 3, and 4.
+
+**Configure Redis** as the Django cache backend:
+
+```python
+# settings.py
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1"),
+    }
+}
+```
+
+The SDK emits a `RuntimeWarning` when `LocMemCache` is detected, helping you
+catch this misconfiguration during development.
+
+### Silent mode (recommended in production)
+
+```python
+sf = SyncForge(
+    api_key=os.environ['SYNCFORGE_API_KEY'],
+    silent=True,   # SyncForge errors are logged, not raised
+)
+```
+
+With `silent=True`, a SyncForge service interruption (network issue, outage)
+will never propagate an exception to your users. The SDK logs a warning and
+your application continues normally — it will simply make more database queries
+until connectivity is restored.
+
+### Async mode
+
+```python
+sf = SyncForge(
+    api_key=os.environ['SYNCFORGE_API_KEY'],
+    async_mode=True,   # refresh() returns None immediately
+)
+sf.refresh("products")  # Runs in background daemon thread
+```
+
+---
+
+## Security Best Practices
+
+### Never commit your API key
+
+```python
+# ❌ Never do this
+sf = SyncForge(api_key="sf_live_abc123xyz")
+
+# ✅ Always read from environment
+import os
+sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
+```
+
+Keep your key in a `.env` file locally and set it as an environment variable
+in your hosting platform. Never commit `.env` to version control.
+
+### Use per-client cache keys
+
+```python
+# ❌ One cache key for all users
+cache_key = "products"
+
+# ✅ Per-user/per-client keys prevent data leakage
+cache_key = f"products_client_{request.user.client_id}"
+```
+
+### Do not cache sensitive data
+
+```python
+# ❌ Never cache passwords, tokens, or PII
+queryset = User.objects.values("username", "password_hash", "auth_token")
+
+# ✅ Cache only public/display-safe fields
+queryset = Product.objects.filter(active=True).values("id", "name", "price")
+```
+
+---
+
+## Limitations
+
+| Limitation | Explanation |
+|---|---|
+| Multi-process requires Redis | `LocMemCache` does not share state across Gunicorn workers |
+| WAF is not a complete security solution | Provides basic pattern matching; does not replace proper input validation |
+| `cache_query` returns a list | The queryset is fully evaluated; lazy loading is not preserved |
+| Stampede protection is per-process | Thread locks prevent stampedes within one worker; Redis lock needed across workers |
+| `sf.refresh()` is synchronous by default | Use `async_mode=True` or the `@sync_model` decorator (which is always async) for non-blocking calls |
+
+---
+
+## Troubleshooting
+
+**`RuntimeWarning: LocMemCache detected`**
+→ Configure Redis as your cache backend for multi-process deployments.
+
+**`AuthError: Authentication failed`**
+→ Your API key is invalid or revoked. Generate a new key in your dashboard.
+
+**`TableNotFoundError`**
+→ The table is not registered. Use `@sync_model` or `sf.create_table()`.
+
+**`NetworkError: Could not connect to SyncForge`**
+→ Check your network and `base_url`. Use `silent=True` in production.
+
+**Stale data after `sf.refresh()`**
+→ Most likely a multi-worker deployment without Redis. See above.
+
+---
+
+## License
+
 MIT — see [LICENSE](LICENSE)

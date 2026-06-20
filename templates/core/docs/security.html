@@ -1,0 +1,96 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-orange-700 bg-orange-50 px-2 py-0.5 rounded">Security Guide</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">Security & WAF</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    SyncForge isn't just for syncing. The SDK includes a production-ready Web Application Firewall (WAF) and comprehensive security headers to protect your Django app.
+</p>
+
+<!-- 1. Enable -->
+<h2 class="text-xl font-semibold mb-3">1. Enable the Security Middleware</h2>
+<p class="text-sm text-brand-secondary mb-3">Add it directly after Django's built-in <code class="font-mono bg-gray-100 px-1 rounded">SecurityMiddleware</code>.</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">settings.py</span>
+        <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">MIDDLEWARE <span class="text-gray-400">=</span> [
+    <span class="text-green-300">'django.middleware.security.SecurityMiddleware'</span>,
+    <span class="text-yellow-300">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,  <span class="text-gray-500"># ← Add this line</span>
+    <span class="text-green-300">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
+    <span class="text-gray-500"># ...</span>
+]</pre>
+</div>
+
+<!-- 2. What it blocks -->
+<h2 class="text-xl font-semibold mb-3">2. Request Inspection (WAF)</h2>
+<p class="text-sm text-brand-secondary mb-4">
+    The middleware intercepts every incoming request and scans the URL path, query parameters, and POST bodies for malicious payloads.
+    If a threat is detected, it blocks the request immediately with a <code class="font-mono bg-gray-100 px-1 rounded">403 Forbidden</code> and logs the attempt.
+</p>
+<div class="border border-brand-border rounded-xl bg-white overflow-hidden mb-8">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-gray-50 border-b border-brand-border">
+            <tr>
+                <th class="px-4 py-3 font-semibold text-brand-primary">Threat Vector</th>
+                <th class="px-4 py-3 font-semibold text-brand-primary">Patterns Blocked</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-brand-border text-brand-secondary">
+            <tr>
+                <td class="px-4 py-3 font-medium text-brand-primary">SQL Injection (SQLi)</td>
+                <td class="px-4 py-3"><code class="font-mono text-xs">UNION SELECT</code>, <code class="font-mono text-xs">OR 1=1</code>, <code class="font-mono text-xs">DROP TABLE</code>, <code class="font-mono text-xs">--</code></td>
+            </tr>
+            <tr>
+                <td class="px-4 py-3 font-medium text-brand-primary">Cross-Site Scripting (XSS)</td>
+                <td class="px-4 py-3"><code class="font-mono text-xs">&lt;script&gt;</code>, <code class="font-mono text-xs">javascript:</code>, <code class="font-mono text-xs">onerror=</code></td>
+            </tr>
+            <tr>
+                <td class="px-4 py-3 font-medium text-brand-primary">Path Traversal</td>
+                <td class="px-4 py-3"><code class="font-mono text-xs">../</code>, <code class="font-mono text-xs">/etc/passwd</code></td>
+            </tr>
+            <tr>
+                <td class="px-4 py-3 font-medium text-brand-primary">Command Injection</td>
+                <td class="px-4 py-3"><code class="font-mono text-xs">/bin/sh</code>, <code class="font-mono text-xs">wget</code>, <code class="font-mono text-xs">curl</code></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 3. Headers -->
+<h2 class="text-xl font-semibold mb-3">3. Security Headers Injected</h2>
+<p class="text-sm text-brand-secondary mb-4">The middleware automatically adds these headers to every outgoing response to harden the browser.</p>
+<div class="space-y-3 mb-8">
+    <div class="border border-brand-border rounded-lg p-4">
+        <div class="font-mono text-sm font-bold text-brand-primary mb-1">X-Content-Type-Options: nosniff</div>
+        <p class="text-xs text-brand-secondary">Prevents MIME-sniffing attacks (e.g. executing an uploaded image as JavaScript).</p>
+    </div>
+    <div class="border border-brand-border rounded-lg p-4">
+        <div class="font-mono text-sm font-bold text-brand-primary mb-1">X-Frame-Options: DENY</div>
+        <p class="text-xs text-brand-secondary">Prevents Clickjacking by blocking your site from being embedded in iframes on other domains.</p>
+    </div>
+    <div class="border border-brand-border rounded-lg p-4">
+        <div class="font-mono text-sm font-bold text-brand-primary mb-1">X-XSS-Protection: 1; mode=block</div>
+        <p class="text-xs text-brand-secondary">Enables legacy browser XSS filters (supplementary to CSP).</p>
+    </div>
+    <div class="border border-brand-border rounded-lg p-4">
+        <div class="font-mono text-sm font-bold text-brand-primary mb-1">Referrer-Policy: strict-origin-when-cross-origin</div>
+        <p class="text-xs text-brand-secondary">Prevents leaking sensitive URLs (like password reset tokens) in the Referer header.</p>
+    </div>
+</div>
+
+<!-- Nav -->
+<div class="flex justify-between pt-6 border-t border-brand-border mt-10">
+    <a href="{% url 'docs_cache_query' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        cache_query()
+    </a>
+    <a href="{% url 'docs_deployment' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        Deployment
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+{% endblock %}

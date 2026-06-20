@@ -1,0 +1,164 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-brand-accent bg-blue-50 px-2 py-0.5 rounded">Overview</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">Getting Started</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    Install the SDK, create a project, get your API key, and make your first sync call — all in under 5 minutes.
+</p>
+
+<!-- Step 1 -->
+<div class="mb-8">
+    <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+        <span class="w-6 h-6 bg-brand-accent text-white rounded-full text-xs font-bold flex items-center justify-center">1</span>
+        Install the SDK
+    </h2>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">terminal</span>
+            <button onclick="copyCode(this)" data-code="pip install syncforge" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+        </div>
+        <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge</pre>
+    </div>
+    <p class="text-sm text-brand-muted mt-2">No external dependencies. Pure Python Standard Library.</p>
+</div>
+
+<!-- Step 2 -->
+<div class="mb-8">
+    <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+        <span class="w-6 h-6 bg-brand-accent text-white rounded-full text-xs font-bold flex items-center justify-center">2</span>
+        Create a project &amp; get your API key
+    </h2>
+    <ol class="list-none space-y-2 text-sm text-brand-secondary ml-1">
+        <li class="flex items-start gap-2"><span class="text-brand-accent mt-0.5">→</span> Register at <strong>syncforge.dev</strong></li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent mt-0.5">→</span> Create a new project in the dashboard</li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent mt-0.5">→</span> Copy your API key — it starts with <code class="font-mono bg-gray-100 px-1 rounded">sf_live_</code></li>
+        <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">⚠</span> The raw key is shown <strong>only once</strong> — store it in your <code class="font-mono bg-gray-100 px-1 rounded">.env</code> immediately</li>
+    </ol>
+</div>
+
+<!-- Step 3 -->
+<div class="mb-8">
+    <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+        <span class="w-6 h-6 bg-brand-accent text-white rounded-full text-xs font-bold flex items-center justify-center">3</span>
+        Set your environment variable
+    </h2>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-3">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">.env</span>
+            <button onclick="copyCode(this)" data-code="SYNCFORGE_API_KEY=sf_live_your_key_here" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+        </div>
+        <pre class="p-4 text-sm font-mono text-yellow-300">SYNCFORGE_API_KEY=sf_live_your_key_here</pre>
+    </div>
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+        <strong>Never hardcode your API key in source code.</strong> Always read it from environment variables. Your <code class="font-mono text-xs">.env</code> file must be listed in <code class="font-mono text-xs">.gitignore</code>.
+    </div>
+</div>
+
+<!-- Step 4 -->
+<div class="mb-8">
+    <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+        <span class="w-6 h-6 bg-brand-accent text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
+        Initialise the client
+    </h2>
+    <p class="text-sm text-brand-secondary mb-3">
+        Create one <code class="font-mono bg-gray-100 px-1 rounded">SyncForge</code> instance per project. Place it in a module-level file and import it wherever needed.
+    </p>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">syncforge_client.py</span>
+            <button onclick="copyCode(this)" data-code="import os
+from syncforge import SyncForge
+
+sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+        </div>
+        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">import</span> os
+<span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
+
+sf <span class="text-gray-400">=</span> SyncForge(api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>])</pre>
+    </div>
+</div>
+
+<!-- Step 5 -->
+<div class="mb-8">
+    <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+        <span class="w-6 h-6 bg-brand-accent text-white rounded-full text-xs font-bold flex items-center justify-center">5</span>
+        Signal a data change
+    </h2>
+    <p class="text-sm text-brand-secondary mb-3">
+        Call <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> after every database write. SyncForge will invalidate cached data and update the server.
+    </p>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">example.py</span>
+            <button onclick="copyCode(this)" data-code="from syncforge_client import sf
+
+# After any DB write
+product = Product.objects.create(name='Widget', price=9.99)
+sf.refresh('products')   # Tell SyncForge this table changed" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+        </div>
+        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> syncforge_client <span class="text-blue-400">import</span> sf
+
+<span class="text-gray-500"># After any DB write</span>
+product <span class="text-gray-400">=</span> Product.objects.create(name<span class="text-gray-400">=</span><span class="text-green-300">'Widget'</span>, price<span class="text-gray-400">=</span><span class="text-yellow-300">9.99</span>)
+sf.refresh(<span class="text-green-300">'products'</span>)   <span class="text-gray-500"># Tell SyncForge this table changed</span></pre>
+    </div>
+</div>
+
+<!-- Step 6: Verify -->
+<div class="mb-10">
+    <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+        <span class="w-6 h-6 bg-green-600 text-white rounded-full text-xs font-bold flex items-center justify-center">✓</span>
+        Verify connectivity
+    </h2>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">python</span>
+            <button onclick="copyCode(this)" data-code="if sf.ping():
+    print('SyncForge connected!')
+else:
+    print('Check your API key or network')" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+        </div>
+        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">if</span> sf.ping():
+    <span class="text-blue-400">print</span>(<span class="text-green-300">'SyncForge connected!'</span>)
+<span class="text-blue-400">else</span>:
+    <span class="text-blue-400">print</span>(<span class="text-green-300">'Check your API key or network'</span>)</pre>
+    </div>
+</div>
+
+<!-- Client options -->
+<h2 class="text-xl font-semibold mb-3">All client options</h2>
+<div class="overflow-x-auto mb-10">
+<table class="w-full text-sm border-collapse">
+    <thead>
+        <tr class="border-b border-brand-border bg-brand-secbg">
+            <th class="text-left px-4 py-2.5 font-semibold">Parameter</th>
+            <th class="text-left px-4 py-2.5 font-semibold">Default</th>
+            <th class="text-left px-4 py-2.5 font-semibold">Description</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-brand-border">
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">api_key</td><td class="px-4 py-2.5 text-brand-muted">required</td><td class="px-4 py-2.5 text-brand-secondary">API key from dashboard (sf_live_...)</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">base_url</td><td class="px-4 py-2.5 font-mono text-xs text-brand-muted">syncforge.dev/api</td><td class="px-4 py-2.5 text-brand-secondary">Override for self-hosted deployments</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">timeout</td><td class="px-4 py-2.5 text-brand-muted">10</td><td class="px-4 py-2.5 text-brand-secondary">HTTP timeout in seconds</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">silent</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Suppress exceptions — log warnings instead (recommended in production)</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">async_mode</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Fire-and-forget refresh() — returns None immediately</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">sign_requests</td><td class="px-4 py-2.5 text-brand-muted">True</td><td class="px-4 py-2.5 text-brand-secondary">Add HMAC-SHA256 signature headers for replay protection</td></tr>
+    </tbody>
+</table>
+</div>
+
+<!-- Nav -->
+<div class="flex justify-between pt-6 border-t border-brand-border mt-4">
+    <a href="{% url 'docs' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Introduction
+    </a>
+    <a href="{% url 'docs_django' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        Django Guide
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+{% endblock %}

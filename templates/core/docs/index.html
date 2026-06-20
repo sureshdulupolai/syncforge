@@ -1,0 +1,118 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block docs_content %}
+
+<div class="mb-2">
+    <span class="text-xs font-mono text-brand-accent bg-blue-50 px-2 py-0.5 rounded">Introduction</span>
+</div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">SyncForge Documentation</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    SyncForge is a <strong>developer-controlled data synchronisation platform</strong>.
+    Instead of expiring data on a timer, you decide exactly when your data becomes stale — by calling <code class="text-sm font-mono bg-gray-100 px-1 py-0.5 rounded">sf.refresh()</code>.
+</p>
+
+<!-- What is SyncForge -->
+<div class="border border-brand-border rounded-xl p-6 mb-8 bg-brand-secbg">
+    <h2 class="text-base font-semibold mb-3">How it works — in one diagram</h2>
+    <pre class="text-sm font-mono text-brand-secondary leading-relaxed overflow-x-auto">
+First request
+──────────────
+cache_query() → cache MISS → DB query → store in cache → return data
+
+All subsequent requests (until refresh)
+────────────────────────────────────────
+cache_query() → cache HIT → return instantly   ← No DB query
+
+After sf.refresh("products")
+──────────────────────────────
+cache_query() → cache MISS → DB query → store fresh data → return</pre>
+</div>
+
+<!-- Feature grid -->
+<h2 class="text-xl font-semibold mb-4">What's included</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+
+    <a href="{% url 'docs_getting_started' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-brand-accent mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">Getting Started</h3>
+        <p class="text-sm text-brand-muted">Install, get an API key, and make your first sync call in 5 minutes.</p>
+    </a>
+
+    <a href="{% url 'docs_django' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-green-600 mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">Django Guide</h3>
+        <p class="text-sm text-brand-muted">@sync_model decorator, cache_query() in views, signal auto-sync.</p>
+    </a>
+
+    <a href="{% url 'docs_flask' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-red-500 mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">Flask Guide</h3>
+        <p class="text-sm text-brand-muted">Integrate SyncForge into Flask routes and Blueprints.</p>
+    </a>
+
+    <a href="{% url 'docs_fastapi' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-teal-600 mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">FastAPI Guide</h3>
+        <p class="text-sm text-brand-muted">Async-first usage with FastAPI and SQLAlchemy / Tortoise ORM.</p>
+    </a>
+
+    <a href="{% url 'docs_cache_query' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-purple-600 mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">cache_query() Deep Dive</h3>
+        <p class="text-sm text-brand-muted">Stampede protection, timeout strategies, template usage, fetch-back.</p>
+    </a>
+
+    <a href="{% url 'docs_security' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-orange-500 mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">Security & WAF</h3>
+        <p class="text-sm text-brand-muted">API key hashing, HMAC signing, WAF middleware, security headers.</p>
+    </a>
+
+    <a href="{% url 'docs_rest_api' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-indigo-600 mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">REST API Reference</h3>
+        <p class="text-sm text-brand-muted">Full HTTP endpoint docs — auth, payloads, status codes.</p>
+    </a>
+
+    <a href="{% url 'docs_deployment' %}" class="border border-brand-border rounded-xl p-5 hover:border-brand-accent transition-subtle group">
+        <div class="text-gray-600 mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+        </div>
+        <h3 class="font-semibold mb-1 group-hover:text-brand-accent transition-subtle">Deployment</h3>
+        <p class="text-sm text-brand-muted">Environment variables, .env setup, production checklist.</p>
+    </a>
+</div>
+
+<!-- Quick install -->
+<h2 class="text-xl font-semibold mb-3">Quick install</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">terminal</span>
+        <button onclick="copyCode(this)" data-code="pip install syncforge" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge</pre>
+</div>
+
+<!-- Nav footer -->
+<div class="flex justify-end pt-6 border-t border-brand-border mt-10">
+    <a href="{% url 'docs_getting_started' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        Getting Started
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+{% endblock %}

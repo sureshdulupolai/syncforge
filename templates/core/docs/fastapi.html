@@ -1,0 +1,203 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-teal-700 bg-teal-50 px-2 py-0.5 rounded">Framework Guide</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">FastAPI Integration</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    Use SyncForge with async FastAPI routes. The SDK's <code class="font-mono bg-gray-100 px-1 rounded text-sm">refresh()</code> call is synchronous but runs in a background thread via <code class="font-mono bg-gray-100 px-1 rounded text-sm">async_mode=True</code> — safe inside async endpoints.
+</p>
+
+<!-- 1 Install -->
+<h2 class="text-xl font-semibold mb-3">1. Install</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">terminal</span>
+        <button onclick="copyCode(this)" data-code="pip install syncforge fastapi uvicorn sqlalchemy" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge fastapi uvicorn sqlalchemy</pre>
+</div>
+
+<!-- 2 Client -->
+<h2 class="text-xl font-semibold mb-3">2. Initialise the client</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">app/sf.py</span>
+        <button onclick="copyCode(this)" data-code="import os
+from syncforge import SyncForge
+
+# async_mode=True: refresh() launches a daemon thread and returns immediately.
+# This is the recommended setting for FastAPI (no blocking inside async routes).
+sf = SyncForge(
+    api_key=os.environ['SYNCFORGE_API_KEY'],
+    silent=True,
+    async_mode=True,   # fire-and-forget — safe inside async endpoints
+)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">import</span> os
+<span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
+
+<span class="text-gray-500"># async_mode=True: refresh() launches a daemon thread and returns immediately.</span>
+<span class="text-gray-500"># Recommended for FastAPI (no blocking inside async routes).</span>
+sf <span class="text-gray-400">=</span> SyncForge(
+    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
+    silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,
+    async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,   <span class="text-gray-500"># fire-and-forget — safe inside async endpoints</span>
+)</pre>
+</div>
+
+<!-- 3 App startup -->
+<h2 class="text-xl font-semibold mb-3">3. App lifespan &amp; startup</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">main.py</span>
+        <button onclick="copyCode(this)" data-code="from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from app.sf import sf
+import logging
+
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if sf.ping():
+        logger.info('SyncForge connected.')
+    else:
+        logger.warning('SyncForge unreachable — running in degraded mode.')
+    yield
+
+app = FastAPI(title='My API', lifespan=lifespan)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> contextlib <span class="text-blue-400">import</span> asynccontextmanager
+<span class="text-blue-400">from</span> fastapi <span class="text-blue-400">import</span> FastAPI
+<span class="text-blue-400">from</span> app.sf <span class="text-blue-400">import</span> sf
+<span class="text-blue-400">import</span> logging
+
+logger <span class="text-gray-400">=</span> logging.getLogger(<span class="text-blue-300">__name__</span>)
+
+<span class="text-yellow-300">@asynccontextmanager</span>
+<span class="text-blue-400">async def</span> <span class="text-yellow-300">lifespan</span>(app: FastAPI):
+    <span class="text-blue-400">if</span> sf.ping():
+        logger.info(<span class="text-green-300">'SyncForge connected.'</span>)
+    <span class="text-blue-400">else</span>:
+        logger.warning(<span class="text-green-300">'SyncForge unreachable — running in degraded mode.'</span>)
+    <span class="text-blue-400">yield</span>
+
+app <span class="text-gray-400">=</span> FastAPI(title<span class="text-gray-400">=</span><span class="text-green-300">'My API'</span>, lifespan<span class="text-gray-400">=</span>lifespan)</pre>
+</div>
+
+<!-- 4 Routes CRUD -->
+<h2 class="text-xl font-semibold mb-3">4. Routes — full CRUD with refresh</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">app/routers/products.py</span>
+        <button onclick="copyCode(this)" data-code="from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from app.sf import sf
+from app.database import get_db
+from app.models import Product
+
+router = APIRouter(prefix='/products', tags=['Products'])
+
+class ProductCreate(BaseModel):
+    name:  str
+    price: float
+
+class ProductOut(BaseModel):
+    id:    int
+    name:  str
+    price: float
+    class Config:
+        from_attributes = True
+
+# LIST
+@router.get('/', response_model=list[ProductOut])
+async def list_products(db: Session = Depends(get_db)):
+    # Note: cache_query() requires Django cache framework.
+    # For FastAPI, query directly and use async_mode=True to refresh on writes.
+    return db.query(Product).filter(Product.active == True).all()
+
+# CREATE
+@router.post('/', response_model=ProductOut, status_code=201)
+async def create_product(data: ProductCreate, db: Session = Depends(get_db)):
+    product = Product(**data.model_dump())
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    sf.refresh('products')   # daemon thread — returns immediately
+    return product
+
+# UPDATE
+@router.put('/{product_id}', response_model=ProductOut)
+async def update_product(product_id: int, data: ProductCreate, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail='Product not found')
+    for field, value in data.model_dump().items():
+        setattr(product, field, value)
+    db.commit()
+    db.refresh(product)
+    sf.refresh('products')
+    return product
+
+# DELETE
+@router.delete('/{product_id}', status_code=204)
+async def delete_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail='Product not found')
+    db.delete(product)
+    db.commit()
+    sf.refresh('products')" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> fastapi <span class="text-blue-400">import</span> APIRouter, Depends, HTTPException
+<span class="text-blue-400">from</span> pydantic <span class="text-blue-400">import</span> BaseModel
+<span class="text-blue-400">from</span> app.sf <span class="text-blue-400">import</span> sf
+
+router <span class="text-gray-400">=</span> APIRouter(prefix<span class="text-gray-400">=</span><span class="text-green-300">'/products'</span>, tags<span class="text-gray-400">=</span>[<span class="text-green-300">'Products'</span>])
+
+<span class="text-gray-500"># CREATE</span>
+<span class="text-yellow-300">@router.post</span>(<span class="text-green-300">'/'</span>, status_code<span class="text-gray-400">=</span><span class="text-yellow-300">201</span>)
+<span class="text-blue-400">async def</span> <span class="text-yellow-300">create_product</span>(data: ProductCreate, db<span class="text-gray-400">=</span>Depends(get_db)):
+    product <span class="text-gray-400">=</span> Product(<span class="text-gray-400">**</span>data.model_dump())
+    db.add(product); db.commit(); db.refresh(product)
+    sf.refresh(<span class="text-green-300">'products'</span>)   <span class="text-gray-500"># async_mode=True → daemon thread, returns immediately</span>
+    <span class="text-blue-400">return</span> product
+
+<span class="text-gray-500"># UPDATE</span>
+<span class="text-yellow-300">@router.put</span>(<span class="text-green-300">'/{product_id}'</span>)
+<span class="text-blue-400">async def</span> <span class="text-yellow-300">update_product</span>(product_id: int, data: ProductCreate, db<span class="text-gray-400">=</span>Depends(get_db)):
+    product <span class="text-gray-400">=</span> db.query(Product).filter(Product.id <span class="text-gray-400">==</span> product_id).first()
+    <span class="text-blue-400">if not</span> product: <span class="text-blue-400">raise</span> HTTPException(<span class="text-yellow-300">404</span>)
+    [setattr(product, k, v) <span class="text-blue-400">for</span> k, v <span class="text-blue-400">in</span> data.model_dump().items()]
+    db.commit()
+    sf.refresh(<span class="text-green-300">'products'</span>)
+    <span class="text-blue-400">return</span> product
+
+<span class="text-gray-500"># DELETE</span>
+<span class="text-yellow-300">@router.delete</span>(<span class="text-green-300">'/{product_id}'</span>, status_code<span class="text-gray-400">=</span><span class="text-yellow-300">204</span>)
+<span class="text-blue-400">async def</span> <span class="text-yellow-300">delete_product</span>(product_id: int, db<span class="text-gray-400">=</span>Depends(get_db)):
+    product <span class="text-gray-400">=</span> db.query(Product).filter(Product.id <span class="text-gray-400">==</span> product_id).first()
+    db.delete(product); db.commit()
+    sf.refresh(<span class="text-green-300">'products'</span>)</pre>
+</div>
+
+<!-- 5 Important note -->
+<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 mb-8">
+    <strong>Important:</strong> <code class="font-mono text-xs">cache_query()</code> uses Django's cache framework internally and is only available in Django projects. In FastAPI, use your own cache layer (e.g. <code class="font-mono text-xs">aiocache</code>, <code class="font-mono text-xs">redis-py</code>) and call <code class="font-mono text-xs">sf.refresh()</code> after every write to signal data changes to the SyncForge server.
+</div>
+
+<!-- Nav -->
+<div class="flex justify-between pt-6 border-t border-brand-border mt-10">
+    <a href="{% url 'docs_flask' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Flask Guide
+    </a>
+    <a href="{% url 'docs_rest_api' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        REST API Reference
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+{% endblock %}

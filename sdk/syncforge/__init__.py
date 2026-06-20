@@ -1,30 +1,56 @@
 """
 SyncForge Python SDK
 ~~~~~~~~~~~~~~~~~~~~
-Official Python client for the SyncForge data sync platform.
+Developer-controlled data synchronisation platform.
 
-Usage::
+Create one ``SyncForge`` instance per project::
 
-    from syncforge import SyncForge
-    sf = SyncForge(api_key='sf_live_YOUR_KEY')
-    sf.refresh('products')
-
-Or use a project-level syncforge.py file (like Celery pattern)::
-
-    # syncforge.py
+    # syncforge.py  (project root)
     import os
     from syncforge import SyncForge
-    sf = SyncForge(api_key=os.environ.get('SYNCFORGE_API_KEY'))
 
-    # In your views / handlers:
+    sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
+
+Then import ``sf`` wherever you need it::
+
     from syncforge import sf
     sf.refresh('products')
+
+Django integration::
+
+    from syncforge import sf
+    from syncforge.django import sync_model
+
+    @sync_model(sf)
+    class Product(models.Model):
+        ...
 """
 
 from .client import SyncForge
 from .result import SyncResult
-from .exceptions import SyncForgeError, AuthError, TableNotFoundError
+from .exceptions import (
+    SyncForgeError,
+    AuthError,
+    TableNotFoundError,
+    RateLimitError,
+    NetworkError,
+    ValidationError,
+    ConfigurationError,
+    CacheError,
+)
 
-__version__ = "1.0.0"
-__author__ = "SyncForge"
-__all__ = ["SyncForge", "SyncResult", "SyncForgeError", "AuthError", "TableNotFoundError"]
+__version__ = "1.1.0"
+__author__  = "SyncForge"
+__all__ = [
+    "SyncForge",
+    "SyncResult",
+    # Exceptions
+    "SyncForgeError",
+    "AuthError",
+    "TableNotFoundError",
+    "RateLimitError",
+    "NetworkError",
+    "ValidationError",
+    "ConfigurationError",
+    "CacheError",
+]

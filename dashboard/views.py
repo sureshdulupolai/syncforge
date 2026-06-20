@@ -232,12 +232,12 @@ def create_project(request):
     if not name:
         return _json({'error': 'Project name is required.'}, 400)
     project = Project.objects.create(user=request.user, name=name, description=desc)
-    # Auto-create first API key
-    key = APIKey.objects.create(project=project, name='Default Key')
+    # Auto-create first API key — returns (obj, raw_key); raw_key shown once.
+    key_obj, raw_key = APIKey.create_new(project=project, name='Default Key')
     return _json({
         'status': 'created',
         'project': {'id': project.id, 'name': project.name, 'slug': project.slug},
-        'api_key': key.key,
+        'api_key': raw_key,  # Raw key returned once — never stored plaintext.
     })
 
 
@@ -292,11 +292,13 @@ def ajax_project_detail(request, slug):
     ))
     keys    = []
     for k in project.api_keys.filter(is_active=True):
+        # key_prefix stores the first 18 chars (e.g. 'sf_live_a1b2c3d4...')
+        # The full plaintext key is never stored — only shown once at creation.
+        display_prefix = k.key_prefix or (k.key[:18] if k.key else 'sf_live_???')
         keys.append({
             'id':         k.id,
             'name':       k.name,
-            'key_prefix': k.key[:18] + '...',
-            'key_full':   k.key,        # shown only on explicit reveal
+            'key_prefix': display_prefix + '...',
             'created_at': k.created_at.isoformat(),
             'last_used':  k.last_used.isoformat() if k.last_used else None,
         })
@@ -322,8 +324,14 @@ def create_api_key(request, slug):
     name = request.POST.get('name', 'New Key').strip() or 'New Key'
     if project.api_keys.filter(is_active=True).count() >= 5:
         return _json({'error': 'Maximum 5 active API keys per project.'}, 400)
-    key = APIKey.objects.create(project=project, name=name)
-    return _json({'status': 'created', 'key': key.key, 'id': key.id, 'name': key.name})
+    key_obj, raw_key = APIKey.create_new(project=project, name=name)
+    return _json({
+        'status': 'created',
+        'key':    raw_key,        # Raw key returned once — never stored plaintext.
+        'prefix': key_obj.key_prefix,
+        'id':     key_obj.id,
+        'name':   key_obj.name,
+    })
 
 
 @login_required

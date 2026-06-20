@@ -1,0 +1,348 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-green-700 bg-green-50 px-2 py-0.5 rounded">Framework Guide</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">Django Integration</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    Complete guide to using SyncForge with Django — from installation to templates, signals, views, and production setup.
+</p>
+
+<!-- TOC -->
+<div class="border border-brand-border rounded-xl p-5 mb-10 bg-brand-secbg">
+    <h2 class="text-sm font-semibold mb-3">On this page</h2>
+    <ol class="space-y-1 text-sm text-brand-secondary list-none">
+        <li><a href="#install" class="hover:text-brand-accent">1. Installation</a></li>
+        <li><a href="#client" class="hover:text-brand-accent">2. Create the client</a></li>
+        <li><a href="#sync-model" class="hover:text-brand-accent">3. @sync_model decorator</a></li>
+        <li><a href="#cache-query" class="hover:text-brand-accent">4. cache_query() in views</a></li>
+        <li><a href="#template" class="hover:text-brand-accent">5. Render data in templates</a></li>
+        <li><a href="#refresh" class="hover:text-brand-accent">6. Manual refresh after writes</a></li>
+        <li><a href="#signals" class="hover:text-brand-accent">7. How signals work</a></li>
+        <li><a href="#middleware" class="hover:text-brand-accent">8. Security middleware</a></li>
+        <li><a href="#monthly" class="hover:text-brand-accent">9. Monthly / scheduled refresh</a></li>
+        <li><a href="#production" class="hover:text-brand-accent">10. Production settings</a></li>
+    </ol>
+</div>
+
+<!-- 1 Install -->
+<h2 id="install" class="text-xl font-semibold mb-3 scroll-mt-20">1. Installation</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">terminal</span>
+        <button onclick="copyCode(this)" data-code="pip install syncforge" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge</pre>
+</div>
+
+<!-- 2 Client -->
+<h2 id="client" class="text-xl font-semibold mb-3 scroll-mt-20">2. Create the client</h2>
+<p class="text-sm text-brand-secondary mb-3">Create a dedicated file at your project root — import <code class="font-mono bg-gray-100 px-1 rounded">sf</code> from it everywhere.</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">myproject/sf.py</span>
+        <button onclick="copyCode(this)" data-code="import os
+from syncforge import SyncForge
+
+sf = SyncForge(
+    api_key=os.environ['SYNCFORGE_API_KEY'],
+    silent=True,       # Recommended: never crash app if SyncForge is unreachable
+    async_mode=False,  # True = fire-and-forget refresh()
+)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">import</span> os
+<span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
+
+sf <span class="text-gray-400">=</span> SyncForge(
+    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
+    silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,       <span class="text-gray-500"># Recommended: never crash app if SyncForge is unreachable</span>
+    async_mode<span class="text-gray-400">=</span><span class="text-blue-300">False</span>,  <span class="text-gray-500"># True = fire-and-forget refresh()</span>
+)</pre>
+</div>
+
+<!-- 3 sync_model -->
+<h2 id="sync-model" class="text-xl font-semibold mb-3 scroll-mt-20">3. @sync_model decorator</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    Apply <code class="font-mono bg-gray-100 px-1 rounded">@sync_model(sf)</code> to any Django model.
+    On every <code class="font-mono bg-gray-100 px-1 rounded">.save()</code> or <code class="font-mono bg-gray-100 px-1 rounded">.delete()</code> — including admin and shell — SyncForge:
+</p>
+<ul class="text-sm text-brand-secondary mb-4 space-y-1 ml-4 list-none">
+    <li><span class="text-brand-accent">→</span> Immediately clears the local cache for this table (synchronous)</li>
+    <li><span class="text-brand-accent">→</span> Notifies the SyncForge server in a background thread (never blocks)</li>
+</ul>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">myapp/models.py</span>
+        <button onclick="copyCode(this)" data-code="from django.db import models
+from myproject.sf import sf
+from syncforge.django import sync_model
+
+@sync_model(sf, sync_mode='event')
+class Product(models.Model):
+    name   = models.CharField(max_length=200)
+    price  = models.DecimalField(max_digits=10, decimal_places=2)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'core_product'" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> django.db <span class="text-blue-400">import</span> models
+<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+<span class="text-blue-400">from</span> syncforge.django <span class="text-blue-400">import</span> sync_model
+
+<span class="text-yellow-300">@sync_model</span>(sf, sync_mode<span class="text-gray-400">=</span><span class="text-green-300">'event'</span>)
+<span class="text-blue-400">class</span> <span class="text-teal-300">Product</span>(models.Model):
+    name   <span class="text-gray-400">=</span> models.CharField(max_length<span class="text-gray-400">=</span><span class="text-yellow-300">200</span>)
+    price  <span class="text-gray-400">=</span> models.DecimalField(max_digits<span class="text-gray-400">=</span><span class="text-yellow-300">10</span>, decimal_places<span class="text-gray-400">=</span><span class="text-yellow-300">2</span>)
+    active <span class="text-gray-400">=</span> models.BooleanField(default<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+
+    <span class="text-blue-400">class</span> <span class="text-teal-300">Meta</span>:
+        db_table <span class="text-gray-400">=</span> <span class="text-green-300">'core_product'</span></pre>
+</div>
+
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 mb-8">
+    <strong>sync_mode options:</strong> <code class="font-mono text-xs">event</code> (on save/delete), <code class="font-mono text-xs">manual</code>, <code class="font-mono text-xs">schedule_5m</code>, <code class="font-mono text-xs">schedule_1h</code>, <code class="font-mono text-xs">schedule_1d</code>, <code class="font-mono text-xs">schedule_30d</code>, <code class="font-mono text-xs">hybrid</code>
+</div>
+
+<!-- 4 cache_query -->
+<h2 id="cache-query" class="text-xl font-semibold mb-3 scroll-mt-20">4. cache_query() in views</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    <code class="font-mono bg-gray-100 px-1 rounded">cache_query()</code> is a cache-aside wrapper. First call hits the DB and stores the result. All subsequent calls return from cache — until <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> is called or the timeout expires.
+</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">myapp/views.py</span>
+        <button onclick="copyCode(this)" data-code="from django.shortcuts import render
+from myproject.sf import sf
+from .models import Product
+
+def product_list(request):
+    products = sf.cache_query(
+        table_name='core_product',
+        cache_key='all_active_products',
+        queryset=Product.objects.filter(active=True).order_by('name'),
+        timeout=3600,   # 1 hour fallback TTL
+    )
+    return render(request, 'products/list.html', {
+        'products': products,
+        'count':    len(products),
+    })" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> django.shortcuts <span class="text-blue-400">import</span> render
+<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+<span class="text-blue-400">from</span> .models <span class="text-blue-400">import</span> Product
+
+<span class="text-blue-400">def</span> <span class="text-yellow-300">product_list</span>(request):
+    products <span class="text-gray-400">=</span> sf.cache_query(
+        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,
+        cache_key<span class="text-gray-400">=</span><span class="text-green-300">'all_active_products'</span>,
+        queryset<span class="text-gray-400">=</span>Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>).order_by(<span class="text-green-300">'name'</span>),
+        timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>,   <span class="text-gray-500"># 1 hour fallback TTL</span>
+    )
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'products/list.html'</span>, {
+        <span class="text-green-300">'products'</span>: products,
+        <span class="text-green-300">'count'</span>:    len(products),
+    })</pre>
+</div>
+
+<!-- 5 Template -->
+<h2 id="template" class="text-xl font-semibold mb-3 scroll-mt-20">5. Render data in templates</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    <code class="font-mono bg-gray-100 px-1 rounded">cache_query()</code> returns a standard Python <code class="font-mono bg-gray-100 px-1 rounded">list</code> of Django model instances — identical to <code class="font-mono bg-gray-100 px-1 rounded">list(queryset)</code>. All model fields and methods work normally in templates.
+</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">templates/products/list.html</span>
+        <button onclick="copyCode(this)" data-code='<p>Total products: {{ count }}</p>
+
+{% for product in products %}
+    <div class="product-card">
+        <h3>{{ product.name }}</h3>
+        <p>Price: ₹{{ product.price }}</p>
+        {% if product.active %}
+            <span>Active</span>
+        {% endif %}
+    </div>
+{% empty %}
+    <p>No active products.</p>
+{% endfor %}' class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-gray-500">&lt;!-- Total count --&gt;</span>
+<span class="text-blue-300">&lt;p&gt;</span>Total products: <span class="text-yellow-300">{{ count }}</span><span class="text-blue-300">&lt;/p&gt;</span>
+
+<span class="text-green-400">{% for product in products %}</span>
+    <span class="text-blue-300">&lt;div</span> <span class="text-teal-300">class</span><span class="text-gray-400">=</span><span class="text-green-300">"product-card"</span><span class="text-blue-300">&gt;</span>
+        <span class="text-blue-300">&lt;h3&gt;</span><span class="text-yellow-300">{{ product.name }}</span><span class="text-blue-300">&lt;/h3&gt;</span>
+        <span class="text-blue-300">&lt;p&gt;</span>Price: ₹<span class="text-yellow-300">{{ product.price }}</span><span class="text-blue-300">&lt;/p&gt;</span>
+        <span class="text-green-400">{% if product.active %}</span>
+            <span class="text-blue-300">&lt;span&gt;</span>Active<span class="text-blue-300">&lt;/span&gt;</span>
+        <span class="text-green-400">{% endif %}</span>
+    <span class="text-blue-300">&lt;/div&gt;</span>
+<span class="text-green-400">{% empty %}</span>
+    <span class="text-blue-300">&lt;p&gt;</span>No active products.<span class="text-blue-300">&lt;/p&gt;</span>
+<span class="text-green-400">{% endfor %}</span></pre>
+</div>
+
+<!-- 6 Manual refresh -->
+<h2 id="refresh" class="text-xl font-semibold mb-3 scroll-mt-20">6. Manual refresh after writes</h2>
+<p class="text-sm text-brand-secondary mb-3">When you're not using <code class="font-mono bg-gray-100 px-1 rounded">@sync_model</code>, call <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> manually after any database write.</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">views.py — create, update, delete</span>
+        <button onclick="copyCode(this)" data-code="from myproject.sf import sf
+from .models import Product
+
+# CREATE
+def add_product(request):
+    Product.objects.create(name=request.POST['name'], price=request.POST['price'])
+    sf.refresh('core_product')   # ← always refresh after write
+    return redirect('product_list')
+
+# UPDATE
+def update_product(request, pk):
+    Product.objects.filter(pk=pk).update(price=request.POST['price'])
+    sf.refresh('core_product')
+    return redirect('product_list')
+
+# DELETE
+def delete_product(request, pk):
+    Product.objects.filter(pk=pk).delete()
+    sf.refresh('core_product')
+    return redirect('product_list')
+
+# BULK
+def bulk_activate(request):
+    Product.objects.filter(active=False).update(active=True)
+    sf.refresh('core_product')   # One call refreshes all cached keys for this table
+    return redirect('product_list')" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+<span class="text-blue-400">from</span> .models <span class="text-blue-400">import</span> Product
+
+<span class="text-gray-500"># CREATE</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-300">add_product</span>(request):
+    Product.objects.create(name<span class="text-gray-400">=</span>request.POST[<span class="text-green-300">'name'</span>], price<span class="text-gray-400">=</span>request.POST[<span class="text-green-300">'price'</span>])
+    sf.refresh(<span class="text-green-300">'core_product'</span>)   <span class="text-gray-500"># ← always refresh after write</span>
+    <span class="text-blue-400">return</span> redirect(<span class="text-green-300">'product_list'</span>)
+
+<span class="text-gray-500"># UPDATE</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-300">update_product</span>(request, pk):
+    Product.objects.filter(pk<span class="text-gray-400">=</span>pk).update(price<span class="text-gray-400">=</span>request.POST[<span class="text-green-300">'price'</span>])
+    sf.refresh(<span class="text-green-300">'core_product'</span>)
+    <span class="text-blue-400">return</span> redirect(<span class="text-green-300">'product_list'</span>)
+
+<span class="text-gray-500"># BULK</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-300">bulk_activate</span>(request):
+    Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">False</span>).update(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+    sf.refresh(<span class="text-green-300">'core_product'</span>)   <span class="text-gray-500"># One call clears all cache keys for this table</span>
+    <span class="text-blue-400">return</span> redirect(<span class="text-green-300">'product_list'</span>)</pre>
+</div>
+
+<!-- 7 Signals -->
+<h2 id="signals" class="text-xl font-semibold mb-3 scroll-mt-20">7. How signals work internally</h2>
+<div class="border border-brand-border rounded-xl p-5 mb-8 bg-brand-secbg text-sm text-brand-secondary">
+    <p class="mb-3">When <code class="font-mono bg-white px-1 rounded border border-brand-border">Product.save()</code> is called, Django fires <code class="font-mono bg-white px-1 rounded border border-brand-border">post_save</code>. SyncForge intercepts it:</p>
+    <ol class="space-y-2 list-none">
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">1.</span> <strong>Instantly</strong> deletes all cache keys registered for <code class="font-mono bg-white px-1 rounded border border-brand-border">core_product</code> from Django's cache</li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">2.</span> <strong>Spawns a daemon thread</strong> → sends POST to <code class="font-mono bg-white px-1 rounded border border-brand-border">/api/v1/sync/core_product/</code></li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">3.</span> Server increments <code class="font-mono bg-white px-1 rounded border border-brand-border">version_number</code> atomically and logs a <code class="font-mono bg-white px-1 rounded border border-brand-border">SyncEvent</code></li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">4.</span> Next <code class="font-mono bg-white px-1 rounded border border-brand-border">cache_query()</code> call: cache miss → fresh DB query → store → return</li>
+    </ol>
+    <p class="mt-3 text-brand-muted">The HTTP call <strong>never blocks</strong> the request/response cycle.</p>
+</div>
+
+<!-- 8 Middleware -->
+<h2 id="middleware" class="text-xl font-semibold mb-3 scroll-mt-20">8. Security middleware</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">settings.py</span>
+        <button onclick="copyCode(this)" data-code="MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'syncforge.middleware.SyncForgeSecurityMiddleware',  # ← WAF + security headers
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    # ... rest of middleware
+]" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100">MIDDLEWARE <span class="text-gray-400">=</span> [
+    <span class="text-green-300">'django.middleware.security.SecurityMiddleware'</span>,
+    <span class="text-yellow-300">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,  <span class="text-gray-500"># ← WAF + security headers</span>
+    <span class="text-green-300">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
+    <span class="text-gray-500"># ... rest of middleware</span>
+]</pre>
+</div>
+<p class="text-sm text-brand-secondary mb-8">Adds: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, basic WAF (SQLi/XSS/path traversal scanning). See <a href="{% url 'docs_security' %}" class="text-brand-accent hover:underline">Security & WAF</a> for full docs.</p>
+
+<!-- 9 Monthly refresh -->
+<h2 id="monthly" class="text-xl font-semibold mb-3 scroll-mt-20">9. Monthly / scheduled data refresh</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    For data that changes infrequently (e.g. once a month), use <code class="font-mono bg-gray-100 px-1 rounded">timeout=None</code> and rotate the <code class="font-mono bg-gray-100 px-1 rounded">cache_key</code> by time period. This means the cache is only invalidated by your refresh call — never by a clock.
+</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">views.py — monthly cache pattern</span>
+        <button onclick="copyCode(this)" data-code="import datetime
+from myproject.sf import sf
+
+def monthly_report(request):
+    now = datetime.date.today()
+    # New cache_key each month = automatic rotation
+    key = f'report_{now.year}_{now.month}'
+
+    data = sf.cache_query(
+        table_name='core_report',
+        cache_key=key,
+        queryset=Report.objects.filter(active=True),
+        timeout=None,   # Never expires on its own — only sf.refresh() clears it
+    )
+    return render(request, 'reports/monthly.html', {'data': data})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">import</span> datetime
+<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+
+<span class="text-blue-400">def</span> <span class="text-yellow-300">monthly_report</span>(request):
+    now <span class="text-gray-400">=</span> datetime.date.today()
+    <span class="text-gray-500"># New cache_key each month = automatic rotation</span>
+    key <span class="text-gray-400">=</span> <span class="text-green-300">f'report_{now.year}_{now.month}'</span>
+
+    data <span class="text-gray-400">=</span> sf.cache_query(
+        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_report'</span>,
+        cache_key<span class="text-gray-400">=</span>key,
+        queryset<span class="text-gray-400">=</span>Report.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>),
+        timeout<span class="text-gray-400">=</span><span class="text-blue-300">None</span>,   <span class="text-gray-500"># Never expires — only sf.refresh() clears it</span>
+    )
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'reports/monthly.html'</span>, {<span class="text-green-300">'data'</span>: data})</pre>
+</div>
+
+<!-- 10 Production -->
+<h2 id="production" class="text-xl font-semibold mb-3 scroll-mt-20">10. Production settings</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">production client</span>
+        <button onclick="copyCode(this)" data-code="sf = SyncForge(
+    api_key=os.environ['SYNCFORGE_API_KEY'],
+    silent=True,       # Log warnings, never raise — keeps your app running
+    async_mode=True,   # refresh() returns immediately, runs in background
+    sign_requests=True,# HMAC signing for replay protection (default: True)
+)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100">sf <span class="text-gray-400">=</span> SyncForge(
+    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
+    silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,       <span class="text-gray-500"># Log warnings, never raise — keeps your app running</span>
+    async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,   <span class="text-gray-500"># refresh() returns immediately, runs in background</span>
+    sign_requests<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,<span class="text-gray-500"># HMAC signing for replay protection (default: True)</span>
+)</pre>
+</div>
+
+<!-- Nav -->
+<div class="flex justify-between pt-6 border-t border-brand-border mt-10">
+    <a href="{% url 'docs_getting_started' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Getting Started
+    </a>
+    <a href="{% url 'docs_flask' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        Flask Guide
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+{% endblock %}

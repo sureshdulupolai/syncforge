@@ -1,28 +1,72 @@
-# Python / Django
+# ─── Python / Django ──────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
+
+# ─── Database ─────────────────────────────────────────────────────────────────
 *.sqlite3
 db.sqlite3
 
-# Environments
+# ─── Environment / Secrets ────────────────────────────────────────────────────
 .env
-.venv
-env/
+*.env
+!.env.example
+
+# ─── Virtual Environments ─────────────────────────────────────────────────────
+.venv/
 venv/
+env/
 ENV/
 env.bak/
 venv.bak/
 
-# SDK Builds
+# ─── SDK Build Artifacts ──────────────────────────────────────────────────────
 sdk/build/
 sdk/dist/
 sdk/*.egg-info/
 sdk/.pytest_cache/
 *.egg
+*.egg-info/
+dist/
+build/
 
-# IDE / OS
+# ─── Django Collected Static ──────────────────────────────────────────────────
+staticfiles/
+static_root/
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── IDE / Editor ─────────────────────────────────────────────────────────────
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# ─── OS Generated ─────────────────────────────────────────────────────────────
 .DS_Store
+.DS_Store?
 Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ─── Test / Coverage ──────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# ─── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ─── mypy / type checking ─────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json

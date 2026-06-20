@@ -1,0 +1,108 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">Core Feature</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">cache_query()</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    The heart of SyncForge's read path. A cache-aside implementation with built-in stampede protection.
+</p>
+
+<!-- 1. The concept -->
+<h2 class="text-xl font-semibold mb-3">1. How it works</h2>
+<div class="border border-brand-border rounded-xl p-5 mb-8 bg-gray-50 text-sm text-brand-secondary">
+    <ol class="space-y-3 list-none">
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+            <div>Check Django cache for <code class="font-mono bg-white px-1 rounded border border-brand-border">cache_key</code>.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+            <div>If cache hit: return data instantly. Fire background thread to report cache hit to SyncForge API.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+            <div>If cache miss: acquire lock (stampede protection), execute database <code class="font-mono bg-white px-1 rounded border border-brand-border">queryset</code>.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">4</span>
+            <div>Store result in cache for <code class="font-mono bg-white px-1 rounded border border-brand-border">timeout</code> seconds.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">5</span>
+            <div>Register <code class="font-mono bg-white px-1 rounded border border-brand-border">cache_key</code> under <code class="font-mono bg-white px-1 rounded border border-brand-border">table_name</code> registry so <code class="font-mono bg-white px-1 rounded border border-brand-border">sf.refresh()</code> knows what to clear later.</div>
+        </li>
+    </ol>
+</div>
+
+<!-- 2. Usage -->
+<h2 class="text-xl font-semibold mb-3">2. Basic usage</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">views.py</span>
+        <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+<span class="text-blue-400">from</span> .models <span class="text-blue-400">import</span> Product
+
+<span class="text-blue-400">def</span> <span class="text-yellow-300">product_list</span>(request):
+    data <span class="text-gray-400">=</span> sf.cache_query(
+        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,          <span class="text-gray-500"># Dashboard name</span>
+        cache_key<span class="text-gray-400">=</span><span class="text-green-300">'all_active_products'</span>,   <span class="text-gray-500"># Unique string key</span>
+        queryset<span class="text-gray-400">=</span>Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>),
+        timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>,                      <span class="text-gray-500"># 1 hour fallback TTL</span>
+    )
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'list.html'</span>, {<span class="text-green-300">'products'</span>: data})</pre>
+</div>
+
+<!-- 3. Dynamic keys -->
+<h2 class="text-xl font-semibold mb-3">3. Dynamic / parameterized keys</h2>
+<p class="text-sm text-brand-secondary mb-3">If your queryset depends on user input (e.g. pagination or filters), the <code class="font-mono bg-gray-100 px-1 rounded">cache_key</code> must include those parameters.</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">views.py</span>
+        <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">def</span> <span class="text-yellow-300">category_list</span>(request, category_id):
+    <span class="text-gray-500"># BAD: All categories will share the same cache key!</span>
+    <span class="text-gray-500"># key = 'category_items' </span>
+
+    <span class="text-gray-500"># GOOD: Key includes the parameter</span>
+    key <span class="text-gray-400">=</span> <span class="text-green-300">f'category_items_{category_id}'</span>
+
+    data <span class="text-gray-400">=</span> sf.cache_query(
+        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,
+        cache_key<span class="text-gray-400">=</span>key,
+        queryset<span class="text-gray-400">=</span>Product.objects.filter(category_id<span class="text-gray-400">=</span>category_id)
+    )</pre>
+</div>
+
+<!-- 4. Invalidating -->
+<h2 class="text-xl font-semibold mb-3">4. Invalidating dynamic keys</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    You do <strong>not</strong> need to manually invalidate <code class="font-mono bg-gray-100 px-1 rounded">category_items_1</code>, <code class="font-mono bg-gray-100 px-1 rounded">category_items_2</code>, etc.
+    When you call <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh('core_product')</code>, SyncForge clears <strong>all</strong> cache keys registered under that table name automatically.
+</p>
+
+<!-- 5. Stampede -->
+<h2 class="text-xl font-semibold mb-3">5. Cache Stampede Protection</h2>
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 mb-8">
+    <p class="font-bold mb-2">The Problem:</p>
+    <p class="mb-3">If a popular cache key expires or is refreshed, and 500 users request that page at the exact same millisecond, all 500 requests will experience a cache miss and hit your database simultaneously, bringing it down.</p>
+    <p class="font-bold mb-2">The Solution (built-in):</p>
+    <p>SyncForge uses Python <code class="font-mono px-1 rounded">threading.Lock()</code> per cache key with Double-Checked Locking. Only the <strong>first</strong> thread executes the database query. The other 499 threads wait for the lock, then instantly retrieve the result from the cache populated by the first thread. Result: exactly 1 database call.</p>
+</div>
+
+<!-- Nav -->
+<div class="flex justify-between pt-6 border-t border-brand-border mt-10">
+    <a href="{% url 'docs_fastapi' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        FastAPI Guide
+    </a>
+    <a href="{% url 'docs_security' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        Security & WAF
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+{% endblock %}

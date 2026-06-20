@@ -1,0 +1,96 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded">API Reference</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">REST API</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    If you're not using Python, you can integrate SyncForge using raw HTTP requests. All endpoints require the <code class="font-mono bg-gray-100 px-1 rounded text-sm">X-API-Key</code> header.
+</p>
+
+<!-- Base URL -->
+<div class="mb-8">
+    <h2 class="text-sm font-bold uppercase tracking-wider text-brand-muted mb-2">Base URL</h2>
+    <code class="font-mono text-brand-primary bg-gray-50 border border-brand-border px-3 py-1.5 rounded-lg">https://syncforge.dev/api/v1</code>
+</div>
+
+<!-- POST /sync/ -->
+<div class="border border-brand-border rounded-xl overflow-hidden mb-10">
+    <div class="bg-gray-50 px-5 py-4 border-b border-brand-border flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="bg-green-100 text-green-800 font-bold font-mono text-xs px-2 py-0.5 rounded">POST</span>
+            <span class="font-mono font-bold text-brand-primary">/sync/{table_name}/</span>
+        </div>
+    </div>
+    <div class="p-5">
+        <p class="text-sm text-brand-secondary mb-4">Signal that a table's data has changed. Increments the version number and logs a SyncEvent.</p>
+        
+        <h3 class="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2">Headers</h3>
+        <table class="w-full text-sm text-left mb-6">
+            <tbody class="divide-y divide-brand-border text-brand-secondary">
+                <tr>
+                    <td class="py-2 pr-4 font-mono font-semibold text-brand-primary">X-API-Key</td>
+                    <td class="py-2 text-red-500 font-semibold text-xs uppercase tracking-wide">Required</td>
+                    <td class="py-2">Your project API key (<code class="font-mono text-xs">sf_live_...</code>)</td>
+                </tr>
+                <tr>
+                    <td class="py-2 pr-4 font-mono font-semibold text-brand-primary">X-SF-Timestamp</td>
+                    <td class="py-2 text-brand-muted font-semibold text-xs uppercase tracking-wide">Optional</td>
+                    <td class="py-2">Unix timestamp for replay protection</td>
+                </tr>
+                <tr>
+                    <td class="py-2 pr-4 font-mono font-semibold text-brand-primary">X-SF-Signature</td>
+                    <td class="py-2 text-brand-muted font-semibold text-xs uppercase tracking-wide">Optional</td>
+                    <td class="py-2">HMAC-SHA256 signature of the request</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 class="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2">Response (200 OK)</h3>
+        <div class="bg-[#1A1A1A] rounded-lg p-4 font-mono text-xs text-[#D4D4D4] overflow-x-auto">
+{
+  <span class="text-[#9CDCFE]">"status"</span>: <span class="text-[#CE9178]">"ok"</span>,
+  <span class="text-[#9CDCFE]">"message"</span>: <span class="text-[#CE9178]">"Sync triggered for table `users` in project `MyApp`."</span>,
+  <span class="text-[#9CDCFE]">"table"</span>: <span class="text-[#CE9178]">"users"</span>,
+  <span class="text-[#9CDCFE]">"sync_mode"</span>: <span class="text-[#CE9178]">"Event — On INSERT / UPDATE / DELETE"</span>,
+  <span class="text-[#9CDCFE]">"database_calls_saved"</span>: <span class="text-[#B5CEA8]">1042</span>
+}
+        </div>
+    </div>
+</div>
+
+<!-- GET /health/ -->
+<div class="border border-brand-border rounded-xl overflow-hidden mb-10">
+    <div class="bg-gray-50 px-5 py-4 border-b border-brand-border flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="bg-blue-100 text-blue-800 font-bold font-mono text-xs px-2 py-0.5 rounded">GET</span>
+            <span class="font-mono font-bold text-brand-primary">/health/</span>
+        </div>
+    </div>
+    <div class="p-5">
+        <p class="text-sm text-brand-secondary mb-4">Ping the SyncForge server to verify your API key is valid and the server is reachable.</p>
+        
+        <h3 class="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2">Response (200 OK)</h3>
+        <div class="bg-[#1A1A1A] rounded-lg p-4 font-mono text-xs text-[#D4D4D4] overflow-x-auto">
+{
+  <span class="text-[#9CDCFE]">"status"</span>: <span class="text-[#CE9178]">"ok"</span>,
+  <span class="text-[#9CDCFE]">"version"</span>: <span class="text-[#CE9178]">"1.1.0"</span>,
+  <span class="text-[#9CDCFE]">"auth"</span>: <span class="text-[#CE9178]">"valid"</span>
+}
+        </div>
+    </div>
+</div>
+
+<!-- Nav -->
+<div class="flex justify-between pt-6 border-t border-brand-border mt-10">
+    <a href="{% url 'docs_fastapi' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        FastAPI Guide
+    </a>
+    <a href="{% url 'docs_cache_query' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        cache_query()
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+{% endblock %}
