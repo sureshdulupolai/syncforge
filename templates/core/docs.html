@@ -384,47 +384,12 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
     name = models.CharField(max_length=<span class="text-[#B5CEA8]">100</span>)</pre>
         </div>
 
-        <h3 class="text-lg font-bold tracking-tight text-brand-primary mb-3">2. Security Middleware (WAF & Logging)</h3>
-        <p class="text-brand-secondary text-sm mb-4">Protect your Django app from hackers. The built-in middleware blocks SQLi (`OR 1=1`), XSS (`&lt;script&gt;`), and Path Traversal (`../`), while logging all response times perfectly. <b>No configuration needed!</b></p>
-        <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d] mb-8">
-            <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
-                <span class="text-xs text-[#858585] font-mono">settings.py</span>
-                <button onclick="copyCode(this)" class="copy-btn text-xs text-[#858585] hover:text-white transition-subtle px-2 py-0.5 rounded hover:bg-[#333]">Copy</button>
-            </div>
-            <pre class="bg-[#1A1A1A] px-6 py-5 text-sm font-mono text-[#D4D4D4] overflow-x-auto leading-relaxed">MIDDLEWARE = [
-    <span class="text-[#CE9178]">'django.middleware.security.SecurityMiddleware'</span>,
-    <span class="text-[#6A9955]"># Add SyncForge Security Firewall</span>
-    <span class="text-[#CE9178]">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,
-    <span class="text-[#CE9178]">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
-    <span class="text-[#6A9955]"># ...</span>
-]</pre>
-        </div>
-        
-        <h3 class="text-lg font-bold tracking-tight text-brand-primary mb-3">3. Manual View Sync</h3>
-        <p class="text-brand-secondary text-sm mb-4">If you prefer manual control over auto-syncing, call <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> in your views.</p>
-        <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d]">
-            <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
-                <span class="text-xs text-[#858585] font-mono">views.py</span>
-                <button onclick="copyCode(this)" class="copy-btn text-xs text-[#858585] hover:text-white transition-subtle px-2 py-0.5 rounded hover:bg-[#333]">Copy</button>
-            </div>
-            <pre class="bg-[#1A1A1A] px-6 py-5 text-sm font-mono text-[#D4D4D4] overflow-x-auto leading-relaxed"><span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf
-
-<span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">bulk_update</span>(request):
-    Product.objects.filter(active=<span class="text-[#569CD6]">True</span>).update(price=<span class="text-[#B5CEA8]">99</span>)
-    sf.refresh(<span class="text-[#CE9178]">'products'</span>) <span class="text-[#6A9955]"># one sync for bulk write</span></pre>
-        </div>
-    </section>
-
-    <hr class="border-brand-border">
-
-    <!-- ── SECURITY MIDDLEWARE ─────────────────────────────────────────────── -->
-    <section id="middleware">
-        <h2 class="text-2xl font-bold tracking-tight text-brand-primary mb-2 flex items-center gap-2">
-            <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-            Security Middleware
-        </h2>
-        <p class="text-brand-secondary leading-relaxed mb-5">
-            SyncForge SDK includes a professional-grade Web Application Firewall (WAF) and request logger. By adding just one line to your <code class="font-mono bg-gray-100 px-1 rounded">settings.py</code>, your entire application is instantly protected.
+        <h3 id="middleware" class="text-lg font-bold tracking-tight text-brand-primary mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            2. Security Middleware (WAF & Logging)
+        </h3>
+        <p class="text-brand-secondary text-sm mb-5">
+            SyncForge SDK includes a professional-grade Web Application Firewall (WAF) and request logger. Protect your Django app from hackers by adding just one line to your <code class="font-mono bg-gray-100 px-1 rounded">settings.py</code>.
         </p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -471,9 +436,8 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
             </div>
         </div>
 
-        <h3 class="text-lg font-bold tracking-tight text-brand-primary mb-3">How to Install</h3>
         <p class="text-brand-secondary text-sm mb-4">No configuration or extra libraries required. Just add it to your <code class="font-mono bg-gray-100 px-1 rounded">MIDDLEWARE</code> list in Django.</p>
-        <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d]">
+        <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d] mb-8">
             <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
                 <span class="text-xs text-[#858585] font-mono">settings.py</span>
                 <button onclick="copyCode(this)" class="copy-btn text-xs text-[#858585] hover:text-white transition-subtle px-2 py-0.5 rounded hover:bg-[#333]">Copy</button>
@@ -489,9 +453,23 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
     <span class="text-[#6A9955]"># ...</span>
 ]</pre>
         </div>
+        
+        <h3 class="text-lg font-bold tracking-tight text-brand-primary mb-3">3. Manual View Sync</h3>
+        <p class="text-brand-secondary text-sm mb-4">If you prefer manual control over auto-syncing, call <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> in your views.</p>
+        <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d]">
+            <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
+                <span class="text-xs text-[#858585] font-mono">views.py</span>
+                <button onclick="copyCode(this)" class="copy-btn text-xs text-[#858585] hover:text-white transition-subtle px-2 py-0.5 rounded hover:bg-[#333]">Copy</button>
+            </div>
+            <pre class="bg-[#1A1A1A] px-6 py-5 text-sm font-mono text-[#D4D4D4] overflow-x-auto leading-relaxed"><span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf
+
+<span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">bulk_update</span>(request):
+    Product.objects.filter(active=<span class="text-[#569CD6]">True</span>).update(price=<span class="text-[#B5CEA8]">99</span>)
+    sf.refresh(<span class="text-[#CE9178]">'products'</span>) <span class="text-[#6A9955]"># one sync for bulk write</span></pre>
+        </div>
     </section>
 
-    <hr class="border-brand-border">
+
 
     <!-- ── FASTAPI ─────────────────────────────────────────────────────────── -->
     <section id="fastapi">
