@@ -224,9 +224,12 @@ class SyncForgeSecurityMiddleware(MiddlewareMixin):
         max_body: int = getattr(_django_settings, "SYNCFORGE_WAF_MAX_BODY", 8192)
 
         # Build the haystack from all scannable sources.
+        import urllib.parse
+        qs = request.META.get("QUERY_STRING", "")
         parts: List[str] = [
             request.path,
-            request.META.get("QUERY_STRING", ""),
+            qs,
+            urllib.parse.unquote(qs),  # Catch URL-encoded attacks (e.g., %3Cscript%3E)
         ]
 
         if request.method in ("POST", "PUT", "PATCH"):

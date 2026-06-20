@@ -232,6 +232,32 @@ class UnifiedAuthMiddleware:
                     status=400,
                 )
 
+            # Replay-protection: validate HMAC-SHA256 signature if timestamp is provided.
+            # (Older SDKs that don't send timestamps are permitted without signatures
+            #  for backward compatibility, but modern SDKs require valid signatures).
+            if request.headers.get("X-SF-Timestamp"):
+                sig_header = request.headers.get("X-SF-Signature")
+                if not sig_header:
+                    return JsonResponse({"error": "Missing X-SF-Signature header."}, status=400)
+                
+                # Reconstruct signing string: METHOD \n PATH \n TIMESTAMP \n SHA256(BODY)
+                method = request.method
+                path = request.path
+                timestamp = request.headers["X-SF-Timestamp"]
+                body = request.body if request.method in ("POST", "PUT", "PATCH") else b""
+                body_hash = hashlib.sha256(body).hexdigest()
+                signing_str = f"{method}\n{path}\n{timestamp}\n{body_hash}"
+                
+                expected_sig = _hmac.new(
+                    raw_key.encode("utf-8"),
+                    signing_str.encode("utf-8"),
+                    hashlib.sha256,
+                ).hexdigest()
+                
+                if not _hmac.compare_digest(sig_header, expected_sig):
+                    logger.warning("[SyncForge] Invalid request signature from %s", request.META.get("REMOTE_ADDR"))
+                    return JsonResponse({"error": "Invalid request signature."}, status=403)
+
             resolved = _resolve_api_key(raw_key)
             if resolved:
                 try:

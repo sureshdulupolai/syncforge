@@ -11,6 +11,7 @@ import re, json
 from .models import DeveloperProfile, Project, APIKey, TableSyncConfig
 from .jwt_utils import (generate_access_token, generate_refresh_token,
                         decode_token, is_token_expiring_soon)
+from api.rate_limit import rate_limit
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ from .jwt_utils import (generate_access_token, generate_refresh_token,
 def _set_jwt(response, user):
     access  = generate_access_token(user)
     refresh = generate_refresh_token(user)
-    opts = dict(httponly=True, samesite='Lax', secure=False)
+    opts = dict(httponly=True, samesite='Lax', secure=settings.SESSION_COOKIE_SECURE)
     response.set_cookie('sf_access_token',  access,
                         max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60, **opts)
     response.set_cookie('sf_refresh_token', refresh,
@@ -39,6 +40,14 @@ def _pw_valid(pw):
     if not re.search(r'\d',    pw): errors.append('At least one number (0–9).')
     if not re.search(r'[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/`~\'"@\\]', pw):
         errors.append('At least one special character (!@#$…).')
+        
+    from django.contrib.auth.password_validation import validate_password
+    from django.core.exceptions import ValidationError
+    try:
+        validate_password(pw)
+    except ValidationError as e:
+        errors.extend(e.messages)
+        
     return not errors, errors
 
 
@@ -48,6 +57,7 @@ def _json(data, status=200):
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
+@rate_limit(requests_per_minute=10)
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -88,6 +98,7 @@ def logout_view(request):
     return response
 
 
+@rate_limit(requests_per_minute=10)
 def register(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -143,6 +154,7 @@ def register(request):
     return render(request, 'dashboard/register.html', {'errors': errors, 'form_data': form_data})
 
 
+@rate_limit(requests_per_minute=10)
 def super_register(request):
     if request.user.is_authenticated and request.user.is_superuser:
         return redirect('dashboard')
@@ -194,6 +206,7 @@ def super_register(request):
 # ─── JWT Refresh ──────────────────────────────────────────────────────────────
 
 @require_POST
+@rate_limit(requests_per_minute=20)
 def jwt_refresh(request):
     token = request.COOKIES.get('sf_refresh_token')
     if not token:
@@ -208,9 +221,11 @@ def jwt_refresh(request):
         resp = _json({'status': 'refreshed'})
         resp.set_cookie('sf_access_token', new_access,
                         max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                        httponly=True, samesite='Lax', secure=False)
+                        httponly=True, samesite='Lax', secure=settings.SESSION_COOKIE_SECURE)
         return resp
     except Exception as e:
+        import logging
+        logging.getLogger('syncforge.auth').error("JWT Refresh failed", exc_info=True)
         return _json({'error': str(e)}, 401)
 
 

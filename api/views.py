@@ -266,6 +266,8 @@ def tables_list(request):
     # ── POST: Register a table ────────────────────────────────────────────────
     if request.method == "POST":
         try:
+            if len(request.body) > 8192:
+                return _json({"error": "Payload too large. Maximum size is 8KB."}, 413)
             body = json.loads(request.body)
         except (json.JSONDecodeError, UnicodeDecodeError):
             return _json({"error": "Request body must be valid JSON."}, 400)
@@ -306,6 +308,8 @@ def tables_list(request):
         table_name = request.GET.get("table_name", "").strip()
         if not table_name:
             try:
+                if len(request.body) > 8192:
+                    return _json({"error": "Payload too large. Maximum size is 8KB."}, 413)
                 body = json.loads(request.body)
                 table_name = body.get("table_name", "").strip()
             except Exception:  # noqa: BLE001

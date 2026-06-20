@@ -20,7 +20,7 @@ from django.views.generic.base import RedirectView
 from django.templatetags.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('sf-internal-admin-7x9q/', admin.site.urls),
     path('', include('core.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('api/', include('api.urls')),

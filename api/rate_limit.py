@@ -70,9 +70,17 @@ def rate_limit(requests_per_minute: int = 60) -> Callable:
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
             project = getattr(request, "api_project", None)
-            if not project:
-                # No project context (e.g., JWT/session auth) — skip rate limiting.
-                return view_func(request, *args, **kwargs)
+            
+            # Determine rate limit key
+            if project:
+                identifier = f"project_{project.id}"
+            else:
+                # Fallback to IP address for public/auth routes (like login/register)
+                client_ip = (
+                    request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
+                    or request.META.get("REMOTE_ADDR", "unknown")
+                )
+                identifier = f"ip_{client_ip}"
 
             try:
                 from django.core.cache import cache
@@ -81,8 +89,8 @@ def rate_limit(requests_per_minute: int = 60) -> Callable:
                 current_window = now // 60
                 previous_window = current_window - 1
 
-                current_key  = f"sf_rl_{project.id}_{current_window}"
-                previous_key = f"sf_rl_{project.id}_{previous_window}"
+                current_key  = f"sf_rl_{identifier}_{current_window}"
+                previous_key = f"sf_rl_{identifier}_{previous_window}"
 
                 # Sliding window: weight the previous window by the fraction of
                 # the current window already elapsed, then add current window count.
@@ -95,14 +103,14 @@ def rate_limit(requests_per_minute: int = 60) -> Callable:
 
                 if estimated_count >= requests_per_minute:
                     logger.warning(
-                        "[SyncForge] Rate limit exceeded for project '%s' "
+                        "[SyncForge] Rate limit exceeded for %s "
                         "(estimated %d/%d requests in window).",
-                        project.slug, estimated_count, requests_per_minute,
+                        identifier, estimated_count, requests_per_minute,
                     )
                     response = JsonResponse(
                         {
                             "error": "Rate limit exceeded.",
-                            "detail": f"Maximum {requests_per_minute} requests per minute per project.",
+                            "detail": f"Maximum {requests_per_minute} requests per minute.",
                             "retry_after": 60,
                         },
                         status=429,
