@@ -402,9 +402,32 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
             </ul>
         </div>
 
+        <h3 class="text-lg font-bold tracking-tight text-brand-primary mt-8 mb-3">2. Smart Caching Engine (Zero DB Load)</h3>
+        <p class="text-brand-secondary text-sm mb-4">SyncForge includes an intelligent auto-invalidating caching engine. It caches your expensive database queries in memory and automatically clears the cache when <code class="font-mono bg-gray-100 px-1 rounded">@sync_model</code> detects a data change.</p>
+        
+        <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d] mb-8">
+            <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
+                <span class="text-xs text-[#858585] font-mono">views.py</span>
+                <button onclick="copyCode(this)" class="copy-btn text-xs text-[#858585] hover:text-white transition-subtle px-2 py-0.5 rounded hover:bg-[#333]">Copy</button>
+            </div>
+            <pre class="bg-[#1A1A1A] px-6 py-5 text-sm font-mono text-[#D4D4D4] overflow-x-auto leading-relaxed"><span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf
+<span class="text-[#569CD6]">from</span> .models <span class="text-[#569CD6]">import</span> Product
+
+<span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">get_products</span>(request):
+    <span class="text-[#6A9955]"># First call hits the Database. Next 10,000 calls hit RAM (0.001s).</span>
+    <span class="text-[#6A9955]"># Automatically invalidates when Product table changes!</span>
+    data = sf.cache_query(
+        table_name=<span class="text-[#CE9178]">'core_product'</span>, 
+        cache_key=<span class="text-[#CE9178]">'all_active_products'</span>, 
+        queryset=Product.objects.<span class="text-[#DCDCAA]">filter</span>(active=<span class="text-[#569CD6]">True</span>)
+    )
+    
+    <span class="text-[#569CD6]">return</span> JsonResponse({<span class="text-[#CE9178]">'products'</span>: data})</pre>
+        </div>
+
         <h3 id="middleware" class="text-lg font-bold tracking-tight text-brand-primary mb-3 flex items-center gap-2">
             <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-            2. Security Middleware (WAF & Logging)
+            3. Security Middleware (WAF & Logging)
         </h3>
         <p class="text-brand-secondary text-sm mb-5">
             SyncForge SDK includes a professional-grade Web Application Firewall (WAF) and request logger. Protect your Django app from hackers by adding just one line to your <code class="font-mono bg-gray-100 px-1 rounded">settings.py</code>.
@@ -472,7 +495,7 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
 ]</pre>
         </div>
         
-        <h3 class="text-lg font-bold tracking-tight text-brand-primary mb-3">3. Manual View Sync</h3>
+        <h3 class="text-lg font-bold tracking-tight text-brand-primary mb-3">4. Manual View Sync</h3>
         <p class="text-brand-secondary text-sm mb-4">If you prefer manual control over auto-syncing, call <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> in your views.</p>
         <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d]">
             <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
