@@ -44,6 +44,22 @@ def sync_model(sf_client, sync_mode='event'):
         # 2. Hook into ORM signals to trigger syncs automatically
         def _trigger_sync(sender, **kwargs):
             try:
+                # -----------------
+                # Smart Cache Invalidation
+                # -----------------
+                try:
+                    from django.core.cache import cache
+                    registry_key = f"sf_registry_{table_name}"
+                    keys = cache.get(registry_key, set())
+                    if keys:
+                        cache.delete_many(keys)
+                        cache.delete(registry_key)
+                except Exception as e:
+                    logger.warning(f"[SyncForge] Cache invalidation failed: {e}")
+                
+                # -----------------
+                # Broadcast to SyncForge Server
+                # -----------------
                 sf_client.refresh(table_name)
             except Exception as e:
                 logger.error(f"[SyncForge] Failed to trigger sync for {table_name}: {e}")

@@ -121,6 +121,37 @@ class SyncForge:
         results = self._refresh_all(tables)
         return results[0] if len(results) == 1 else results
 
+    def cache_query(self, table_name: str, cache_key: str, queryset, timeout: int = 3600):
+        """
+        Smart Database Caching.
+        Evaluates the queryset and stores it in memory. If data exists in cache,
+        returns it without hitting the database.
+        
+        When this table is updated (via @sync_model), the cache is auto-invalidated.
+        """
+        try:
+            from django.core.cache import cache
+        except ImportError:
+            # If not in Django, fallback to evaluating the query without caching
+            return list(queryset)
+
+        # Check cache
+        data = cache.get(cache_key)
+        if data is not None:
+            return data
+
+        # Evaluate queryset (hits DB)
+        data = list(queryset)
+        cache.set(cache_key, data, timeout)
+
+        # Register this key to the table's invalidation registry
+        registry_key = f"sf_registry_{table_name}"
+        keys = cache.get(registry_key, set())
+        keys.add(cache_key)
+        cache.set(registry_key, keys, timeout)
+
+        return data
+
     def ping(self) -> bool:
         """
         Check that your API key is valid and SyncForge is reachable.
