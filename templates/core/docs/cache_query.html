@@ -35,29 +35,48 @@
     </ol>
 </div>
 
-<!-- 2. Usage -->
-<h2 class="text-xl font-semibold mb-3">2. Basic usage</h2>
+<!-- 2. Usage with Explicit If/Else Check -->
+<h2 class="text-xl font-semibold mb-3">2. Basic usage (Explicit If/Else)</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    It is best practice to explicitly check if the data exists in the cache using an <code class="font-mono bg-gray-100 px-1 rounded">if/else</code> block. 
+    This guarantees that the database is only queried for the <strong>very first client</strong>. Every subsequent client will receive the exact same formatted data directly from the fast cache, saving massive database load.
+</p>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-gray-400">views.py</span>
         <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> django.core.cache <span class="text-blue-400">import</span> cache
+<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
 <span class="text-blue-400">from</span> .models <span class="text-blue-400">import</span> Product
 
 <span class="text-blue-400">def</span> <span class="text-yellow-300">product_list</span>(request):
-    data <span class="text-gray-400">=</span> sf.cache_query(
-        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,          <span class="text-gray-500"># Dashboard name</span>
-        cache_key<span class="text-gray-400">=</span><span class="text-green-300">'all_active_products'</span>,   <span class="text-gray-500"># Unique string key</span>
-        queryset<span class="text-gray-400">=</span>Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>),
-        timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>,                      <span class="text-gray-500"># 1 hour fallback TTL</span>
-    )
-    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'list.html'</span>, {<span class="text-green-300">'products'</span>: data})</pre>
+    cache_key <span class="text-gray-400">=</span> <span class="text-green-300">'all_active_products'</span>
+    
+    <span class="text-gray-500"># 1. First, check if data is already in cache</span>
+    data <span class="text-gray-400">=</span> cache.get(cache_key)
+    
+    <span class="text-gray-500"># 2. If/Else check: If data is NOT in cache (First Client Only)</span>
+    <span class="text-blue-400">if</span> data <span class="text-blue-400">is None</span>:
+        <span class="text-gray-500"># Fetch from Database and apply filters/ordering</span>
+        data <span class="text-gray-400">=</span> list(Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>).order_by(<span class="text-green-300">'name'</span>))
+        
+        <span class="text-gray-500"># Save EXACTLY in this format to cache for 1 hour</span>
+        cache.set(cache_key, data, <span class="text-yellow-300">3600</span>)
+        
+        <span class="text-gray-500"># Tell SyncForge to track this key so it can be auto-cleared on updates</span>
+        sf.track_key(table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>, cache_key<span class="text-gray-400">=</span>cache_key, timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>)
+    
+    <span class="text-gray-500"># 3. Return data (Subsequent clients skip the DB entirely)</span>
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'list.html'</span>, {
+        <span class="text-green-300">'products'</span>: data,
+        <span class="text-green-300">'count'</span>: len(data)
+    })</pre>
 </div>
 
 <!-- 3. Dynamic keys -->
 <h2 class="text-xl font-semibold mb-3">3. Dynamic / parameterized keys</h2>
-<p class="text-sm text-brand-secondary mb-3">If your queryset depends on user input (e.g. pagination or filters), the <code class="font-mono bg-gray-100 px-1 rounded">cache_key</code> must include those parameters.</p>
+<p class="text-sm text-brand-secondary mb-3">If your data depends on user input (e.g. pagination or filters), the <code class="font-mono bg-gray-100 px-1 rounded">cache_key</code> must include those parameters to avoid mixing up different data formats.</p>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-gray-400">views.py</span>
@@ -67,14 +86,16 @@
     <span class="text-gray-500"># BAD: All categories will share the same cache key!</span>
     <span class="text-gray-500"># key = 'category_items' </span>
 
-    <span class="text-gray-500"># GOOD: Key includes the parameter</span>
+    <span class="text-gray-500"># GOOD: Key includes the parameter (ensures separate cache for each category)</span>
     key <span class="text-gray-400">=</span> <span class="text-green-300">f'category_items_{category_id}'</span>
 
-    data <span class="text-gray-400">=</span> sf.cache_query(
-        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,
-        cache_key<span class="text-gray-400">=</span>key,
-        queryset<span class="text-gray-400">=</span>Product.objects.filter(category_id<span class="text-gray-400">=</span>category_id)
-    )</pre>
+    data <span class="text-gray-400">=</span> cache.get(key)
+    <span class="text-blue-400">if</span> data <span class="text-blue-400">is None</span>:
+        data <span class="text-gray-400">=</span> list(Product.objects.filter(category_id<span class="text-gray-400">=</span>category_id))
+        cache.set(key, data, <span class="text-yellow-300">3600</span>)
+        sf.track_key(table_name<span class="text-green-300">='core_product'</span>, cache_key<span class="text-gray-400">=</span>key)
+        
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'list.html'</span>, {<span class="text-green-300">'products'</span>: data})</pre>
 </div>
 
 <!-- 4. Invalidating -->
@@ -91,6 +112,32 @@
     <p class="mb-3">If a popular cache key expires or is refreshed, and 500 users request that page at the exact same millisecond, all 500 requests will experience a cache miss and hit your database simultaneously, bringing it down.</p>
     <p class="font-bold mb-2">The Solution (built-in):</p>
     <p>SyncForge uses Python <code class="font-mono px-1 rounded">threading.Lock()</code> per cache key with Double-Checked Locking. Only the <strong>first</strong> thread executes the database query. The other 499 threads wait for the lock, then instantly retrieve the result from the cache populated by the first thread. Result: exactly 1 database call.</p>
+</div>
+
+<!-- 6. Simplified Fetching with get_table -->
+<h2 class="text-xl font-semibold mb-3">6. Simplified Auto-Key Fetching</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    If your table has a single global cache (no dynamic parameters like <code class="font-mono bg-gray-100 px-1 rounded">user_id</code>), you can omit the <code class="font-mono bg-gray-100 px-1 rounded">cache_key</code> entirely. 
+    SyncForge will auto-generate a key, and you can fetch the data later using <code class="font-mono bg-gray-100 px-1 rounded">sf.get_table()</code> without remembering the key string.
+</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">views.py</span>
+        <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">def</span> <span class="text-yellow-300">get_global_report</span>(request):
+    <span class="text-gray-500"># 1. Fetch using the auto-generated key</span>
+    data <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">"core_report"</span>)
+    
+    <span class="text-gray-500"># 2. If not found, run the expensive query and cache it automatically</span>
+    <span class="text-blue-400">if not</span> data:
+        data <span class="text-gray-400">=</span> sf.cache_query(
+            table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_report'</span>,
+            queryset<span class="text-gray-400">=</span>Report.objects.all(),
+            <span class="text-gray-500"># cache_key omitted! Auto-generates as 'sf_auto_core_report'</span>
+        )
+        
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'report.html'</span>, {<span class="text-green-300">'report'</span>: data})</pre>
 </div>
 
 <!-- Nav -->

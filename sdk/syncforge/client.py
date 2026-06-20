@@ -255,11 +255,23 @@ class SyncForge:
         results = self._refresh_all(tables)
         return results[0] if len(results) == 1 else results
 
+    def get_table(self, table_name: str) -> Any:
+        """
+        Fetch the automatically generated cache for a specific table.
+        This retrieves data stored by cache_query() when no cache_key is explicitly provided.
+        """
+        self._validate_table_name(table_name)
+        try:
+            from django.core.cache import cache  # type: ignore[import]
+            return cache.get(f"sf_auto_{table_name}")
+        except ImportError:
+            return None
+
     def cache_query(
         self,
         table_name: str,
-        cache_key: str,
-        queryset: Any,
+        cache_key: Any = None,
+        queryset: Any = None,
         timeout: Optional[int] = 3600,
     ) -> List[Any]:
         """
@@ -322,7 +334,19 @@ class SyncForge:
             )
         """
         self._validate_table_name(table_name)
-        if not cache_key or not isinstance(cache_key, str):
+        
+        # Handle backward compatibility / optional cache_key
+        # If cache_key is not a string and queryset is None, the user passed the queryset as the 2nd positional argument.
+        if queryset is None and cache_key is not None and not isinstance(cache_key, str):
+            queryset = cache_key
+            cache_key = None
+            
+        if queryset is None:
+            raise ValueError("queryset must be provided.")
+            
+        if not cache_key:
+            cache_key = f"sf_auto_{table_name}"
+        elif not isinstance(cache_key, str):
             raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
 
         try:
@@ -366,6 +390,16 @@ class SyncForge:
             self._register_cache_key(table_name, cache_key, timeout)
 
         return data  # type: ignore[return-value]
+
+    def track_key(self, table_name: str, cache_key: str, timeout: Optional[int] = 3600) -> None:
+        """
+        Manually register a cache key to be cleared when sf.refresh(table_name) is called.
+        Use this when manually setting cache with if/else instead of using sf.cache_query().
+        """
+        self._validate_table_name(table_name)
+        if not cache_key or not isinstance(cache_key, str):
+            raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
+        self._register_cache_key(table_name, cache_key, timeout)
 
     def ping(self) -> bool:
         """
