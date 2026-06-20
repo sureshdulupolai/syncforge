@@ -10,18 +10,51 @@
 
 <!-- 0. Zero-Data Privacy -->
 <h2 class="text-xl font-semibold mb-3">0. Zero-Data Privacy Architecture</h2>
-<div class="bg-green-50 border border-green-200 rounded-xl p-5 mb-8 text-sm text-green-900">
-    <div class="flex items-start gap-3">
-        <svg class="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-        <div>
-            <p class="font-bold text-base mb-2">SyncForge NEVER sees or stores your actual data.</p>
-            <p class="mb-3">
-                A common misconception is that caching platforms store your users, products, or financial records on their central servers. <strong>SyncForge does NOT.</strong>
+<div class="bg-gray-50 border border-brand-border rounded-xl p-6 mb-8 text-sm text-brand-secondary">
+    <div class="flex items-start gap-4">
+        <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-bold text-brand-primary text-base mb-2">SyncForge operates on a strict zero-data model.</h3>
+            <p class="mb-4 leading-relaxed">
+                Unlike traditional managed caching or database-as-a-service platforms, the SyncForge central backend <strong>never ingests, processes, or stores your application payload data</strong>. Customer records, financial transactions, and proprietary business logic remain entirely isolated within your own infrastructure.
             </p>
-            <ul class="list-disc pl-5 space-y-2 text-green-800">
-                <li><strong>100% Security against Hackers:</strong> Your actual data stays completely within your own infrastructure (your Django server and your local Redis). SyncForge's central API only receives lightweight signals like <code class="font-mono bg-green-100 px-1 rounded text-xs">Table 'core_report' was updated</code>.</li>
-                <li><strong>Zero Storage Limits:</strong> Because we only store metadata (table names, timestamps, and API keys) and not the multi-gigabyte query results, scaling to thousands of projects has absolutely <strong>no storage bottleneck</strong> for the SyncForge backend.</li>
-            </ul>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <div class="bg-white border border-brand-border rounded-lg p-4">
+                    <h4 class="font-semibold text-brand-primary mb-1 text-xs uppercase tracking-wider">What We Sync</h4>
+                    <p class="text-xs leading-relaxed text-brand-muted">
+                        Only lightweight synchronization metadata is exchanged over the network: table identifiers, invalidation timestamps, cache keys, and API credentials.
+                    </p>
+                </div>
+                <div class="bg-white border border-brand-border rounded-lg p-4">
+                    <h4 class="font-semibold text-brand-primary mb-1 text-xs uppercase tracking-wider">What Stays Local</h4>
+                    <p class="text-xs leading-relaxed text-brand-muted">
+                        All query results and cached data structures are stored securely in your local environment (e.g., Redis or Django LocMem).
+                    </p>
+                </div>
+            </div>
+
+            <p class="mb-4 leading-relaxed">
+                By managing only metadata, SyncForge inherently reduces your application's external attack surface while maintaining an ultra-lightweight, infinitely scalable backend architecture.
+            </p>
+
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg mt-2">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-amber-800">Security Note</h3>
+                        <div class="mt-1 text-xs text-amber-700">
+                            <p>No software or architecture can guarantee 100% security. SyncForge follows a privacy-first, zero-data design philosophy intended to significantly minimize risk and limit data exposure, rather than eliminate all security threats.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
