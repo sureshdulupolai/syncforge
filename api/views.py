@@ -4,6 +4,7 @@ Supports auth via: X-API-Key header | JWT cookie | Django session
 """
 from django.http import JsonResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from dashboard.models import TableSyncConfig
 
 
@@ -11,6 +12,7 @@ def _json(data, status=200):
     return JsonResponse(data, status=status)
 
 
+@csrf_exempt
 def smartdb_refresh(request, table_name):
     """
     POST /api/v1/sync/<table_name>/
@@ -75,6 +77,7 @@ def project_info(request):
     })
 
 
+@csrf_exempt
 def tables_list(request):
     """
     GET /api/v1/tables/ — list all tables for the project.
