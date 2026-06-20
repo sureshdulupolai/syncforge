@@ -2,32 +2,28 @@
 {% load static %}
 
 {% block content %}
-<div id="app" class="min-h-screen" style="background:#f8faff;">
+<div id="app" class="min-h-screen bg-white">
 
-<!-- Top bar -->
-<div class="bg-white border-b border-brand-border sticky top-16 z-40">
-    <div class="max-w-container mx-auto px-6 h-14 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <img src="{% static 'logo_icon.png' %}" class="w-6 h-6" alt="">
-            <span class="font-semibold text-sm">{{ user.username }}</span>
-            <span class="text-brand-muted text-sm">/ Projects</span>
-        </div>
-        <button onclick="openNewProject()"
-                class="flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:opacity-90"
-                style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            New Project
-        </button>
-    </div>
-</div>
-
-<!-- Hero stats bar -->
+<!-- Page header with stats -->
 <div class="bg-white border-b border-brand-border">
-    <div class="max-w-container mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div><div class="text-2xl font-bold text-brand-primary" id="stat-projects">—</div><div class="text-xs text-brand-muted mt-1">Total Projects</div></div>
-        <div><div class="text-2xl font-bold text-brand-primary" id="stat-tables">—</div><div class="text-xs text-brand-muted mt-1">Tables Monitored</div></div>
-        <div><div class="text-2xl font-bold text-green-600" id="stat-calls">—</div><div class="text-xs text-brand-muted mt-1">DB Calls Saved</div></div>
-        <div><div class="text-2xl font-bold text-brand-primary" id="stat-keys">—</div><div class="text-xs text-brand-muted mt-1">Active API Keys</div></div>
+    <div class="max-w-container mx-auto px-6 py-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-lg font-bold text-brand-primary">My Projects</h2>
+                <p class="text-xs text-brand-muted mt-0.5">{{ user.username }}</p>
+            </div>
+            <button onclick="openNewProject()"
+                    class="flex items-center gap-2 text-sm font-semibold text-white px-4 py-2.5 rounded-xl transition-subtle hover:bg-brand-accenthover bg-brand-accent">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                New Project
+            </button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div><div class="text-2xl font-bold text-brand-primary" id="stat-projects">—</div><div class="text-xs text-brand-muted mt-1">Total Projects</div></div>
+            <div><div class="text-2xl font-bold text-brand-primary" id="stat-tables">—</div><div class="text-xs text-brand-muted mt-1">Tables Monitored</div></div>
+            <div><div class="text-2xl font-bold text-green-600" id="stat-calls">—</div><div class="text-xs text-brand-muted mt-1">DB Calls Saved</div></div>
+            <div><div class="text-2xl font-bold text-brand-primary" id="stat-keys">—</div><div class="text-xs text-brand-muted mt-1">Active API Keys</div></div>
+        </div>
     </div>
 </div>
 
@@ -240,8 +236,8 @@ document.getElementById('modal-new-project').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeNewProject();
 });
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-loadProjects();
+// Always fetch fresh from server on page load — prevents stale cache showing deleted projects
+loadProjects(true);
 
 // JWT auto-refresh at 13 min
 setInterval(() => {

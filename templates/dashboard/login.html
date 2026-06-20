@@ -2,36 +2,36 @@
 {% load static %}
 
 {% block content %}
-<section class="min-h-screen flex items-center justify-center py-16 px-4 bg-white" style="background: radial-gradient(ellipse at 60% 0%, #eff6ff 0%, #ffffff 60%);">
-    <div class="w-full max-w-md">
+<section class="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 bg-white">
 
-        <!-- Logo + Brand -->
+    <!-- Subtle decorative blobs -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        <div style="position:absolute;top:-100px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(30,58,138,0.045) 0%,transparent 70%);"></div>
+        <div style="position:absolute;bottom:-60px;left:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,0.035) 0%,transparent 70%);"></div>
+    </div>
+
+    <div class="w-full max-w-md relative">
+
+        <!-- Logo + Heading -->
         <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
-                <div class="relative">
-                    <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, #1E3A8A, #3B82F6); box-shadow: 0 8px 32px rgba(30,58,138,0.3);">
-                        <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-10 h-10" style="filter: brightness(0) invert(1);">
-                    </div>
-                    <div class="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center" style="box-shadow: 0 2px 8px rgba(74,222,128,0.5);">
-                        <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
+            <div class="flex justify-center mb-5">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center border border-brand-border bg-white">
+                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-8 h-8">
                 </div>
             </div>
             <h1 class="text-2xl font-bold tracking-tight text-brand-primary">Welcome back</h1>
-            <p class="text-brand-secondary text-sm mt-1">Sign in to your SyncForge dashboard</p>
+            <p class="text-brand-secondary text-sm mt-1.5">Sign in to your SyncForge account</p>
         </div>
 
         <!-- Card -->
-        <div class="bg-white rounded-2xl p-8" style="border: 1px solid #e8e8e8; box-shadow: 0 4px 40px rgba(0,0,0,0.06);">
+        <div class="bg-white rounded-2xl p-8 border border-brand-border" style="box-shadow:0 1px 3px rgba(0,0,0,0.05),0 8px 32px rgba(0,0,0,0.04);">
 
             {% if errors.general %}
-            <div class="mb-5 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
-                <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+                <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                 </svg>
-                {{ errors.general }}
+                <span>{{ errors.general }}</span>
             </div>
             {% endif %}
 
@@ -39,46 +39,58 @@
                 {% csrf_token %}
                 <div class="space-y-5">
 
-                    <!-- Username -->
+                    <!-- Email -->
                     <div>
-                        <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="id_username">Username</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted">
+                        <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="id_email">Email address</label>
+                        <div class="relative" id="email-wrap">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
                             </span>
-                            <input id="id_username" type="text" name="username"
-                                   value="{{ form_data.username|default:'' }}"
-                                   placeholder="your_username"
-                                   class="w-full pl-10 pr-4 py-3 rounded-xl text-sm transition-all outline-none {% if errors.username %}border-red-400 bg-red-50{% else %}border-brand-border bg-gray-50 focus:bg-white focus:border-brand-accent{% endif %}"
-                                   style="border: 1.5px solid {% if errors.username %}#f87171{% else %}#e8e8e8{% endif %};"
-                                   autocomplete="username" required>
+                            <input id="id_email" type="email" name="email"
+                                   value="{{ form_data.email|default:'' }}"
+                                   placeholder="you@company.com"
+                                   maxlength="254"
+                                   class="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
+                                   style="border: 1.5px solid {% if errors.email %}#f87171{% else %}#e8e8e8{% endif %};"
+                                   autocomplete="email"
+                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
+                                   onblur="this.style.background='#f9fafb'"
+                                   oninput="clearErr('email-wrap','email-err')"
+                                   required>
                         </div>
-                        {% if errors.username %}
-                        <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                            {{ errors.username }}
+                        {% if errors.email %}
+                        <p id="email-err" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                            <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ errors.email }}
                         </p>
+                        {% else %}
+                        <p id="email-err" class="mt-1.5 text-xs text-red-500 flex items-center gap-1 hidden"></p>
                         {% endif %}
                     </div>
 
                     <!-- Password -->
                     <div>
                         <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="id_password">Password</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted">
+                        <div class="relative" id="pw-wrap">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                 </svg>
                             </span>
                             <input id="id_password" type="password" name="password"
                                    placeholder="••••••••"
-                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm transition-all outline-none {% if errors.password %}border-red-400 bg-red-50{% else %}border-brand-border bg-gray-50 focus:bg-white focus:border-brand-accent{% endif %}"
+                                   maxlength="128"
+                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
                                    style="border: 1.5px solid {% if errors.password %}#f87171{% else %}#e8e8e8{% endif %};"
-                                   autocomplete="current-password" required>
-                            <button type="button" onclick="togglePassword('id_password', 'eye-login')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-subtle">
+                                   autocomplete="current-password"
+                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
+                                   onblur="this.style.background='#f9fafb'"
+                                   oninput="clearErr('pw-wrap','pw-err')"
+                                   required>
+                            <button type="button" onclick="togglePw('id_password','eye-login')"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-subtle" tabindex="-1">
                                 <svg id="eye-login" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -86,21 +98,22 @@
                             </button>
                         </div>
                         {% if errors.password %}
-                        <p class="mt-1.5 text-xs text-red-500">{{ errors.password }}</p>
+                        <p id="pw-err" class="mt-1.5 text-xs text-red-500">{{ errors.password }}</p>
+                        {% else %}
+                        <p id="pw-err" class="mt-1.5 text-xs text-red-500 hidden"></p>
                         {% endif %}
                     </div>
 
-                    <!-- JWT info badge -->
-                    <div class="flex items-center gap-2 text-xs text-brand-muted bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
-                        <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <!-- Security info -->
+                    <div class="flex items-center gap-2.5 text-xs text-brand-muted bg-gray-50 px-3 py-2.5 rounded-xl border border-brand-border">
+                        <svg class="w-3.5 h-3.5 text-brand-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
-                        Secured with JWT — session auto-renews every 15 minutes
+                        Secured with JWT · Session auto-renews every 15 minutes
                     </div>
 
                     <button type="submit"
-                            class="w-full text-white py-3 px-6 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] mt-2"
-                            style="background: linear-gradient(135deg, #1E3A8A, #3B82F6); box-shadow: 0 4px 16px rgba(30,58,138,0.3);">
+                            class="w-full bg-brand-accent text-white py-3 px-6 rounded-xl font-semibold text-sm transition-subtle hover:bg-brand-accenthover active:scale-[0.99]">
                         Sign In to Dashboard
                     </button>
                 </div>
@@ -112,37 +125,42 @@
             </div>
         </div>
 
-        <p class="text-center text-xs text-brand-muted mt-6">
-            Protected by SyncForge JWT Auth &middot; 15-min token expiry
-        </p>
     </div>
 </section>
 
 <script>
-function togglePassword(inputId, eyeId) {
+function togglePw(inputId, eyeId) {
     const input = document.getElementById(inputId);
     const eye   = document.getElementById(eyeId);
-    if (input.type === 'password') {
-        input.type = 'text';
-        eye.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`;
-    } else {
-        input.type = 'password';
-        eye.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
-    }
+    const hide  = input.type === 'password';
+    input.type  = hide ? 'text' : 'password';
+    eye.innerHTML = hide
+        ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`
+        : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
 }
 
-// JWT auto-refresh: ping /dashboard/auth/token/refresh/ 2 min before expiry
-(function() {
-    const REFRESH_INTERVAL_MS = (15 - 2) * 60 * 1000; // 13 minutes
-    setInterval(() => {
-        fetch('/dashboard/auth/token/refresh/', {
-            method: 'POST',
-            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-        }).catch(() => {});
-    }, REFRESH_INTERVAL_MS);
-})();
+function clearErr(wrapId, errId) {
+    const inp = document.getElementById(wrapId)?.querySelector('input');
+    if (inp) inp.style.borderColor = '#1E3A8A';
+    const err = document.getElementById(errId);
+    if (err) { err.classList.add('hidden'); err.textContent = ''; }
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    let bad = false;
+    const email = document.getElementById('id_email').value.trim();
+    const pw    = document.getElementById('id_password').value;
+    if (!email) { markErr('id_email','email-err','Email is required.'); bad = true; }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { markErr('id_email','email-err','Enter a valid email address.'); bad = true; }
+    if (!pw) { markErr('id_password','pw-err','Password is required.'); bad = true; }
+    if (bad) e.preventDefault();
+});
+
+function markErr(inputId, errId, msg) {
+    const input = document.getElementById(inputId);
+    const err   = document.getElementById(errId);
+    if (input) input.style.borderColor = '#f87171';
+    if (err)   { err.textContent = msg; err.classList.remove('hidden'); }
+}
 </script>
 {% endblock %}

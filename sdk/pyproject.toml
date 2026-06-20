@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "syncforge"
+version = "1.0.3"
+description = "Official Python SDK for SyncForge — control exactly when data syncs between your database and clients."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "SyncForge", email = "sureshdulupolai@gmail.com" }
+]
+keywords = ["syncforge", "sync", "database", "cache", "invalidation", "django", "fastapi"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database",
+]
+requires-python = ">=3.8"
+dependencies = []   # zero external dependencies — only stdlib
+
+[project.urls]
+Homepage = "https://github.com/sureshdulupolai/syncforge"
+Documentation = "https://syncforge.dev/docs/"
+Repository = "https://github.com/sureshdulupolai/syncforge"
+"Bug Tracker" = "https://github.com/sureshdulupolai/syncforge/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["syncforge*"]

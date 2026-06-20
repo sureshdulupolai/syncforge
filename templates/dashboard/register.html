@@ -2,137 +2,166 @@
 {% load static %}
 
 {% block content %}
-<section class="min-h-screen flex items-center justify-center py-16 px-4" style="background: linear-gradient(135deg, #f8faff 0%, #eef2ff 50%, #f0f9ff 100%);">
-    <div class="w-full max-w-lg">
+<section class="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 bg-white">
 
-        <!-- Logo + Brand -->
+    <!-- Decorative blobs -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        <div style="position:absolute;top:-100px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(30,58,138,0.045) 0%,transparent 70%);"></div>
+        <div style="position:absolute;bottom:-60px;left:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,0.035) 0%,transparent 70%);"></div>
+    </div>
+
+    <div class="w-full max-w-lg relative">
+
+        <!-- Logo + Heading -->
         <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
-                <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, #1E3A8A, #3B82F6); box-shadow: 0 8px 32px rgba(30,58,138,0.3);">
-                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-10 h-10" style="filter: brightness(0) invert(1);">
+            <div class="flex justify-center mb-5">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center border border-brand-border bg-white">
+                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-8 h-8">
                 </div>
             </div>
             <h1 class="text-2xl font-bold tracking-tight text-brand-primary">Create your account</h1>
-            <p class="text-brand-secondary text-sm mt-1">Start syncing smarter with SyncForge</p>
+            <p class="text-brand-secondary text-sm mt-1.5">Start syncing smarter with SyncForge</p>
         </div>
 
         <!-- Card -->
-        <div class="bg-white rounded-2xl p-8" style="border: 1px solid #e8e8e8; box-shadow: 0 4px 40px rgba(0,0,0,0.06);">
+        <div class="bg-white rounded-2xl p-8 border border-brand-border" style="box-shadow:0 1px 3px rgba(0,0,0,0.05),0 8px 32px rgba(0,0,0,0.04);">
 
             <form method="post" action="{% url 'register' %}" id="registerForm" novalidate>
                 {% csrf_token %}
                 <div class="space-y-5">
 
-                    <!-- Username -->
-                    <div>
-                        <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="r_username">Username</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                            </span>
-                            <input id="r_username" type="text" name="username"
-                                   value="{{ form_data.username|default:'' }}"
-                                   placeholder="developer_name"
-                                   class="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all"
-                                   style="border: 1.5px solid {{ errors.username|yesno:'#f87171,#e8e8e8' }}; background: {{ errors.username|yesno:'#fff5f5,#f9fafb' }};"
-                                   autocomplete="username" required>
-                        </div>
-                        {% if errors.username %}
-                        <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-                            <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                            {{ errors.username }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-
                     <!-- Email -->
                     <div>
-                        <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="r_email">Email <span class="text-brand-muted font-normal">(optional)</span></label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-sm font-semibold text-brand-primary" for="r_email">Email address</label>
+                            <span id="email-counter" class="text-xs text-brand-muted font-mono">0 / 254</span>
+                        </div>
+                        <div class="relative" id="email-wrap">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
                             </span>
                             <input id="r_email" type="email" name="email"
                                    value="{{ form_data.email|default:'' }}"
                                    placeholder="you@company.com"
-                                   class="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all bg-gray-50 focus:bg-white"
-                                   style="border: 1.5px solid #e8e8e8;">
+                                   maxlength="254"
+                                   class="w-full pl-10 pr-10 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
+                                   style="border: 1.5px solid {{ errors.email|yesno:'#f87171,#e8e8e8' }};"
+                                   autocomplete="email"
+                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
+                                   onblur="this.style.background='#f9fafb';liveValidateEmail()"
+                                   oninput="updateCounter('r_email','email-counter',254,'email-limit-tip');clearErr('email-wrap','email-err')"
+                                   required>
+                            <span id="email-valid-icon" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l3-3z" clip-rule="evenodd"/></svg>
+                            </span>
+                            <!-- Limit popup -->
+                            <div id="email-limit-tip" class="hidden absolute right-0 top-full mt-1.5 z-20 bg-brand-primary text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap">
+                                ⚠ Maximum 254 characters reached
+                                <div class="absolute -top-1 right-4 w-2 h-2 bg-brand-primary rotate-45"></div>
+                            </div>
                         </div>
+                        <p class="mt-1 text-xs text-brand-muted">Your email will be used to sign in — must be unique</p>
+                        {% if errors.email %}
+                        <p id="email-err" class="mt-1 text-xs text-red-500 flex items-center gap-1">
+                            <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ errors.email }}
+                        </p>
+                        {% else %}
+                        <p id="email-err" class="mt-1 text-xs text-red-500 flex items-center gap-1 hidden"></p>
+                        {% endif %}
                     </div>
 
                     <!-- Password -->
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label class="block text-sm font-semibold text-brand-primary" for="r_password1">Password</label>
-                            <button type="button" onclick="generatePassword()"
-                                    class="text-xs text-brand-accent font-semibold flex items-center gap-1 hover:underline transition-subtle">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                </svg>
-                                Generate Password
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <span id="pw-counter" class="text-xs text-brand-muted font-mono">0 / 128</span>
+                                <button type="button" onclick="generatePassword()"
+                                        class="text-xs text-brand-accent font-semibold flex items-center gap-1 hover:underline transition-subtle">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                    Generate
+                                </button>
+                            </div>
                         </div>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted">
+                        <div class="relative" id="pw1-wrap">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                             </span>
                             <input id="r_password1" type="password" name="password1"
-                                   placeholder="Min 8 chars, A-Z, 0-9, symbols"
-                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm outline-none transition-all"
-                                   style="border: 1.5px solid {{ errors.password1|yesno:'#f87171,#e8e8e8' }}; background: {{ errors.password1|yesno:'#fff5f5,#f9fafb' }};"
-                                   oninput="checkStrength(this.value)"
+                                   placeholder="Min 8 chars · A–Z · 0–9 · symbol"
+                                   maxlength="128"
+                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
+                                   style="border: 1.5px solid {{ errors.password1|yesno:'#f87171,#e8e8e8' }};"
+                                   oninput="updateCounter('r_password1','pw-counter',128,'pw-limit-tip');checkStrength(this.value);checkMatch();clearErr('pw1-wrap','pw1-err')"
+                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
+                                   onblur="this.style.background='#f9fafb'"
                                    autocomplete="new-password" required>
-                            <button type="button" onclick="togglePassword('r_password1','eye-p1')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary">
+                            <button type="button" onclick="togglePw('r_password1','eye-p1')"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-subtle" tabindex="-1">
                                 <svg id="eye-p1" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </button>
+                            <div id="pw-limit-tip" class="hidden absolute right-0 top-full mt-1.5 z-20 bg-brand-primary text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap">
+                                ⚠ Maximum 128 characters reached
+                                <div class="absolute -top-1 right-4 w-2 h-2 bg-brand-primary rotate-45"></div>
+                            </div>
                         </div>
                         {% if errors.password1 %}
-                        <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                        <p id="pw1-err" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
                             <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                             {{ errors.password1 }}
                         </p>
+                        {% else %}
+                        <p id="pw1-err" class="mt-1.5 text-xs text-red-500 hidden"></p>
                         {% endif %}
 
-                        <!-- Strength Meter -->
-                        <div class="mt-2">
-                            <div class="flex gap-1 mb-1">
-                                <div id="bar1" class="h-1 flex-1 rounded-full bg-gray-200 transition-all"></div>
-                                <div id="bar2" class="h-1 flex-1 rounded-full bg-gray-200 transition-all"></div>
-                                <div id="bar3" class="h-1 flex-1 rounded-full bg-gray-200 transition-all"></div>
-                                <div id="bar4" class="h-1 flex-1 rounded-full bg-gray-200 transition-all"></div>
-                                <div id="bar5" class="h-1 flex-1 rounded-full bg-gray-200 transition-all"></div>
+                        <!-- Strength bar -->
+                        <div class="mt-2.5">
+                            <div class="flex gap-1 mb-2">
+                                <div id="bar1" class="h-1 flex-1 rounded-full bg-gray-200 transition-all duration-300"></div>
+                                <div id="bar2" class="h-1 flex-1 rounded-full bg-gray-200 transition-all duration-300"></div>
+                                <div id="bar3" class="h-1 flex-1 rounded-full bg-gray-200 transition-all duration-300"></div>
+                                <div id="bar4" class="h-1 flex-1 rounded-full bg-gray-200 transition-all duration-300"></div>
+                                <div id="bar5" class="h-1 flex-1 rounded-full bg-gray-200 transition-all duration-300"></div>
                             </div>
-                            <!-- A-Z Checklist -->
-                            <div class="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-2">
-                                <div id="chk-len"  class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0" id="ic-len">·</span>8+ characters</div>
-                                <div id="chk-upper" class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0" id="ic-upper">·</span>Uppercase (A–Z)</div>
-                                <div id="chk-lower" class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0" id="ic-lower">·</span>Lowercase (a–z)</div>
-                                <div id="chk-num"  class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0" id="ic-num">·</span>Number (0–9)</div>
-                                <div id="chk-sym"  class="flex items-center gap-1.5 text-xs text-brand-muted col-span-2"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0" id="ic-sym">·</span>Special char (!@#$…)</div>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                                <div id="chk-len"   class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0 text-[8px]" id="ic-len">·</span>8+ characters</div>
+                                <div id="chk-upper" class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0 text-[8px]" id="ic-upper">·</span>Uppercase (A–Z)</div>
+                                <div id="chk-lower" class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0 text-[8px]" id="ic-lower">·</span>Lowercase (a–z)</div>
+                                <div id="chk-num"   class="flex items-center gap-1.5 text-xs text-brand-muted"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0 text-[8px]" id="ic-num">·</span>Number (0–9)</div>
+                                <div id="chk-sym"   class="flex items-center gap-1.5 text-xs text-brand-muted col-span-2"><span class="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0 text-[8px]" id="ic-sym">·</span>Special char (!@#$…)</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Confirm Password -->
                     <div>
-                        <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="r_password2">Confirm Password</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-sm font-semibold text-brand-primary" for="r_password2">Confirm Password</label>
+                            <span id="pw2-counter" class="text-xs text-brand-muted font-mono">0 / 128</span>
+                        </div>
+                        <div class="relative" id="pw2-wrap">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                             </span>
                             <input id="r_password2" type="password" name="password2"
                                    placeholder="Re-enter your password"
-                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm outline-none transition-all"
-                                   style="border: 1.5px solid {{ errors.password2|yesno:'#f87171,#e8e8e8' }}; background: {{ errors.password2|yesno:'#fff5f5,#f9fafb' }};"
-                                   oninput="checkMatch()"
+                                   maxlength="128"
+                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
+                                   style="border: 1.5px solid {{ errors.password2|yesno:'#f87171,#e8e8e8' }};"
+                                   oninput="updateCounter('r_password2','pw2-counter',128,null);checkMatch()"
+                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
+                                   onblur="this.style.background='#f9fafb'"
                                    autocomplete="new-password" required>
-                            <button type="button" onclick="togglePassword('r_password2','eye-p2')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary">
+                            <button type="button" onclick="togglePw('r_password2','eye-p2')"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-subtle" tabindex="-1">
                                 <svg id="eye-p2" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -145,12 +174,12 @@
                         {% endif %}
                     </div>
 
-                    <!-- Generated password display -->
+                    <!-- Generated password box -->
                     <div id="gen-pw-box" class="hidden bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                        <p class="text-xs text-amber-700 font-semibold mb-1">⚡ Generated Password — Copy & save it!</p>
+                        <p class="text-xs text-amber-700 font-semibold mb-2">⚡ Generated Password — Copy &amp; save it now!</p>
                         <div class="flex items-center gap-2">
                             <code id="gen-pw-text" class="flex-1 text-sm font-mono text-amber-900 break-all"></code>
-                            <button type="button" onclick="copyPassword()"
+                            <button type="button" onclick="copyPw()"
                                     class="flex-shrink-0 text-xs bg-amber-200 hover:bg-amber-300 text-amber-800 px-3 py-1.5 rounded-lg font-semibold transition-subtle">
                                 Copy
                             </button>
@@ -158,8 +187,7 @@
                     </div>
 
                     <button type="submit" id="submitBtn"
-                            class="w-full text-white py-3 px-6 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] mt-2"
-                            style="background: linear-gradient(135deg, #1E3A8A, #3B82F6); box-shadow: 0 4px 16px rgba(30,58,138,0.3);">
+                            class="w-full bg-brand-accent text-white py-3 px-6 rounded-xl font-semibold text-sm transition-subtle hover:bg-brand-accenthover active:scale-[0.99]">
                         Create Free Account
                     </button>
                 </div>
@@ -169,109 +197,196 @@
                 Already have an account?
                 <a href="{% url 'login' %}" class="text-brand-accent font-semibold hover:underline ml-1">Sign in →</a>
             </div>
-        </div>
     </div>
 </section>
 
 <script>
 // ── Eye toggle ────────────────────────────────────────────────────────────────
-function togglePassword(inputId, eyeId) {
+function togglePw(inputId, eyeId) {
     const input = document.getElementById(inputId);
     const eye   = document.getElementById(eyeId);
-    const isHidden = input.type === 'password';
-    input.type = isHidden ? 'text' : 'password';
-    eye.innerHTML = isHidden
+    const hide  = input.type === 'password';
+    input.type  = hide ? 'text' : 'password';
+    eye.innerHTML = hide
         ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`
         : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
 }
 
-// ── A-Z Strength checker ──────────────────────────────────────────────────────
+// ── Character counter + limit popup ──────────────────────────────────────────
+function updateCounter(inputId, counterId, max, tipId) {
+    const input   = document.getElementById(inputId);
+    const counter = document.getElementById(counterId);
+    if (!input || !counter) return;
+    const len = input.value.length;
+    counter.textContent = len + ' / ' + max;
+    const tip = tipId ? document.getElementById(tipId) : null;
+    if (len >= max) {
+        counter.style.color = '#ef4444';
+        if (tip) {
+            tip.classList.remove('hidden');
+            clearTimeout(tip._t);
+            tip._t = setTimeout(() => tip.classList.add('hidden'), 2500);
+        }
+    } else {
+        counter.style.color = len > max * 0.85 ? '#f97316' : '';
+        if (tip) tip.classList.add('hidden');
+    }
+}
+
+// ── Clear field error ─────────────────────────────────────────────────────────
+function clearErr(wrapId, errId) {
+    const inp = document.getElementById(wrapId)?.querySelector('input');
+    if (inp) inp.style.borderColor = '#1E3A8A';
+    const err = document.getElementById(errId);
+    if (err) { err.classList.add('hidden'); err.innerHTML = ''; }
+}
+
+// ── Live email validation ─────────────────────────────────────────────────────
+function liveValidateEmail() {
+    const input = document.getElementById('r_email');
+    const err   = document.getElementById('email-err');
+    const icon  = document.getElementById('email-valid-icon');
+    const val   = input.value.trim();
+    if (!val) { err.classList.add('hidden'); icon.classList.add('hidden'); return; }
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    if (valid) {
+        err.classList.add('hidden');
+        icon.classList.remove('hidden');
+        input.style.borderColor = '#22c55e';
+    } else {
+        err.innerHTML = '<svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg> Enter a valid email address.';
+        err.classList.remove('hidden');
+        icon.classList.add('hidden');
+        input.style.borderColor = '#f87171';
+    }
+}
+
+// ── Password strength ─────────────────────────────────────────────────────────
 function checkStrength(pw) {
     const rules = {
         len:   pw.length >= 8,
         upper: /[A-Z]/.test(pw),
         lower: /[a-z]/.test(pw),
         num:   /\d/.test(pw),
-        sym:   /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\;'`~/]/.test(pw),
+        sym:   /[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/`~\\'\"@\\\\]/.test(pw),
     };
-    const score = Object.values(rules).filter(Boolean).length;
+    const score  = Object.values(rules).filter(Boolean).length;
     const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#16a34a'];
-
     ['bar1','bar2','bar3','bar4','bar5'].forEach((id, i) => {
         document.getElementById(id).style.background = i < score ? colors[score] : '#e5e7eb';
     });
-
     Object.entries(rules).forEach(([key, pass]) => {
-        const ic = document.getElementById('ic-' + key);
-        const row = ic.parentElement;
-        if (pass) {
-            ic.innerHTML = '✓';
-            ic.style.background    = '#22c55e';
-            ic.style.borderColor   = '#22c55e';
-            ic.style.color         = 'white';
-            ic.style.fontSize      = '8px';
-            row.style.color        = '#16a34a';
-        } else {
-            ic.innerHTML = '·';
-            ic.style.background    = '';
-            ic.style.borderColor   = '#d1d5db';
-            ic.style.color         = '';
-            ic.style.fontSize      = '';
-            row.style.color        = '';
-        }
+        const ic  = document.getElementById('ic-'  + key);
+        const row = document.getElementById('chk-' + key);
+        if (pass) { ic.textContent='✓'; ic.style.background='#22c55e'; ic.style.borderColor='#22c55e'; ic.style.color='white'; row.style.color='#16a34a'; }
+        else      { ic.textContent='·'; ic.style.background=''; ic.style.borderColor='#d1d5db'; ic.style.color=''; row.style.color=''; }
     });
-    checkMatch();
+    const p1 = document.getElementById('r_password1');
+    if (pw.length > 0) p1.style.borderColor = score >= 4 ? '#22c55e' : score >= 2 ? '#f97316' : '#f87171';
 }
 
 // ── Match checker ─────────────────────────────────────────────────────────────
 function checkMatch() {
-    const p1 = document.getElementById('r_password1').value;
-    const p2 = document.getElementById('r_password2').value;
+    const p1  = document.getElementById('r_password1').value;
+    const p2  = document.getElementById('r_password2').value;
+    const p2i = document.getElementById('r_password2');
     const msg = document.getElementById('match-msg');
     if (!p2) { msg.classList.add('hidden'); return; }
     if (p1 === p2) {
         msg.textContent = '✓ Passwords match';
-        msg.className = 'mt-1.5 text-xs text-green-600 flex items-center gap-1';
+        msg.className = 'mt-1.5 text-xs text-green-600';
+        p2i.style.borderColor = '#22c55e';
     } else {
         msg.textContent = '✗ Passwords do not match';
-        msg.className = 'mt-1.5 text-xs text-red-500 flex items-center gap-1';
+        msg.className = 'mt-1.5 text-xs text-red-500';
+        p2i.style.borderColor = '#f87171';
     }
     msg.classList.remove('hidden');
 }
 
 // ── Password generator ────────────────────────────────────────────────────────
 function generatePassword() {
-    const upper   = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-    const lower   = 'abcdefghjkmnpqrstuvwxyz';
-    const nums    = '23456789';
-    const syms    = '!@#$%^&*';
-    const all     = upper + lower + nums + syms;
-    let pw = '';
-    // Guarantee at least one of each
-    pw += upper[Math.floor(Math.random() * upper.length)];
-    pw += lower[Math.floor(Math.random() * lower.length)];
-    pw += nums[Math.floor(Math.random() * nums.length)];
-    pw += syms[Math.floor(Math.random() * syms.length)];
-    for (let i = 4; i < 16; i++) pw += all[Math.floor(Math.random() * all.length)];
-    // Shuffle
-    pw = pw.split('').sort(() => Math.random() - 0.5).join('');
-
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghjkmnpqrstuvwxyz';
+    const nums  = '23456789';
+    const syms  = '!@#$%^&*';
+    const all   = upper + lower + nums + syms;
+    let pw = upper[Math.floor(Math.random()*upper.length)]
+           + lower[Math.floor(Math.random()*lower.length)]
+           + nums[Math.floor(Math.random()*nums.length)]
+           + syms[Math.floor(Math.random()*syms.length)];
+    for (let i = 4; i < 16; i++) pw += all[Math.floor(Math.random()*all.length)];
+    pw = pw.split('').sort(() => Math.random()-0.5).join('');
     document.getElementById('r_password1').value = pw;
     document.getElementById('r_password1').type  = 'text';
     document.getElementById('r_password2').value = pw;
     document.getElementById('gen-pw-text').textContent = pw;
     document.getElementById('gen-pw-box').classList.remove('hidden');
+    updateCounter('r_password1','pw-counter',128,null);
+    updateCounter('r_password2','pw2-counter',128,null);
     checkStrength(pw);
     checkMatch();
 }
 
-function copyPassword() {
+function copyPw() {
     const pw = document.getElementById('gen-pw-text').textContent;
     navigator.clipboard.writeText(pw).then(() => {
         const btn = event.target;
+        const orig = btn.textContent;
         btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy', 2000);
+        setTimeout(() => btn.textContent = orig, 2000);
     });
+}
+
+// ── Submit guard ──────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // init counters for pre-filled values
+    ['r_email','r_password1','r_password2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.value) {
+            const map = {r_email:'email-counter',r_password1:'pw-counter',r_password2:'pw2-counter'};
+            const mx  = {r_email:254,r_password1:128,r_password2:128};
+            updateCounter(id, map[id], mx[id], null);
+        }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        let bad = false;
+        const email = document.getElementById('r_email').value.trim();
+        const pw1   = document.getElementById('r_password1').value;
+        const pw2   = document.getElementById('r_password2').value;
+
+        if (!email) {
+            markErr('r_email','email-err','Email is required.');
+            bad = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            markErr('r_email','email-err','Enter a valid email address.');
+            bad = true;
+        }
+        if (!pw1) {
+            markErr('r_password1','pw1-err','Password is required.');
+            bad = true;
+        } else if (pw1.length < 8) {
+            markErr('r_password1','pw1-err','Password must be at least 8 characters.');
+            bad = true;
+        }
+        if (pw1 && pw2 && pw1 !== pw2) {
+            document.getElementById('r_password2').style.borderColor = '#f87171';
+            const msg = document.getElementById('match-msg');
+            msg.textContent = '✗ Passwords do not match';
+            msg.className = 'mt-1.5 text-xs text-red-500';
+            msg.classList.remove('hidden');
+            bad = true;
+        }
+        if (bad) e.preventDefault();
+    });
+});
+
+function markErr(inputId, errId, msg) {
+    const input = document.getElementById(inputId);
+    const err   = document.getElementById(errId);
+    if (input) input.style.borderColor = '#f87171';
+    if (err)   { err.innerHTML = msg; err.classList.remove('hidden'); }
 }
 </script>
 {% endblock %}

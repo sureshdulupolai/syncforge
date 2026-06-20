@@ -76,10 +76,56 @@ def project_info(request):
 
 
 def tables_list(request):
-    """GET /api/v1/tables/ — list all tables for the project."""
+    """
+    GET /api/v1/tables/ — list all tables for the project.
+    POST /api/v1/tables/ — register a new table.
+    DELETE /api/v1/tables/ — delete a table by name.
+    """
     project = getattr(request, 'api_project', None)
     if not project:
         return _json({'error': 'X-API-Key required'}, 400)
+
+    if request.method == 'POST':
+        import json
+        try:
+            body = json.loads(request.body)
+            table_name = body.get('table_name', '').strip()
+            sync_mode = body.get('sync_mode', 'event')
+            if not table_name:
+                return _json({'error': 'table_name is required'}, 400)
+            
+            config, created = project.table_configs.get_or_create(
+                table_name=table_name,
+                defaults={'sync_mode': sync_mode}
+            )
+            if not created and config.sync_mode != sync_mode:
+                config.sync_mode = sync_mode
+                config.save(update_fields=['sync_mode'])
+            
+            return _json({
+                'status': 'ok', 
+                'table_name': table_name, 
+                'sync_mode': sync_mode, 
+                'created': created
+            })
+        except Exception as e:
+            return _json({'error': str(e)}, 400)
+
+    if request.method == 'DELETE':
+        table_name = request.GET.get('table_name', '').strip()
+        if not table_name:
+            import json
+            try:
+                table_name = json.loads(request.body).get('table_name', '').strip()
+            except Exception:
+                pass
+                
+        if not table_name:
+            return _json({'error': 'table_name is required'}, 400)
+            
+        deleted, _ = project.table_configs.filter(table_name=table_name).delete()
+        return _json({'status': 'ok', 'deleted': deleted > 0})
+
     tables = list(project.table_configs.values(
         'table_name', 'sync_mode', 'rows_count', 'database_calls_saved'))
     return _json({'tables': tables, 'count': len(tables)})

@@ -32,12 +32,13 @@ def _clear_jwt(response):
 
 def _pw_valid(pw):
     errors = []
-    if len(pw) < 8:            errors.append('At least 8 characters.')
-    if not re.search(r'[A-Z]', pw): errors.append('One uppercase letter.')
-    if not re.search(r'[a-z]', pw): errors.append('One lowercase letter.')
-    if not re.search(r'\d',    pw): errors.append('One number.')
-    if not re.search(r'[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/`~]', pw):
-        errors.append('One special character.')
+    if len(pw) < 8:            errors.append('At least 8 characters required.')
+    if len(pw) > 128:          errors.append('Password cannot exceed 128 characters.')
+    if not re.search(r'[A-Z]', pw): errors.append('At least one uppercase letter (A–Z).')
+    if not re.search(r'[a-z]', pw): errors.append('At least one lowercase letter (a–z).')
+    if not re.search(r'\d',    pw): errors.append('At least one number (0–9).')
+    if not re.search(r'[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/`~\'"@\\]', pw):
+        errors.append('At least one special character (!@#$…).')
     return not errors, errors
 
 
@@ -53,20 +54,29 @@ def login_view(request):
     errors, form_data = {}, {}
 
     if request.method == 'POST':
-        form_data['username'] = request.POST.get('username', '').strip()
+        form_data['email'] = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
-        if not form_data['username']:
-            errors['username'] = 'Username is required.'
+
+        if not form_data['email']:
+            errors['email'] = 'Email is required.'
+        elif not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', form_data['email']):
+            errors['email'] = 'Enter a valid email address.'
         if not password:
             errors['password'] = 'Password is required.'
+
         if not errors:
-            user = authenticate(request, username=form_data['username'], password=password)
+            from django.contrib.auth.models import User
+            try:
+                user_obj = User.objects.get(email__iexact=form_data['email'])
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                user = None
             if user:
                 login(request, user)
                 response = redirect('dashboard')
                 _set_jwt(response, user)
                 return response
-            errors['general'] = 'Invalid username or password.'
+            errors['general'] = 'Invalid email or password.'
 
     return render(request, 'dashboard/login.html', {'errors': errors, 'form_data': form_data})
 
@@ -85,14 +95,21 @@ def register(request):
 
     if request.method == 'POST':
         form_data = {
-            'username': request.POST.get('username', '').strip(),
-            'email':    request.POST.get('email', '').strip(),
+            'email':     request.POST.get('email', '').strip().lower(),
             'password1': request.POST.get('password1', ''),
             'password2': request.POST.get('password2', ''),
         }
-        if not form_data['username'] or len(form_data['username']) < 3:
-            errors['username'] = 'Username must be at least 3 characters.'
 
+        # Email validation
+        email = form_data['email']
+        if not email:
+            errors['email'] = 'Email is required.'
+        elif not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+            errors['email'] = 'Enter a valid email address.'
+        elif len(email) > 254:
+            errors['email'] = 'Email cannot exceed 254 characters.'
+
+        # Password validation
         ok, pw_errs = _pw_valid(form_data['password1'])
         if not ok:
             errors['password1'] = pw_errs[0]
@@ -101,12 +118,20 @@ def register(request):
 
         if not errors:
             from django.contrib.auth.models import User
-            if User.objects.filter(username=form_data['username']).exists():
-                errors['username'] = 'Username already taken.'
+            if User.objects.filter(email__iexact=email).exists():
+                errors['email'] = 'An account with this email already exists.'
             else:
+                # Auto-generate a unique internal username from email prefix
+                base = re.sub(r'[^a-zA-Z0-9_]', '_', email.split('@')[0])[:20]
+                username = base
+                suffix = 1
+                while User.objects.filter(username=username).exists():
+                    username = f'{base}_{suffix}'
+                    suffix += 1
+
                 user = User.objects.create_user(
-                    username=form_data['username'],
-                    email=form_data['email'],
+                    username=username,
+                    email=email,
                     password=form_data['password1'],
                 )
                 DeveloperProfile.objects.create(user=user)

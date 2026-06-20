@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<div class="min-h-screen" style="background:#f8faff;">
+<div class="min-h-screen bg-white">
 
 <!-- Top breadcrumb bar -->
 <div class="bg-white border-b border-brand-border sticky top-16 z-40">
@@ -32,7 +32,7 @@
 
 <!-- Project header -->
 <div class="bg-white border-b border-brand-border">
-    <div class="max-w-container mx-auto px-6 py-6">
+    <div class="max-w-container mx-auto px-6 pt-6">
         <div class="flex items-start gap-4">
             <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
                  style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
@@ -66,7 +66,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex gap-0 mt-6 border-b border-brand-border -mb-px">
+        <div class="flex gap-0 mt-6 -mb-px">
             <button onclick="switchTab('tables')" id="tab-tables"
                     class="tab-btn px-5 py-2.5 text-sm font-semibold border-b-2 transition-all">
                 Tables
@@ -136,59 +136,112 @@
 
     <!-- ── INTEGRATION TAB ────────────────────────────────────────────────── -->
     <div id="pane-integration" class="tab-pane hidden">
-        <h2 class="text-lg font-bold mb-6">Integration Guide</h2>
-        <div class="space-y-6">
-            <!-- Step 1 -->
-            <div class="bg-white rounded-2xl p-6 border border-brand-border">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-7 h-7 rounded-full bg-brand-primary text-white text-xs font-bold flex items-center justify-center">1</div>
-                    <h3 class="font-bold">Install SyncForge</h3>
-                </div>
-                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
-                    <span class="text-[#6A9955]"># pip</span><br>
-                    pip install <span class="text-[#4EC9B0]">syncforge</span><br><br>
-                    <span class="text-[#6A9955]"># npm</span><br>
-                    npm install <span class="text-[#4EC9B0]">syncforge</span>
-                </div>
+        <div class="max-w-3xl">
+            <div class="mb-8">
+                <h2 class="text-xl font-bold tracking-tight text-brand-primary">Integration Guide</h2>
+                <p class="text-sm text-brand-secondary mt-1">Copy and paste this code to integrate SyncForge into your backend. It takes less than 2 minutes.</p>
             </div>
-            <!-- Step 2 -->
-            <div class="bg-white rounded-2xl p-6 border border-brand-border">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-7 h-7 rounded-full bg-brand-primary text-white text-xs font-bold flex items-center justify-center">2</div>
-                    <h3 class="font-bold">Initialize with your API Key</h3>
+
+            <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-brand-border before:to-transparent">
+                
+                <!-- Step 1 -->
+                <div class="relative flex items-start gap-6 md:justify-center">
+                    <div class="hidden md:block w-full text-right py-3 pr-6 text-sm text-brand-secondary">
+                        <span class="font-bold text-brand-primary block mb-1">Install the SDK</span>
+                        Available on PyPI. Zero external dependencies.
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-white border-[3px] border-brand-accent text-brand-accent font-bold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">1</div>
+                    <div class="w-full">
+                        <div class="md:hidden mb-2">
+                            <span class="font-bold text-brand-primary block text-sm">Install the SDK</span>
+                        </div>
+                        <div class="bg-[#1A1A1A] rounded-xl overflow-hidden border border-[#2d2d2d] shadow-sm">
+                            <div class="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between">
+                                <span class="text-xs text-gray-400 font-mono">Terminal</span>
+                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+                            </div>
+                            <div class="p-4 font-mono text-sm text-[#D4D4D4]">
+                                <span class="text-[#6A9955]"># Install via pip</span><br>
+                                pip install syncforge
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
-                    <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
-                    <span class="text-[#6A9955]"># Dead simple — like FastAPI</span><br>
-                    app = <span class="text-[#4EC9B0]">SyncForge</span>(api_key=<span class="text-[#CE9178]">'sf_live_your_key'</span>)
+
+                <!-- Step 2 -->
+                <div class="relative flex items-start gap-6 md:justify-center">
+                    <div class="hidden md:block w-full text-right py-3 pr-6 text-sm text-brand-secondary">
+                        <span class="font-bold text-brand-primary block mb-1">Create syncforge.py</span>
+                        Put this file at the root of your project.
+                        <div class="mt-3 flex justify-end">
+                            <div class="bg-gray-50 border border-brand-border rounded-lg p-3 text-left inline-block text-xs font-mono">
+                                <div>myproject/</div>
+                                <div class="pl-4 border-l-2 border-brand-accent ml-2 my-1 py-1">syncforge.py</div>
+                                <div class="pl-4 text-brand-muted">manage.py</div>
+                                <div class="pl-4 text-brand-muted">app/</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-white border-[3px] border-brand-accent text-brand-accent font-bold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">2</div>
+                    <div class="w-full">
+                        <div class="md:hidden mb-2">
+                            <span class="font-bold text-brand-primary block text-sm">Create syncforge.py at project root</span>
+                        </div>
+                        <div class="bg-[#1A1A1A] rounded-xl overflow-hidden border border-[#2d2d2d] shadow-sm">
+                            <div class="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between">
+                                <span class="text-xs text-gray-400 font-mono">syncforge.py</span>
+                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+                            </div>
+                            <div class="p-4 font-mono text-sm text-[#D4D4D4] overflow-x-auto leading-relaxed">
+                                <span class="text-[#569CD6]">import</span> os<br>
+                                <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
+                                <span class="text-[#6A9955]"># Initialize client for {{ project.name }}</span><br>
+                                sf = <span class="text-[#4EC9B0]">SyncForge</span>(<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;api_key=os.environ.get(<span class="text-[#CE9178]">'SYNCFORGE_API_KEY'</span>, <span class="text-[#CE9178]">'{{ api_keys.first.key|default:"sf_live_YOUR_KEY" }}'</span>)<br>
+                                )<br><br>
+                                <span class="text-[#6A9955]"># Register tables programmatically (runs once)</span><br>
+                                sf.create_table(<span class="text-[#CE9178]">'items'</span>, sync_mode=<span class="text-[#CE9178]">'event'</span>)
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Step 3 -->
+                <div class="relative flex items-start gap-6 md:justify-center">
+                    <div class="hidden md:block w-full text-right py-3 pr-6 text-sm text-brand-secondary">
+                        <span class="font-bold text-brand-primary block mb-1">Zero-Code Syncs 🚀</span>
+                        Add the <code class="font-mono bg-gray-100 px-1 rounded text-xs text-brand-primary">@sync_model</code> decorator to your models. SyncForge will automatically trigger on every Create, Update, and Delete!
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-white border-[3px] border-brand-accent text-brand-accent font-bold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">3</div>
+                    <div class="w-full">
+                        <div class="md:hidden mb-2">
+                            <span class="font-bold text-brand-primary block text-sm">Zero-Code Syncs 🚀</span>
+                        </div>
+                        <div class="bg-[#1A1A1A] rounded-xl overflow-hidden border border-[#2d2d2d] shadow-sm">
+                            <div class="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between">
+                                <span class="text-xs text-gray-400 font-mono">models.py</span>
+                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+                            </div>
+                            <div class="p-4 font-mono text-sm text-[#D4D4D4] overflow-x-auto leading-relaxed">
+                                <span class="text-[#569CD6]">from</span> django.db <span class="text-[#569CD6]">import</span> models<br>
+                                <span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf<br>
+                                <span class="text-[#569CD6]">from</span> syncforge.django <span class="text-[#569CD6]">import</span> sync_model<br><br>
+                                <span class="text-[#6A9955]"># Auto-registers table & syncs on all DB changes ⚡</span><br>
+                                <span class="text-[#4EC9B0]">@sync_model</span>(sf)<br>
+                                <span class="text-[#569CD6]">class</span> <span class="text-[#4EC9B0]">Item</span>(models.Model):<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;name = models.CharField(max_length=<span class="text-[#B5CEA8]">100</span>)<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;price = models.IntegerField()
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <!-- Step 3 -->
-            <div class="bg-white rounded-2xl p-6 border border-brand-border">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-7 h-7 rounded-full bg-brand-primary text-white text-xs font-bold flex items-center justify-center">3</div>
-                    <h3 class="font-bold">Push updates instantly</h3>
-                </div>
-                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
-                    <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">save_product</span>(data):<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;Product.objects.create(**data)<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Push delta to all clients ⚡</span><br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;app.push(<span class="text-[#CE9178]">'products'</span>)<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> <span class="text-[#CE9178]">'Synced instantly — zero polling'</span>
-                </div>
-            </div>
-            <!-- REST API -->
-            <div class="bg-white rounded-2xl p-6 border border-brand-border">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-7 h-7 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center">✓</div>
-                    <h3 class="font-bold">Or use the REST API directly</h3>
-                </div>
-                <div class="bg-[#1A1A1A] rounded-xl p-4 text-sm font-mono text-[#D4D4D4]">
-                    <span class="text-[#6A9955]"># Trigger sync via HTTP — works from any language</span><br>
-                    curl -X POST {{ request.scheme }}://{{ request.get_host }}/api/v1/sync/products/ \<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;-H <span class="text-[#CE9178]">"X-API-Key: sf_live_your_key"</span><br><br>
-                    <span class="text-[#6A9955]"># Health check</span><br>
-                    curl {{ request.scheme }}://{{ request.get_host }}/api/v1/health/
+
+            <div class="mt-12 p-5 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3">
+                <svg class="w-5 h-5 text-brand-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="text-sm text-blue-900 leading-relaxed">
+                    <strong>How it works:</strong> The <code class="font-mono px-1">sf.refresh('table')</code> command sends a lightweight signal to our servers. SyncForge handles cache invalidation and distributes the fresh data delta to all connected client devices automatically. Your database only receives 1 query, not 10,000.
                 </div>
             </div>
         </div>
