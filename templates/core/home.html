@@ -50,14 +50,15 @@
                 <div class="w-3 h-3 rounded-full bg-[#4A4A4A]"></div>
             </div>
             <div>
-                <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
-                <span class="text-[#6A9955]"># One-line init — just like FastAPI</span><br>
-                app = <span class="text-[#4EC9B0]">SyncForge</span>(api_key=<span class="text-[#CE9178]">'sf_live_a1b2c3d4'</span>)<br><br>
-                <span class="text-[#6A9955]"># Push updates — zero polling required</span><br>
+                <span class="text-[#569CD6]">from</span> syncforge.django <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">sync_model</span><br>
+                <span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf<br><br>
+                <span class="text-[#6A9955]"># 1. Zero-code Django auto-sync</span><br>
+                <span class="text-[#4EC9B0]">@sync_model</span>(sf, sync_mode=<span class="text-[#CE9178]">'event'</span>)<br>
+                <span class="text-[#569CD6]">class</span> <span class="text-[#4EC9B0]">Product</span>(models.Model):<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;name = models.CharField(max_length=<span class="text-[#B5CEA8]">100</span>)<br><br>
+                <span class="text-[#6A9955]"># 2. Or manual push from FastAPI/Flask</span><br>
                 <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">update_catalog</span>():<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;app.update(<span class="text-[#CE9178]">'products'</span>, data)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;app.push(<span class="text-[#CE9178]">'products'</span>)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> <span class="text-[#CE9178]">'All clients synced instantly ⚡'</span>
+                &nbsp;&nbsp;&nbsp;&nbsp;sf.refresh(<span class="text-[#CE9178]">'products'</span>)
             </div>
         </div>
     </div>
@@ -107,12 +108,12 @@
             </div>
             <!-- Feature 4 -->
             <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
-                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
-                    <span class="font-mono text-xs font-bold">04</span>
+                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6 text-red-500 bg-red-50">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
                 </div>
-                <h3 class="font-semibold text-lg mb-3">Hybrid Mode</h3>
+                <h3 class="font-semibold text-lg mb-3 flex items-center gap-2">Built-in WAF <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold">New</span></h3>
                 <p class="text-brand-secondary text-sm leading-relaxed">
-                    Combine Event-based triggers with a 24-hour verification schedule to ensure perfect data consistency.
+                    Instantly protect your app from SQL Injection, XSS, and Path Traversal with our one-line Security Middleware.
                 </p>
             </div>
         </div>
@@ -325,11 +326,11 @@
             </div>
             <div class="md:col-span-7 mt-8 md:mt-0">
                 <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
+                    <span class="text-[#569CD6]">import</span> os<br>
                     <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
                     <span class="text-[#6A9955]"># Dead simple — like Flask or FastAPI</span><br>
-                    app = <span class="text-[#4EC9B0]">SyncForge</span>(<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;api_key=<span class="text-[#CE9178]">'sf_live_a1b2c3d4'</span>,<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;env=<span class="text-[#CE9178]">'production'</span><br>
+                    sf = <span class="text-[#4EC9B0]">SyncForge</span>(<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;api_key=os.environ.get(<span class="text-[#CE9178]">'SYNCFORGE_API_KEY'</span>)<br>
                     )
                 </div>
             </div>
@@ -373,7 +374,7 @@
                     &nbsp;&nbsp;&nbsp;&nbsp;Product.objects.create(name=<span class="text-[#CE9178]">'New Item'</span>)<br><br>
                     &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Broadcast delta to all connected clients</span><br>
                     &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Zero database polling required.</span><br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;client.refresh(<span class="text-[#CE9178]">'products'</span>)<br><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;sf.refresh(<span class="text-[#CE9178]">'products'</span>)<br><br>
                     &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> success_response()
                 </div>
             </div>

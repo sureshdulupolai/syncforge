@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "syncforge"
-version = "1.0.3"
+version = "1.0.4"
 description = "Official Python SDK for SyncForge — control exactly when data syncs between your database and clients."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-    { name = "SyncForge", email = "sureshdulupolai@gmail.com" }
+    { name = "suresh dullu polai", email = "sureshpolai63@gmail.com" }
 ]
 keywords = ["syncforge", "sync", "database", "cache", "invalidation", "django", "fastapi"]
 classifiers = [

@@ -58,6 +58,7 @@
                 <li><a href="#trigger-sync" class="doc-link block px-2 py-1 rounded-lg text-brand-secondary hover:text-brand-primary hover:bg-gray-50 transition-subtle">Trigger Sync</a></li>
                 <li><a href="#fetch-update" class="doc-link block px-2 py-1 rounded-lg text-brand-secondary hover:text-brand-primary hover:bg-gray-50 transition-subtle">Fetch / Update</a></li>
                 <li><a href="#django" class="doc-link block px-2 py-1 rounded-lg text-brand-secondary hover:text-brand-primary hover:bg-gray-50 transition-subtle">Django</a></li>
+                <li><a href="#middleware" class="doc-link block px-2 py-1 rounded-lg text-brand-secondary hover:text-brand-primary hover:bg-gray-50 transition-subtle">Security Middleware</a></li>
                 <li><a href="#fastapi" class="doc-link block px-2 py-1 rounded-lg text-brand-secondary hover:text-brand-primary hover:bg-gray-50 transition-subtle">FastAPI / Flask</a></li>
             </ul>
         </div>
@@ -411,6 +412,82 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
 <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">bulk_update</span>(request):
     Product.objects.filter(active=<span class="text-[#569CD6]">True</span>).update(price=<span class="text-[#B5CEA8]">99</span>)
     sf.refresh(<span class="text-[#CE9178]">'products'</span>) <span class="text-[#6A9955]"># one sync for bulk write</span></pre>
+        </div>
+    </section>
+
+    <hr class="border-brand-border">
+
+    <!-- ── SECURITY MIDDLEWARE ─────────────────────────────────────────────── -->
+    <section id="middleware">
+        <h2 class="text-2xl font-bold tracking-tight text-brand-primary mb-2 flex items-center gap-2">
+            <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            Security Middleware
+        </h2>
+        <p class="text-brand-secondary leading-relaxed mb-5">
+            SyncForge SDK includes a professional-grade Web Application Firewall (WAF) and request logger. By adding just one line to your <code class="font-mono bg-gray-100 px-1 rounded">settings.py</code>, your entire application is instantly protected.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div class="border border-brand-border rounded-xl p-5 bg-gray-50">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <h4 class="font-bold text-brand-primary">Hacker Protection (WAF)</h4>
+                </div>
+                <ul class="space-y-2 text-sm text-brand-secondary">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>Blocks <strong>SQL Injection</strong> (<code class="font-mono text-xs">UNION SELECT</code>, <code class="font-mono text-xs">OR 1=1</code>)</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>Blocks <strong>Cross-Site Scripting</strong> (<code class="font-mono text-xs">&lt;script&gt;</code>)</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>Blocks <strong>Path Traversal</strong> (<code class="font-mono text-xs">../</code>)</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="border border-brand-border rounded-xl p-5 bg-gray-50">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <h4 class="font-bold text-brand-primary">Precision Logging & Headers</h4>
+                </div>
+                <ul class="space-y-2 text-sm text-brand-secondary">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>Logs response times in <strong>milliseconds</strong></span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>Injects strict <code class="font-mono text-xs">X-Content-Type-Options</code></span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        <span>Formats logs beautifully: <code class="font-mono text-xs text-brand-primary">[GET] /api/ - 200 (12.4ms)</code></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <h3 class="text-lg font-bold tracking-tight text-brand-primary mb-3">How to Install</h3>
+        <p class="text-brand-secondary text-sm mb-4">No configuration or extra libraries required. Just add it to your <code class="font-mono bg-gray-100 px-1 rounded">MIDDLEWARE</code> list in Django.</p>
+        <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d]">
+            <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
+                <span class="text-xs text-[#858585] font-mono">settings.py</span>
+                <button onclick="copyCode(this)" class="copy-btn text-xs text-[#858585] hover:text-white transition-subtle px-2 py-0.5 rounded hover:bg-[#333]">Copy</button>
+            </div>
+            <pre class="bg-[#1A1A1A] px-6 py-5 text-sm font-mono text-[#D4D4D4] overflow-x-auto leading-relaxed">MIDDLEWARE = [
+    <span class="text-[#CE9178]">'django.middleware.security.SecurityMiddleware'</span>,
+    
+    <span class="text-[#6A9955]"># Add SyncForge Security Firewall right after Django's built-in security</span>
+    <span class="text-[#CE9178]">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,
+    
+    <span class="text-[#CE9178]">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
+    <span class="text-[#CE9178]">'django.middleware.common.CommonMiddleware'</span>,
+    <span class="text-[#6A9955]"># ...</span>
+]</pre>
         </div>
     </section>
 
