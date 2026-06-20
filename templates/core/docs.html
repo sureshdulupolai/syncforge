@@ -405,21 +405,66 @@ result = sf.refresh(<span class="text-[#CE9178]">'products'</span>)
         <h3 class="text-lg font-bold tracking-tight text-brand-primary mt-8 mb-3">2. Smart Caching Engine (Zero DB Load)</h3>
         <p class="text-brand-secondary text-sm mb-4">SyncForge includes an intelligent auto-invalidating caching engine. It caches your expensive database queries in memory and automatically clears the cache when <code class="font-mono bg-gray-100 px-1 rounded">@sync_model</code> detects a data change.</p>
         
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="border border-brand-border rounded-xl p-5 bg-gray-50">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <h4 class="font-bold text-brand-primary">Security & Privacy</h4>
+                </div>
+                <p class="text-sm text-brand-secondary">
+                    All cached data remains <strong>100% on your server's backend memory (RAM)</strong>. It is never sent to the client's browser automatically or any third-party server. It is completely invisible to normal users and hackers, providing bank-grade security for sensitive queries.
+                </p>
+            </div>
+            <div class="border border-brand-border rounded-xl p-5 bg-gray-50">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4"/></svg>
+                    <h4 class="font-bold text-brand-primary">Storage Limits & Scale</h4>
+                </div>
+                <p class="text-sm text-brand-secondary">
+                    Because it uses Django's cache framework, it scales infinitely. If you configure Redis, you can store <strong>Gigabytes of data</strong> representing millions of rows. It supports a <code class="font-mono text-xs">timeout</code> parameter to automatically free up memory after a set time (e.g., 3600 seconds limit).
+                </p>
+            </div>
+        </div>
+
+        <h4 class="font-bold text-brand-primary mb-3 text-sm">Implementation Flow</h4>
+        <div class="border border-brand-border rounded-xl bg-gray-50 p-6 mb-6">
+            <div class="flex flex-col gap-3 text-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</div>
+                    <div><strong>Write Query</strong> — Define your normal Django query (e.g., <code class="font-mono text-xs bg-white border border-brand-border px-1.5 py-0.5 rounded">Product.objects.filter(active=True)</code>)</div>
+                </div>
+                <div class="ml-3.5 w-px h-4 bg-brand-border"></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</div>
+                    <div><strong>Wrap in Cache</strong> — Pass it to <code class="font-mono text-xs bg-white border border-brand-border px-1.5 py-0.5 rounded">sf.cache_query(table, key, queryset)</code>. SyncForge fetches from DB and stores in your server RAM.</div>
+                </div>
+                <div class="ml-3.5 w-px h-4 bg-brand-border"></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</div>
+                    <div><strong>Zero DB Calls</strong> — The next 10,000 requests fetch directly from RAM in 0.001 seconds. The database is completely bypassed.</div>
+                </div>
+                <div class="ml-3.5 w-px h-4 bg-brand-border"></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">4</div>
+                    <div><strong>Auto Invalidate</strong> — When an admin updates a product, the <code class="font-mono text-xs bg-white border border-brand-border px-1.5 py-0.5 rounded">@sync_model</code> automatically clears the cache key so users never see stale data.</div>
+                </div>
+            </div>
+        </div>
+
         <div class="code-block rounded-xl overflow-hidden border border-[#2d2d2d] mb-8">
             <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-[#2d2d2d]">
-                <span class="text-xs text-[#858585] font-mono">views.py</span>
+                <span class="text-xs text-[#858585] font-mono">views.py (Usage Example)</span>
                 <button onclick="copyCode(this)" class="copy-btn text-xs text-[#858585] hover:text-white transition-subtle px-2 py-0.5 rounded hover:bg-[#333]">Copy</button>
             </div>
             <pre class="bg-[#1A1A1A] px-6 py-5 text-sm font-mono text-[#D4D4D4] overflow-x-auto leading-relaxed"><span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf
 <span class="text-[#569CD6]">from</span> .models <span class="text-[#569CD6]">import</span> Product
 
 <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">get_products</span>(request):
-    <span class="text-[#6A9955]"># First call hits the Database. Next 10,000 calls hit RAM (0.001s).</span>
-    <span class="text-[#6A9955]"># Automatically invalidates when Product table changes!</span>
     data = sf.cache_query(
         table_name=<span class="text-[#CE9178]">'core_product'</span>, 
         cache_key=<span class="text-[#CE9178]">'all_active_products'</span>, 
-        queryset=Product.objects.<span class="text-[#DCDCAA]">filter</span>(active=<span class="text-[#569CD6]">True</span>)
+        queryset=Product.objects.<span class="text-[#DCDCAA]">filter</span>(active=<span class="text-[#569CD6]">True</span>),
+        timeout=<span class="text-[#B5CEA8]">3600</span>  <span class="text-[#6A9955]"># Limit: Free memory after 1 hour</span>
     )
     
     <span class="text-[#569CD6]">return</span> JsonResponse({<span class="text-[#CE9178]">'products'</span>: data})</pre>
