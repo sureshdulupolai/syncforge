@@ -124,10 +124,8 @@
                 </a>
             </div>
             
-            <!-- Navigation -->
             <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-brand-secondary">
                 <a href="{% url 'docs' %}" class="hover:text-brand-primary transition-subtle">Documentation</a>
-                <a href="{% url 'pricing' %}" class="hover:text-brand-primary transition-subtle">Pricing</a>
             </nav>
             
             <!-- Auth -->
@@ -166,7 +164,7 @@
 
     <!-- Footer -->
     <footer class="bg-brand-secbg border-t border-brand-border py-16">
-        <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
                 <div class="flex items-center gap-2 mb-6">
                     <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-6 h-6 opacity-60">
@@ -177,30 +175,13 @@
                     Build once. Sync smart. Scale safely.
                 </p>
             </div>
-            <div>
-                <h4 class="font-semibold text-sm mb-4">Product</h4>
-                <ul class="space-y-3 text-sm text-brand-muted">
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Features</a></li>
-                    <li><a href="{% url 'pricing' %}" class="hover:text-brand-primary transition-subtle">Pricing</a></li>
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Status</a></li>
-                </ul>
-            </div>
+
             <div>
                 <h4 class="font-semibold text-sm mb-4">Developers</h4>
                 <ul class="space-y-3 text-sm text-brand-muted">
                     <li><a href="{% url 'docs' %}" class="hover:text-brand-primary transition-subtle">Documentation</a></li>
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">API Reference</a></li>
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">SDKs</a></li>
+                    <li><a href="{% url 'docs_rest_api' %}" class="hover:text-brand-primary transition-subtle">API Reference</a></li>
                     <li><a href="https://github.com/sureshdulupolai/syncforge" target="_blank" class="hover:text-brand-primary transition-subtle">GitHub</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-semibold text-sm mb-4">Company</h4>
-                <ul class="space-y-3 text-sm text-brand-muted">
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Blog</a></li>
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Contact</a></li>
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Privacy</a></li>
-                    <li><a href="#" class="hover:text-brand-primary transition-subtle">Terms</a></li>
                 </ul>
             </div>
         </div>

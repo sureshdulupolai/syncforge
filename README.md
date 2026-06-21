@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="static/logo.png" alt="SyncForge Logo" width="200" />
+  <img src="static/logo_icon.png" alt="SyncForge Logo" width="120" />
   <h1>SyncForge</h1>
   <p><b>The Developer-Controlled Smart Data Synchronization Platform</b></p>
   <p>
@@ -17,7 +17,7 @@ Instead of expiring cached data on an arbitrary timer (TTL), SyncForge lets you 
 
 ## 🚀 The Core Concept
 
-1. **Read**: `cache_query()` intercepts database queries and serves them instantly from your local memory.
+1. **Read**: `sf.get_table()` instantly serves queries from your fast local memory.
 2. **Write**: You call `sf.refresh('table_name')` after writing to your database.
 3. **Invalidate**: SyncForge instantly clears the local cache across all your workers and notifies the central dashboard.
 
@@ -31,7 +31,7 @@ A common misconception is that caching platforms store your users, products, or 
 
 SyncForge operates on a strict **zero-data model**:
 - **What We Sync:** Only lightweight synchronization metadata is exchanged over the network (table identifiers, invalidation timestamps, cache keys, and HMAC-signed API credentials).
-- **What Stays Local:** All your actual query results and application data remain strictly inside your own infrastructure (e.g., your local Redis or Django LocMem).
+- **What Stays Local:** All your actual query results and application data remain strictly inside your own infrastructure.
 
 ### Enterprise-Grade Security Features
 - **HMAC-SHA256 Request Signing**: Every API call is cryptographically signed and timestamped, making replay attacks and payload forgery mathematically impossible.
@@ -46,21 +46,18 @@ SyncForge operates on a strict **zero-data model**:
 pip install syncforge
 ```
 
-## ⚡ Quick Start (Django)
-
-SyncForge provides a zero-code `@sync_model` decorator for Django.
+## ⚡ Quick Start
 
 ### 1. Initialize
 
 ```python
-# myproject/sf.py
 import os
 from syncforge import SyncForge
 
 sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
 ```
 
-### 2. Auto-sync your models
+### 2. Auto-sync your models (Django Example)
 
 ```python
 # models.py
@@ -75,21 +72,21 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
 ```
 
-### 3. Read from cache (Global Fetch)
+### 3. Read Data (Framework Agnostic)
 
-No need to remember cache keys! SyncForge automatically generates keys for your tables so you can fetch them globally.
+SyncForge natively supports Django's cache framework, but automatically falls back to an internal, highly-concurrent `InMemoryCache` for **FastAPI, Flask, and plain Python**.
 
 ```python
-# views.py
+# views.py (or FastAPI router)
 from myproject.sf import sf
 from .models import Product
 
 def product_list(request):
-    # 1. Simply fetch by table name
-    products = sf.get_table("core_product")
-    
-    # 2. If empty, run query and cache it automatically
-    if not products:
+    # 1. First, try to fetch from fast memory
+    if sf.get_table("core_product"):
+        products = sf.get_table("core_product")
+    else:
+        # 2. On Cache Miss: Hit DB, and automatically save to memory
         products = sf.cache_query(
             table_name='core_product',
             queryset=Product.objects.filter(active=True)
@@ -103,10 +100,10 @@ def product_list(request):
 
 ## 🛡️ Web Application Firewall (WAF)
 
-SyncForge SDK includes a production-ready Web Application Firewall for Django. Protect your app with one line.
+SyncForge SDK includes a production-ready Web Application Firewall. Protect your app with one line.
 
 ```python
-# settings.py
+# Django settings.py
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'syncforge.middleware.SyncForgeSecurityMiddleware',  # Add this line
@@ -116,7 +113,7 @@ MIDDLEWARE = [
 
 It automatically intercepts:
 * **SQL Injection (SQLi):** `UNION SELECT`, `OR 1=1`, `DROP TABLE`
-* **Cross-Site Scripting (XSS):** `<script>`, `javascript:`, `onerror=` (includes deep URL-unquote scanning)
+* **Cross-Site Scripting (XSS):** `<script>`, `javascript:`, `onerror=`
 * **Path Traversal:** `../`, `/etc/passwd`
 * **Security Headers:** Automatically injects `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and CSP headers.
 
