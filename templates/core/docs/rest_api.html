@@ -59,6 +59,50 @@
     </div>
 </div>
 
+<!-- Integration Pattern -->
+<h2 class="text-xl font-semibold mb-3 scroll-mt-20">2. Reading Data (Cache-Aside Pattern)</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    When building your own client without the Python SDK, you should implement the cache-aside pattern locally. Follow these 3 steps:
+</p>
+
+<div class="border border-brand-border rounded-xl p-5 mb-4 bg-brand-secbg text-sm text-brand-secondary">
+    <ol class="space-y-3 list-none">
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+            <div><strong>Get Local Cache</strong>: Instantly fetch pre-warmed data from your local memory. Zero database hits.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+            <div><strong>Query DB & Save</strong>: If memory is empty (cache miss), execute the DB query and automatically save the result back to memory.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+            <div><strong>Combine Both</strong>: Use a simple <code class="font-mono bg-white px-1 rounded border border-brand-border text-xs">if/else</code> block to ensure only the very first user triggers a database query.</div>
+        </li>
+    </ol>
+</div>
+
+<div class="border border-brand-border rounded-xl overflow-hidden mb-10">
+    <div class="bg-gray-50 px-5 py-4 border-b border-brand-border">
+        <h3 class="font-bold text-brand-primary">Pseudo-code Implementation</h3>
+    </div>
+    <div class="p-5">
+        <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+            <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-gray-500">// Pseudo-code for caching logic</span>
+<span class="text-blue-400">if</span> (local_cache.get(<span class="text-green-300">"product"</span>)) {
+    <span class="text-gray-500">// 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
+    log <span class="text-gray-400">=</span> local_cache.get(<span class="text-green-300">"product"</span>);
+} <span class="text-blue-400">else</span> {
+    <span class="text-gray-500">// 2. Cache Miss: Execute DB query and automatically save to memory</span>
+    log <span class="text-gray-400">=</span> database.query(<span class="text-green-300">"SELECT * FROM products"</span>);
+    local_cache.set(<span class="text-green-300">"product"</span>, log);
+}
+<span class="text-gray-500">// 3. Return data exactly as it came from the DB</span>
+<span class="text-blue-400">return</span> render(<span class="text-green-300">"home"</span>, {<span class="text-green-300">"product"</span>: log});</pre>
+        </div>
+    </div>
+</div>
+
 <!-- GET /health/ -->
 <div class="border border-brand-border rounded-xl overflow-hidden mb-10">
     <div class="bg-gray-50 px-5 py-4 border-b border-brand-border flex items-center justify-between">

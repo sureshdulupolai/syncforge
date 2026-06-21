@@ -87,7 +87,28 @@ app <span class="text-gray-400">=</span> FastAPI(title<span class="text-gray-400
 </div>
 
 <!-- 4 Routes CRUD -->
-<h2 class="text-xl font-semibold mb-3">4. Routes — full CRUD with refresh</h2>
+<h2 class="text-xl font-semibold mb-3">4. Reading Data (Cache-Aside Pattern)</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    SyncForge uses a smart cache-aside pattern to protect your database. Follow these 3 steps in your FastAPI routes:
+</p>
+
+<div class="border border-brand-border rounded-xl p-5 mb-4 bg-brand-secbg text-sm text-brand-secondary">
+    <ol class="space-y-3 list-none">
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+            <div><strong>get_table()</strong>: Instantly fetches pre-warmed data from local memory. Zero database hits.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+            <div><strong>cache_query()</strong>: If memory is empty (cache miss), executes the DB query and automatically saves the result back to memory.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+            <div><strong>Combine Both</strong>: Use a simple <code class="font-mono bg-white px-1 rounded border border-brand-border text-xs">if/else</code> block to ensure only the very first user triggers a database query.</div>
+        </li>
+    </ol>
+</div>
+
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-gray-400">app/routers/products.py</span>
@@ -114,9 +135,18 @@ class ProductOut(BaseModel):
 # LIST
 @router.get('/', response_model=list[ProductOut])
 async def list_products(db: Session = Depends(get_db)):
-    # Note: cache_query() requires Django cache framework.
-    # For FastAPI, query directly and use async_mode=True to refresh on writes.
-    return db.query(Product).filter(Product.active == True).all()
+    if sf.get_table('products'):
+        # 1. Cache Hit: Data found in memory! DB query skipped entirely.
+        products = sf.get_table('products')
+    else:
+        # 2. Cache Miss: Execute DB query and automatically save to memory
+        products = sf.cache_query(
+            table_name='products',
+            queryset=db.query(Product).all()
+        )
+        
+    # 3. Return data exactly as it came from the DB
+    return products
 
 # CREATE
 @router.post('/', response_model=ProductOut, status_code=201)
@@ -125,7 +155,7 @@ async def create_product(data: ProductCreate, db: Session = Depends(get_db)):
     db.add(product)
     db.commit()
     db.refresh(product)
-    sf.refresh('products')   # daemon thread — returns immediately
+    sf.refresh('products')   # daemon thread — returns immediately and clears local cache
     return product
 
 # UPDATE
@@ -157,6 +187,20 @@ async def delete_product(product_id: int, db: Session = Depends(get_db)):
 
 router <span class="text-gray-400">=</span> APIRouter(prefix<span class="text-gray-400">=</span><span class="text-green-300">'/products'</span>, tags<span class="text-gray-400">=</span>[<span class="text-green-300">'Products'</span>])
 
+<span class="text-gray-500"># LIST (Cached)</span>
+<span class="text-yellow-300">@router.get</span>(<span class="text-green-300">'/'</span>)
+<span class="text-blue-400">async def</span> <span class="text-yellow-300">list_products</span>(db<span class="text-gray-400">=</span>Depends(get_db)):
+    <span class="text-blue-400">if</span> sf.get_table(<span class="text-green-300">'products'</span>):
+        <span class="text-gray-500"># Cache hit: Fetch directly from SyncForge memory cache</span>
+        products <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">'products'</span>)
+    <span class="text-blue-400">else</span>:
+        <span class="text-gray-500"># Cache miss: Run DB query and cache automatically</span>
+        products <span class="text-gray-400">=</span> sf.cache_query(
+            table_name<span class="text-gray-400">=</span><span class="text-green-300">'products'</span>,
+            queryset<span class="text-gray-400">=</span>db.query(Product).filter(Product.active <span class="text-gray-400">==</span> <span class="text-blue-300">True</span>).all()
+        )
+    <span class="text-blue-400">return</span> products
+
 <span class="text-gray-500"># CREATE</span>
 <span class="text-yellow-300">@router.post</span>(<span class="text-green-300">'/'</span>, status_code<span class="text-gray-400">=</span><span class="text-yellow-300">201</span>)
 <span class="text-blue-400">async def</span> <span class="text-yellow-300">create_product</span>(data: ProductCreate, db<span class="text-gray-400">=</span>Depends(get_db)):
@@ -181,11 +225,6 @@ router <span class="text-gray-400">=</span> APIRouter(prefix<span class="text-gr
     product <span class="text-gray-400">=</span> db.query(Product).filter(Product.id <span class="text-gray-400">==</span> product_id).first()
     db.delete(product); db.commit()
     sf.refresh(<span class="text-green-300">'products'</span>)</pre>
-</div>
-
-<!-- 5 Important note -->
-<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 mb-8">
-    <strong>Important:</strong> <code class="font-mono text-xs">cache_query()</code> uses Django's cache framework internally and is only available in Django projects. In FastAPI, use your own cache layer (e.g. <code class="font-mono text-xs">aiocache</code>, <code class="font-mono text-xs">redis-py</code>) and call <code class="font-mono text-xs">sf.refresh()</code> after every write to signal data changes to the SyncForge server.
 </div>
 
 <!-- Nav -->

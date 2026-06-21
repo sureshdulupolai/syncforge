@@ -77,7 +77,28 @@ def create_app():
 </div>
 
 <!-- 4 Routes -->
-<h2 class="text-xl font-semibold mb-3">4. Routes — read, create, update, delete</h2>
+<h2 class="text-xl font-semibold mb-3">4. Reading Data (Cache-Aside Pattern)</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    SyncForge uses a smart cache-aside pattern to protect your database. Follow these 3 steps in your Flask routes:
+</p>
+
+<div class="border border-brand-border rounded-xl p-5 mb-4 bg-brand-secbg text-sm text-brand-secondary">
+    <ol class="space-y-3 list-none">
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+            <div><strong>get_table()</strong>: Instantly fetches pre-warmed data from local memory. Zero database hits.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+            <div><strong>cache_query()</strong>: If memory is empty (cache miss), executes the DB query and automatically saves the result back to memory.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+            <div><strong>Combine Both</strong>: Use a simple <code class="font-mono bg-white px-1 rounded border border-brand-border text-xs">if/else</code> block to ensure only the very first user triggers a database query.</div>
+        </li>
+    </ol>
+</div>
+
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-gray-400">app/routes/products.py</span>
@@ -87,14 +108,19 @@ from app.models import Product, db
 
 products_bp = Blueprint('products', __name__, url_prefix='/products')
 
-# READ — serve from cache, hit DB only on miss/after refresh
 @products_bp.get('/')
 def list_products():
-    # Flask doesn't have Django's cache framework.
-    # Use sf.cache_query() only from Django.
-    # For Flask: cache manually or use flask-caching.
-    products = Product.query.filter_by(active=True).all()
-    sf._report_cache_hit_async('products')  # optional: track manually
+    if sf.get_table('products'):
+        # 1. Cache Hit: Data found in memory! DB query skipped entirely.
+        products = sf.get_table('products')
+    else:
+        # 2. Cache Miss: Execute DB query and automatically save to memory
+        products = sf.cache_query(
+            table_name='products',
+            queryset=Product.query.all()
+        )
+        
+    # 3. Return data exactly as it came from the DB
     return jsonify([p.to_dict() for p in products])
 
 # CREATE
@@ -104,15 +130,14 @@ def create_product():
     product = Product(name=data['name'], price=data['price'])
     db.session.add(product)
     db.session.commit()
-    sf.refresh('products')    # ← signal change
+    sf.refresh('products')    # ← clears local cache and notifies server
     return jsonify(product.to_dict()), 201
 
 # UPDATE
 @products_bp.put('/<int:pk>')
 def update_product(pk):
     product       = Product.query.get_or_404(pk)
-    data          = request.get_json()
-    product.price = data.get('price', product.price)
+    product.price = request.get_json().get('price', product.price)
     db.session.commit()
     sf.refresh('products')
     return jsonify(product.to_dict())
@@ -132,6 +157,22 @@ def delete_product(pk):
 
 products_bp <span class="text-gray-400">=</span> Blueprint(<span class="text-green-300">'products'</span>, <span class="text-blue-300">__name__</span>, url_prefix<span class="text-gray-400">=</span><span class="text-green-300">'/products'</span>)
 
+<span class="text-gray-500"># READ (Cached)</span>
+<span class="text-yellow-300">@products_bp.get</span>(<span class="text-green-300">'/'</span>)
+<span class="text-blue-400">def</span> <span class="text-yellow-300">list_products</span>():
+    <span class="text-blue-400">if</span> sf.get_table(<span class="text-green-300">'products'</span>):
+        <span class="text-gray-500"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
+        products <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">'products'</span>)
+    <span class="text-blue-400">else</span>:
+        <span class="text-gray-500"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
+        products <span class="text-gray-400">=</span> sf.cache_query(
+            table_name<span class="text-gray-400">=</span><span class="text-green-300">'products'</span>,
+            queryset<span class="text-gray-400">=</span>Product.query.all()
+        )
+        
+    <span class="text-gray-500"># 3. Return data exactly as it came from the DB</span>
+    <span class="text-blue-400">return</span> jsonify([p.to_dict() <span class="text-blue-400">for</span> p <span class="text-blue-400">in</span> products])
+
 <span class="text-gray-500"># CREATE</span>
 <span class="text-yellow-300">@products_bp.post</span>(<span class="text-green-300">'/'</span>)
 <span class="text-blue-400">def</span> <span class="text-yellow-300">create_product</span>():
@@ -139,7 +180,7 @@ products_bp <span class="text-gray-400">=</span> Blueprint(<span class="text-gre
     product <span class="text-gray-400">=</span> Product(name<span class="text-gray-400">=</span>data[<span class="text-green-300">'name'</span>], price<span class="text-gray-400">=</span>data[<span class="text-green-300">'price'</span>])
     db.session.add(product)
     db.session.commit()
-    sf.refresh(<span class="text-green-300">'products'</span>)    <span class="text-gray-500"># ← signal change</span>
+    sf.refresh(<span class="text-green-300">'products'</span>)    <span class="text-gray-500"># ← clears local cache and notifies server</span>
     <span class="text-blue-400">return</span> jsonify(product.to_dict()), <span class="text-yellow-300">201</span>
 
 <span class="text-gray-500"># UPDATE</span>

@@ -116,6 +116,53 @@ def _warn_if_locmem_cache() -> None:
         pass  # Not a Django project — no-op
 
 
+# ── Internal Cache Engine ──────────────────────────────────────────────────────
+
+class InMemoryCache:
+    """
+    Thread-safe, dict-backed fallback cache for non-Django frameworks (FastAPI/Flask).
+    """
+    def __init__(self) -> None:
+        self._data: Dict[str, tuple] = {}
+        self._lock = threading.Lock()
+
+    def get(self, key: str, default: Any = None) -> Any:
+        with self._lock:
+            if key not in self._data:
+                return default
+            val, exp = self._data[key]
+            if exp and time.time() > exp:
+                del self._data[key]
+                return default
+            return val
+
+    def set(self, key: str, value: Any, timeout: Optional[int] = None) -> None:
+        with self._lock:
+            exp = time.time() + timeout if timeout else 0
+            self._data[key] = (value, exp)
+
+    def delete(self, key: str) -> None:
+        with self._lock:
+            self._data.pop(key, None)
+
+    def delete_many(self, keys: List[str]) -> None:
+        with self._lock:
+            for k in keys:
+                self._data.pop(k, None)
+
+_fallback_cache = InMemoryCache()
+
+def _get_cache() -> Any:
+    """
+    Return Django's cache if available, else the internal fallback cache.
+    """
+    try:
+        from django.core.cache import cache  # type: ignore[import]
+        return cache
+    except ImportError:
+        return _fallback_cache
+
+
 # ── Main Client ───────────────────────────────────────────────────────────────
 
 class SyncForge:
@@ -261,11 +308,8 @@ class SyncForge:
         This retrieves data stored by cache_query() when no cache_key is explicitly provided.
         """
         self._validate_table_name(table_name)
-        try:
-            from django.core.cache import cache  # type: ignore[import]
-            return cache.get(f"sf_auto_{table_name}")
-        except ImportError:
-            return None
+        cache = _get_cache()
+        return cache.get(f"sf_auto_{table_name}")
 
     def cache_query(
         self,
@@ -349,13 +393,7 @@ class SyncForge:
         elif not isinstance(cache_key, str):
             raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
 
-        try:
-            from django.core.cache import cache  # type: ignore[import]
-        except ImportError:
-            # Not a Django project — evaluate queryset directly, no caching.
-            logger.debug("[SyncForge] Django not available; cache_query evaluating queryset directly.")
-            return list(queryset)
-
+        cache = _get_cache()
         _warn_if_locmem_cache()
 
         # ── Fast path: cache hit ───────────────────────────────────────────────
@@ -560,7 +598,7 @@ class SyncForge:
         cache keys to delete when the table changes.
         """
         try:
-            from django.core.cache import cache  # type: ignore[import]
+            cache = _get_cache()
             registry_key = f"sf_registry_{table_name}"
             # Registry TTL: at least as long as the data TTL, or 24 hours if no timeout.
             registry_ttl = timeout if timeout is not None else 86400
@@ -592,6 +630,10 @@ class SyncForge:
         """Execute ``_sync_one`` for each table, handling errors per ``silent``."""
         results: List[SyncResult] = []
         for table in tables:
+            # 1. Invalidate local cache FIRST (framework-agnostic)
+            self._invalidate_local_cache(table)
+            
+            # 2. Notify SyncForge server
             try:
                 results.append(self._sync_one(table))
             except SyncForgeError as exc:
@@ -626,6 +668,33 @@ class SyncForge:
             raw=data,
             status_code=200,
         )
+
+    def _invalidate_local_cache(self, table_name: str) -> None:
+        """
+        Delete all cache entries registered under ``table_name``'s invalidation
+        registry. Works across all frameworks.
+        """
+        try:
+            cache = _get_cache()
+            registry_key = f"sf_registry_{table_name}"
+            keys: set = cache.get(registry_key) or set()
+            if keys:
+                # Provide a generic delete_many approach if the backend supports it
+                if hasattr(cache, 'delete_many'):
+                    cache.delete_many(list(keys))
+                else:
+                    for k in keys:
+                        cache.delete(k)
+                cache.delete(registry_key)
+                logger.debug(
+                    "[SyncForge] Invalidated %d cache key(s) for table '%s'.",
+                    len(keys), table_name,
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "[SyncForge] Cache invalidation failed for table '%s': %s",
+                table_name, exc,
+            )
 
     # ── HTTP Layer ─────────────────────────────────────────────────────────────
 

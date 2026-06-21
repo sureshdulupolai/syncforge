@@ -104,12 +104,30 @@ class Product(models.Model):
     <strong>sync_mode options:</strong> <code class="font-mono text-xs">event</code> (on save/delete), <code class="font-mono text-xs">manual</code>, <code class="font-mono text-xs">schedule_5m</code>, <code class="font-mono text-xs">schedule_1h</code>, <code class="font-mono text-xs">schedule_1d</code>, <code class="font-mono text-xs">schedule_30d</code>, <code class="font-mono text-xs">hybrid</code>
 </div>
 
-<!-- 4 cache_query -->
-<h2 id="cache-query" class="text-xl font-semibold mb-3 scroll-mt-20">4. cache_query() in views</h2>
+<!-- 4 Reading Data -->
+<h2 id="cache-aside" class="text-xl font-semibold mb-3 scroll-mt-20">4. Reading Data (Cache-Aside Pattern)</h2>
 <p class="text-sm text-brand-secondary mb-3">
-    <code class="font-mono bg-gray-100 px-1 rounded">cache_query()</code> is a cache-aside wrapper. First call hits the DB and stores the result. All subsequent calls return from cache — until <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> is called or the timeout expires.
+    SyncForge uses a smart cache-aside pattern to protect your database. Follow these 3 steps in your views:
 </p>
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+
+<div class="border border-brand-border rounded-xl p-5 mb-4 bg-brand-secbg text-sm text-brand-secondary">
+    <ol class="space-y-3 list-none">
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+            <div><strong>get_table()</strong>: Instantly fetches pre-warmed data from local memory. Zero database hits.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+            <div><strong>cache_query()</strong>: If memory is empty (cache miss), executes the DB query and automatically saves the result back to memory.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+            <div><strong>Combine Both</strong>: Use a simple <code class="font-mono bg-white px-1 rounded border border-brand-border text-xs">if/else</code> block to ensure only the very first user triggers a database query.</div>
+        </li>
+    </ol>
+</div>
+
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-gray-400">myapp/views.py</span>
         <button onclick="copyCode(this)" data-code="from django.shortcuts import render
@@ -117,32 +135,36 @@ from myproject.sf import sf
 from .models import Product
 
 def product_list(request):
-    products = sf.cache_query(
-        table_name='core_product',
-        cache_key='all_active_products',
-        queryset=Product.objects.filter(active=True).order_by('name'),
-        timeout=3600,   # 1 hour fallback TTL
-    )
-    return render(request, 'products/list.html', {
-        'products': products,
-        'count':    len(products),
-    })" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    if sf.get_table('core_product'):
+        # 1. Cache Hit: Data found in memory! DB query skipped entirely.
+        log = sf.get_table('core_product')
+    else:
+        # 2. Cache Miss: Execute DB query and automatically save to memory
+        log = sf.cache_query(
+            table_name='core_product',
+            queryset=Product.objects.all()
+        )
+        
+    # 3. Return data exactly as it came from the DB
+    return render(request, 'products/list.html', {'products': log})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
     <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> django.shortcuts <span class="text-blue-400">import</span> render
 <span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
 <span class="text-blue-400">from</span> .models <span class="text-blue-400">import</span> Product
 
 <span class="text-blue-400">def</span> <span class="text-yellow-300">product_list</span>(request):
-    products <span class="text-gray-400">=</span> sf.cache_query(
-        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,
-        cache_key<span class="text-gray-400">=</span><span class="text-green-300">'all_active_products'</span>,
-        queryset<span class="text-gray-400">=</span>Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>).order_by(<span class="text-green-300">'name'</span>),
-        timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>,   <span class="text-gray-500"># 1 hour fallback TTL</span>
-    )
-    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'products/list.html'</span>, {
-        <span class="text-green-300">'products'</span>: products,
-        <span class="text-green-300">'count'</span>:    len(products),
-    })</pre>
+    <span class="text-blue-400">if</span> sf.get_table(<span class="text-green-300">'core_product'</span>):
+        <span class="text-gray-500"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
+        log <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">'core_product'</span>)
+    <span class="text-blue-400">else</span>:
+        <span class="text-gray-500"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
+        log <span class="text-gray-400">=</span> sf.cache_query(
+            table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,
+            queryset<span class="text-gray-400">=</span>Product.objects.all()
+        )
+        
+    <span class="text-gray-500"># 3. Return data exactly as it came from the DB</span>
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'products/list.html'</span>, {<span class="text-green-300">'products'</span>: log})</pre>
 </div>
 
 <!-- 5 Template -->
