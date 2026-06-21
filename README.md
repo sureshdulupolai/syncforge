@@ -11,32 +11,52 @@
 
 ---
 
-SyncForge is the missing link between simple caching and complex real-time push systems. It provides an intelligent cache-aside engine with **built-in stampede protection**, powered by explicit developer-triggered invalidation.
+SyncForge is the ultimate missing link between simple caching and complex real-time push systems. Built for modern Python frameworks (Django, FastAPI, Flask), it provides an intelligent cache-aside engine with **built-in stampede protection** and a **Web Application Firewall (WAF)**.
 
-Instead of expiring cached data on an arbitrary timer (TTL), SyncForge lets you decide exactly when data becomes stale.
+Instead of expiring cached data on an arbitrary timer (TTL), SyncForge lets you decide exactly when data becomes stale. 
 
-## 🚀 The Core Concept
+## 🚀 Why Use SyncForge? (The "0 DB Calls" Advantage)
 
-1. **Read**: `sf.get_table()` instantly serves queries from your fast local memory.
-2. **Write**: You call `sf.refresh('table_name')` after writing to your database.
-3. **Invalidate**: SyncForge instantly clears the local cache across all your workers and notifies the central dashboard.
+SyncForge is designed to give your applications **massive speed** and save your database from unnecessary load. 
 
-**The result?** Zero polling, zero unnecessary database queries, and your clients always get fresh data exactly when it changes.
+**Best Use Case:** It is perfect for data that remains static for long periods (e.g., E-Commerce Products, Blog Articles, Global Settings). 
+**The Advantage:** If you set a 100-day timer on your database cache, the first user loads the data. For the next 100 days, every subsequent request is served with **0 Database Calls**. The load on your database drops to practically zero, and your application speed multiplies.
+
+### Advanced In-Memory Filtering (Cache as a DB)
+Instead of running N+1 queries to filter data (e.g., `category_id=1`), SyncForge allows you to cache the **entire table** once and perform filters instantly in Python RAM. This guarantees 0 database hits across all your filter combinations and eliminates Cache Key Fragmentation.
+
+*(Note: Do not use SyncForge for highly dynamic real-time data like Live Chat, where data changes every second.)*
 
 ---
 
-## 🔒 Security & Zero-Data Privacy Architecture
+## 🔒 Enterprise-Grade Security & Isolation
 
-A common misconception is that caching platforms store your users, products, or financial records on their central servers. **SyncForge does NOT.**
+### 1. Zero-Data Privacy Architecture
+A common misconception is that caching platforms store your users or products on their central servers. **SyncForge does NOT.**
+- **What We Sync:** Only lightweight metadata is exchanged (table names, timestamps, HMAC signatures).
+- **What Stays Local:** All your actual query results remain strictly inside your own server's RAM or Redis. 
 
-SyncForge operates on a strict **zero-data model**:
-- **What We Sync:** Only lightweight synchronization metadata is exchanged over the network (table identifiers, invalidation timestamps, cache keys, and HMAC-signed API credentials).
-- **What Stays Local:** All your actual query results and application data remain strictly inside your own infrastructure.
+### 2. Multi-Tenant Cache Key Isolation
+If multiple clients or projects use SyncForge on the same shared Redis cluster, their data will never mix. The SyncForge SDK automatically hashes your secret `API_KEY` to generate a mathematically unique prefix (e.g., `sf_8a7b9c1d_products`). Client A's data can never overwrite Client B's data.
 
-### Enterprise-Grade Security Features
-- **HMAC-SHA256 Request Signing**: Every API call is cryptographically signed and timestamped, making replay attacks and payload forgery mathematically impossible.
-- **Cache Stampede Protection**: Double-checked threading locks ensure that even if 10,000 users hit an expired cache at the exact same millisecond, only exactly **1** database query is executed.
-- **Built-in WAF**: The Python SDK includes a Web Application Firewall that blocks URL-encoded XSS, SQLi, and Path Traversal attacks before they even reach your views.
+### 3. Built-in WAF (Web Application Firewall)
+The Python SDK includes a production-ready WAF that automatically intercepts malicious payloads.
+
+### 4. Zero-Code Anti-DDoS Rate Limiter 🛡️ [NEW]
+Protect your database from cache-busting brute force attacks. Our IP-based Anti-DDoS middleware automatically tracks fetches per IP (even behind proxies like Cloudflare via `HTTP_X_FORWARDED_FOR`).
+If an attacker excessively hits the same table, the SDK instantly blocks the IP and returns a `429 Too Many Requests` JSON response.
+**Zero code required in your views** — simply enable it on the model:
+`@sync_model(sf, sync_mode='event', waf_enabled=True, max_requests=3, block_time_sec=86400)`
+
+## 📂 Project Structure (A-Z)
+
+This repository contains both the Central Server (Dashboard/API) and the SDK.
+
+- **`config/`**: Core Django settings. Fully optimized for high-concurrency SQLite (WAL Mode, Memory-Mapped I/O, 20-second timeout locks).
+- **`core/`**: Main frontend templates (`templates/core/`), including the heavily optimized 3-column UI, pricing, and all framework-specific documentation (Django, FastAPI, Flask).
+- **`dashboard/`**: The developer portal where you create projects, generate API keys, and track analytics (bandwidth saved, database calls saved).
+- **`api/`**: The high-speed REST API endpoints that the SDK communicates with using HMAC-SHA256 signatures.
+- **`sdk/`**: The actual `syncforge` Python library installed via `pip`. Contains the framework-agnostic client, Django `@sync_model` decorator, and WAF middleware.
 
 ---
 
@@ -54,6 +74,7 @@ pip install syncforge
 import os
 from syncforge import SyncForge
 
+# Initialize the client with your unique API key
 sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
 ```
 
@@ -82,40 +103,20 @@ from myproject.sf import sf
 from .models import Product
 
 def product_list(request):
-    # 1. First, try to fetch from fast memory
-    if sf.get_table("core_product"):
-        products = sf.get_table("core_product")
-    else:
-        # 2. On Cache Miss: Hit DB, and automatically save to memory
-        products = sf.cache_query(
-            table_name='core_product',
-            queryset=Product.objects.filter(active=True)
-            # cache_key omitted! Auto-generates as 'sf_auto_core_product'
-        )
+    # 1. First, try to fetch the ENTIRE table from fast memory (0 DB calls!)
+    all_products = sf.get_table("core_product")
+    
+    # 2. On Cache Miss: Hit DB, and save to memory
+    if not all_products:
+        all_products = list(Product.objects.all())
+        # Track this key so @sync_model deletes it when data changes
+        sf.track_key("core_product", "sf_myproj_products")
         
-    return render(request, 'list.html', {'products': products})
+    # 3. Filter directly in RAM (Instant speed, 0 DB load)
+    active_products = [p for p in all_products if p.is_active]
+        
+    return render(request, 'list.html', {'products': active_products})
 ```
-
----
-
-## 🛡️ Web Application Firewall (WAF)
-
-SyncForge SDK includes a production-ready Web Application Firewall. Protect your app with one line.
-
-```python
-# Django settings.py
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'syncforge.middleware.SyncForgeSecurityMiddleware',  # Add this line
-    # ...
-]
-```
-
-It automatically intercepts:
-* **SQL Injection (SQLi):** `UNION SELECT`, `OR 1=1`, `DROP TABLE`
-* **Cross-Site Scripting (XSS):** `<script>`, `javascript:`, `onerror=`
-* **Path Traversal:** `../`, `/etc/passwd`
-* **Security Headers:** Automatically injects `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and CSP headers.
 
 ---
 

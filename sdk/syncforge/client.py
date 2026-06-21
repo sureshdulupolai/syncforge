@@ -48,6 +48,7 @@ from .exceptions import (
     NetworkError,
     ValidationError,
     ConfigurationError,
+    SyncForgeWAFError,
 )
 
 # ── Constants ──────────────────────────────────────────────────────────────────
@@ -230,6 +231,12 @@ class SyncForge:
         self._silent       = silent
         self._async        = async_mode
         self._sign_requests = sign_requests
+        self._local         = threading.local()
+        self._waf_configs: Dict[str, dict] = {}
+        
+        # Generate a unique 8-character prefix based on the API key to prevent 
+        # cache collisions if multiple projects share the same Redis instance.
+        self._project_prefix = hashlib.md5(api_key.encode()).hexdigest()[:8]
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
@@ -302,14 +309,17 @@ class SyncForge:
         results = self._refresh_all(tables)
         return results[0] if len(results) == 1 else results
 
-    def get_table(self, table_name: str) -> Any:
+    def get_table(self, table_name: str, cache_key: Optional[str] = None) -> Any:
         """
-        Fetch the automatically generated cache for a specific table.
-        This retrieves data stored by cache_query() when no cache_key is explicitly provided.
+        Fetch data from the cache. If cache_key is provided, fetches that specific key.
+        Otherwise, fetches the auto-generated key for the table.
         """
         self._validate_table_name(table_name)
+        self._check_waf(table_name)
         cache = _get_cache()
-        return cache.get(f"sf_auto_{table_name}")
+        if not cache_key:
+            cache_key = f"sf_{self._project_prefix}_{table_name}"
+        return cache.get(cache_key)
 
     def cache_query(
         self,
@@ -378,6 +388,7 @@ class SyncForge:
             )
         """
         self._validate_table_name(table_name)
+        self._check_waf(table_name)
         
         # Handle backward compatibility / optional cache_key
         # If cache_key is not a string and queryset is None, the user passed the queryset as the 2nd positional argument.
@@ -389,7 +400,7 @@ class SyncForge:
             raise ValueError("queryset must be provided.")
             
         if not cache_key:
-            cache_key = f"sf_auto_{table_name}"
+            cache_key = f"sf_{self._project_prefix}_{table_name}"
         elif not isinstance(cache_key, str):
             raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
 
@@ -563,6 +574,16 @@ class SyncForge:
                 return False
             raise
 
+    def register_waf_config(self, table_name: str, max_requests: int, block_time_sec: int) -> None:
+        """
+        Register a WAF rate-limiting configuration for a specific table.
+        """
+        self._validate_table_name(table_name)
+        self._waf_configs[table_name.strip().lower()] = {
+            'max': max_requests,
+            'block': block_time_sec,
+        }
+
     # ── Internal Helpers ───────────────────────────────────────────────────────
 
     def _validate_table_name(self, table_name: str) -> None:
@@ -607,6 +628,37 @@ class SyncForge:
             cache.set(registry_key, existing_keys, registry_ttl)
         except Exception as exc:  # noqa: BLE001
             logger.warning("[SyncForge] Failed to register cache key '%s': %s", cache_key, exc)
+
+    def _check_waf(self, table_name: str) -> None:
+        """
+        Checks if the current client IP has exceeded the allowed fetch rate for this table.
+        Raises SyncForgeWAFError if the limit is exceeded.
+        """
+        config = self._waf_configs.get(table_name.strip().lower())
+        if not config:
+            return
+
+        ip = getattr(self._local, "client_ip", None)
+        if not ip:
+            return
+
+        cache = _get_cache()
+        # Create a unique rate limit tracker key: e.g. sf_waf_products_192.168.1.1
+        waf_key = f"sf_waf_{table_name}_{ip}"
+        
+        hits = cache.get(waf_key)
+        if hits is None:
+            # First hit, set to 1 for the block duration (sliding window proxy)
+            cache.set(waf_key, 1, config['block'])
+        elif hits >= config['max']:
+            logger.warning("[SyncForge WAF] Blocked IP %s for table '%s'. Exceeded %d requests.", ip, table_name, config['max'])
+            raise SyncForgeWAFError(
+                f"Rate limit exceeded for table {table_name}. Too many fetches.", 
+                block_time=config['block']
+            )
+        else:
+            # Increment hits (requires read-modify-write if backend lacks atomic incr)
+            cache.set(waf_key, hits + 1, config['block'])
 
     def _report_cache_hit_async(self, table_name: str) -> None:
         """

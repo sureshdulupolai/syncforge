@@ -108,3 +108,16 @@ class CacheError(SyncForgeError):
     Note: Transient cache unavailability (e.g., Redis restart) does NOT raise
     this error — the SDK falls back to querying the database directly.
     """
+
+class SyncForgeWAFError(SyncForgeError):
+    """
+    Raised when the built-in WAF (Rate Limiter) blocks a request due to
+    excessive cache queries from a single IP address.
+
+    Attributes:
+        block_time: The number of seconds the IP is blocked for.
+    """
+    def __init__(self, message: str, block_time: int) -> None:
+        super().__init__(message, status_code=429)
+        self.block_time = block_time
+

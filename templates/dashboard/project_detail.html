@@ -56,7 +56,11 @@
                 </div>
                 <div class="text-center">
                     <div class="text-xl font-bold text-green-600" id="p-stat-calls">0</div>
-                    <div class="text-xs text-brand-muted">Calls Saved</div>
+                    <div class="text-xs text-brand-muted">DB Calls Saved</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xl font-bold text-blue-600" id="p-stat-bandwidth">0.0</div>
+                    <div class="text-xs text-brand-muted">MB Saved</div>
                 </div>
                 <div class="text-center">
                     <div class="text-xl font-bold text-brand-primary" id="p-stat-keys">{{ api_keys.count }}</div>
@@ -125,8 +129,15 @@
         <!-- Quick usage example -->
         <div class="mb-6 bg-[#1A1A1A] rounded-xl p-5 text-sm font-mono text-[#D4D4D4]">
             <div class="text-[#6A9955] mb-2"># Use your API key — works with any HTTP client</div>
-            <span class="text-[#569CD6]">curl</span> -X POST https://yoursite.com/api/v1/sync/products/ \<br>
+            <span class="text-[#569CD6]">curl</span> -X POST https://syncforge.dev/api/v1/sync/products/ \<br>
             &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#CE9178]">-H "X-API-Key: sf_live_your_key_here"</span>
+        </div>
+        
+        <div class="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-900 flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+                <strong>Collision-Proof Cache Keys:</strong> The SDK automatically hashes your active API Key to generate a unique cache prefix. Your auto-generated cache keys will look like: <code class="font-mono bg-blue-100 px-1 rounded">sf_{hash}_tablename</code>. This guarantees your data never collides with other projects.
+            </div>
         </div>
 
         <div id="keys-loading" class="text-center py-12 text-brand-muted text-sm">Loading…</div>
@@ -171,12 +182,12 @@
                 <!-- Step 2 -->
                 <div class="relative flex items-start gap-6 md:justify-center">
                     <div class="hidden md:block w-full text-right py-3 pr-6 text-sm text-brand-secondary">
-                        <span class="font-bold text-brand-primary block mb-1">Create syncforge.py</span>
+                        <span class="font-bold text-brand-primary block mb-1">Create sf_client.py</span>
                         Put this file at the root of your project.
                         <div class="mt-3 flex justify-end">
                             <div class="bg-gray-50 border border-brand-border rounded-lg p-3 text-left inline-block text-xs font-mono">
                                 <div>myproject/</div>
-                                <div class="pl-4 border-l-2 border-brand-accent ml-2 my-1 py-1">syncforge.py</div>
+                                <div class="pl-4 border-l-2 border-brand-accent ml-2 my-1 py-1">sf_client.py</div>
                                 <div class="pl-4 text-brand-muted">manage.py</div>
                                 <div class="pl-4 text-brand-muted">app/</div>
                             </div>
@@ -185,11 +196,11 @@
                     <div class="w-10 h-10 rounded-full bg-white border-[3px] border-brand-accent text-brand-accent font-bold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">2</div>
                     <div class="w-full">
                         <div class="md:hidden mb-2">
-                            <span class="font-bold text-brand-primary block text-sm">Create syncforge.py at project root</span>
+                            <span class="font-bold text-brand-primary block text-sm">Create sf_client.py at project root</span>
                         </div>
                         <div class="bg-[#1A1A1A] rounded-xl overflow-hidden border border-[#2d2d2d] shadow-sm">
                             <div class="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between">
-                                <span class="text-xs text-gray-400 font-mono">syncforge.py</span>
+                                <span class="text-xs text-gray-400 font-mono">sf_client.py</span>
                                 <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
                             </div>
                             <div class="p-4 font-mono text-sm text-[#D4D4D4] overflow-x-auto leading-relaxed">
@@ -224,7 +235,7 @@
                             </div>
                             <div class="p-4 font-mono text-sm text-[#D4D4D4] overflow-x-auto leading-relaxed">
                                 <span class="text-[#569CD6]">from</span> django.db <span class="text-[#569CD6]">import</span> models<br>
-                                <span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf<br>
+                                <span class="text-[#569CD6]">from</span> sf_client <span class="text-[#569CD6]">import</span> sf<br>
                                 <span class="text-[#569CD6]">from</span> syncforge.django <span class="text-[#569CD6]">import</span> sync_model<br><br>
                                 <span class="text-[#6A9955]"># Auto-registers table & syncs on all DB changes ⚡</span><br>
                                 <span class="text-[#4EC9B0]">@sync_model</span>(sf)<br>
@@ -332,8 +343,10 @@ function renderData({ tables, api_keys }) {
     renderKeys(api_keys);
     // Update stats
     const calls = tables.reduce((s, t) => s + (t.database_calls_saved || 0), 0);
+    const bandwidth = tables.reduce((s, t) => s + (t.bandwidth_saved_mb || 0), 0);
     document.getElementById('p-stat-tables').textContent = tables.length;
     document.getElementById('p-stat-calls').textContent  = calls.toLocaleString();
+    document.getElementById('p-stat-bandwidth').textContent = bandwidth.toFixed(1);
     document.getElementById('p-stat-keys').textContent   = api_keys.length;
 }
 

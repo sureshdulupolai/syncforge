@@ -28,6 +28,20 @@ After sf.refresh("products")
 cache_query() → cache MISS → DB query → store fresh data → return</pre>
 </div>
 
+<!-- Best Practices & Speed Advantage -->
+<div class="mb-10">
+    <h2 class="text-xl font-semibold mb-4">When to use SyncForge (The 0 DB Calls Advantage)</h2>
+    <p class="text-sm text-brand-secondary leading-relaxed mb-4">
+        SyncForge ka sabse best use un tables ke liye hai jinka data lambe time tak static (same) rehta hai (e.g. E-Commerce Products, Global Configurations, Blog Articles). Iska sabse bada fayda yeh hai ki aapko <strong>Massive Speed</strong> milti hai.
+    </p>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-blue-900 leading-relaxed">
+        <strong>Fayda:</strong> Agar aapne database ko 100 din ka timer de diya, toh ek baar data kisi ek client ke device/server par load ho gaya, toh aane wale har ek operation mein usko <strong>0 Database Calls</strong> ke sath turant data screen par show ho jayega. Database par load practically 0 ho jata hai, aur server ki speed multiply ho jati hai.
+    </div>
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 leading-relaxed">
+        <strong>Warning:</strong> Aisi tables (jaise Live Chat ya Fast Comments) jahan har bar data jaldi change hota hai, wahan iska use na karein. Wahan bar-bar refresh karne par fayde se zyada DB load ho sakta hai. Isliye is framework ko tabhi use karein jab data static ho aur use update/refresh lambe interval par karna ho.
+    </div>
+</div>
+
 <!-- Feature grid -->
 <h2 class="text-xl font-semibold mb-4">What's included</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">

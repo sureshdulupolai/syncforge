@@ -52,7 +52,7 @@ except ImportError:
 
 # ── Decorator ─────────────────────────────────────────────────────────────────
 
-def sync_model(sf_client, sync_mode: str = "event"):
+def sync_model(sf_client, sync_mode: str = "event", waf_enabled: bool = False, max_requests: int = 100, block_time_sec: int = 86400):
     """
     Class decorator for Django models that enables automatic SyncForge
     synchronisation.
@@ -76,6 +76,15 @@ def sync_model(sf_client, sync_mode: str = "event"):
             One of ``'event'``, ``'manual'``, ``'schedule_5m'``,
             ``'schedule_1h'``, ``'schedule_1d'``, ``'schedule_30d'``,
             ``'hybrid'``. Default: ``'event'``.
+        waf_enabled:
+            Enable the Anti-DDoS Web Application Firewall (WAF) for this table.
+            Default: ``False``.
+        max_requests:
+            Maximum number of database fetches allowed per IP for this table.
+            Default: ``100``.
+        block_time_sec:
+            Number of seconds to block the IP if `max_requests` is exceeded.
+            Default: ``86400`` (1 day).
 
     Returns:
         The original model class, unmodified — this decorator is transparent
@@ -100,6 +109,9 @@ def sync_model(sf_client, sync_mode: str = "event"):
             )
 
         table_name: str = cls._meta.db_table
+        
+        if waf_enabled:
+            sf_client.register_waf_config(table_name, max_requests, block_time_sec)
 
         with _registration_lock:
             if table_name in _registered_tables:
@@ -277,3 +289,61 @@ def sync_migrations(sf_client) -> None:
 
     except Exception as exc:  # noqa: BLE001
         logger.warning("[SyncForge] sync_migrations failed: %s", exc)
+
+
+# ── Middleware ─────────────────────────────────────────────────────────────────
+
+class SyncForgeWAFMiddleware:
+    """
+    SyncForge Anti-DDoS Web Application Firewall (WAF) Middleware.
+
+    Extracts the client IP from the incoming request and attaches it to the 
+    SyncForge thread-local storage. If the user exceeds the rate limit 
+    defined in ``@sync_model(waf_enabled=True)``, this middleware intercepts 
+    the exception and returns a 429 Too Many Requests response.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def _get_client_ip(self, request) -> str:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', '')
+
+    def __call__(self, request):
+        from django.http import JsonResponse
+        from syncforge.exceptions import SyncForgeWAFError
+        
+        # We need the global 'sf' client instance used by the project.
+        # Since the user initializes 'sf' in their sf_client.py, we try to 
+        # find the thread-local storage dynamically if multiple sf clients exist, 
+        # or we just rely on standard monkeypatching. 
+        # Safest approach: find any SyncForge instances tracking IPs, or if the user 
+        # imports this middleware, we assume they have 'sf'.
+        # For a robust SDK, we can look up the syncforge logger or simply 
+        # provide a generic way to set the IP for all clients.
+        import sys
+        
+        ip = self._get_client_ip(request)
+        
+        # Inject IP into any SyncForge clients loaded in sys.modules
+        # (This is a robust way to avoid forcing the user to pass 'sf' to the middleware)
+        sf_clients_found = []
+        for mod_name, mod in list(sys.modules.items()):
+            if getattr(mod, 'sf', None) and hasattr(mod.sf, '_local'):
+                sf_clients_found.append(mod.sf)
+                mod.sf._local.client_ip = ip
+
+        try:
+            response = self.get_response(request)
+            return response
+        except SyncForgeWAFError as e:
+            return JsonResponse({
+                "error": "Rate limit exceeded. Too many requests.",
+                "blocked_for_seconds": e.block_time
+            }, status=429)
+        finally:
+            # Clean up thread-local storage to prevent memory leaks in worker threads
+            for client in sf_clients_found:
+                client._local.client_ip = None
