@@ -219,6 +219,7 @@ class UnifiedAuthMiddleware:
             or request.GET.get("api_key")
         )
         if raw_key:
+            request.api_key = raw_key
             # Replay-protection: validate timestamp if provided.
             if not _validate_timestamp(request):
                 return JsonResponse(

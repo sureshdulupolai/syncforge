@@ -132,6 +132,30 @@ sequenceDiagram
 
 ---
 
+## ⚙️ Standalone SDK Refresh & Rate Limiting
+
+### 1. Standalone SDK Refresh
+You can trigger cache invalidation from standalone Python scripts outside the main web application (e.g. in cron jobs or microservices) using the SDK and your API key:
+```python
+import os
+from syncforge import SyncForge
+
+# Initialize the SyncForge client standalone
+sf = SyncForge(api_key=os.environ.get('SYNCFORGE_API_KEY'))
+
+# Trigger cache refresh from anywhere
+sf.refresh('products')
+```
+
+### 2. Anti-Spam Rate Limiting (60-Second Cooldown)
+To protect your application and database from request spikes, table refreshes are subject to a **60-second cooldown period** per table:
+- Rapid consecutive refresh requests (via SDK or the dashboard manual refresh button) within 60 seconds will return an `HTTP 429 Too Many Requests` error.
+
+### 3. Project-Scoped Table Isolation
+Table names are isolated by project prefix to avoid collisions across different applications or environments. The SDK and API calculate a prefix like `sf_{project_prefix}_{table_name}` based on your API key, ensuring complete key isolation.
+
+---
+
 ## 📖 Documentation & Support
 
 Comprehensive guides for Django, FastAPI, and Flask are available at:

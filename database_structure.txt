@@ -1,0 +1,156 @@
+================================================================================
+                       SYNCFORGE DATABASE STRUCTURE DOCUMENTATION
+================================================================================
+
+This document details all the database tables in the SyncForge project, their keys
+(Primary Keys, Foreign Keys, Unique constraints, and Indexes), and explanations of
+why each column is used.
+
+--------------------------------------------------------------------------------
+1. Table: dashboard_developerprofile
+--------------------------------------------------------------------------------
+This table stores additional profile information linked to Django's standard User.
+
+* Keys:
+  - Primary Key: `id` (integer, auto-increment)
+  - Foreign Key / Unique: `user_id` -> links to standard `auth_user.id` (One-to-One)
+
+* Columns & Explanation:
+  - `id`: Unique identifier for the developer profile.
+  - `user_id`: One-to-one link to the user table. Ensures each profile corresponds
+    to exactly one developer account.
+
+--------------------------------------------------------------------------------
+2. Table: dashboard_project
+--------------------------------------------------------------------------------
+Represents a developer's project containing API keys and table configurations.
+
+* Keys:
+  - Primary Key: `id` (integer, auto-increment)
+  - Foreign Key: `user_id` -> links to `auth_user.id`
+  - Unique Constraint: `slug` (slugified name for unique URL paths)
+
+* Columns & Explanation:
+  - `id`: Unique database identifier for the project.
+  - `user_id`: Links the project to the developer who owns it.
+  - `name`: User-friendly name of the project (e.g. "My E-commerce Shop").
+  - `slug`: URL-friendly slug generated from the name, used for dashboard routing.
+  - `description`: Text describing the project's purpose.
+  - `project_prefix`: 8-character hex string unique prefix calculated from the
+    API key or project name. Used by the SDK and API as a prefix for local cache
+    keys (e.g., `sf_{prefix}_tablename`) to prevent collisions between projects.
+  - `created_at`: Timestamp recording when the project was created.
+  - `updated_at`: Timestamp updated whenever project settings are saved.
+
+--------------------------------------------------------------------------------
+3. Table: dashboard_apikey
+--------------------------------------------------------------------------------
+Stores hashed API keys used by developers to authenticate the SDK and REST calls.
+
+* Keys:
+  - Primary Key: `id` (integer, auto-increment)
+  - Foreign Key: `project_id` -> links to `dashboard_project.id`
+  - Unique Constraint: `key_hash` (secure SHA-256 hash of the API key)
+  - Unique Constraint: `key` (legacy plaintext key - deprecated)
+
+* Columns & Explanation:
+  - `id`: Unique identifier for the API key entry.
+  - `project_id`: Links the API key to a specific SyncForge project.
+  - `name`: Friendly name for the key (e.g. "Production Key", "Dev Key").
+  - `key_prefix`: Stores the first 18 characters of the raw key (e.g. "sf_live_abc123...")
+    to safely identify the key in the dashboard UI without exposing the full secret.
+  - `key_hash`: SHA-256 hash of the full API key. Incoming requests are hashed and
+    matched against this field for secure authentication.
+  - `key`: DEPRECATED plaintext key stored for legacy keys. All new keys use `key_hash`.
+  - `is_active`: Boolean flag indicating if the API key is active. Deactivated
+    keys are rejected.
+  - `last_used`: DateTime updated asynchronously when the key is used to authenticate a request.
+  - `created_at`: Timestamp of key generation.
+
+--------------------------------------------------------------------------------
+4. Table: dashboard_tablesyncconfig
+--------------------------------------------------------------------------------
+Defines caching, encryption, compression, and invalidation rules for a table.
+
+* Keys:
+  - Primary Key: `id` (integer, auto-increment)
+  - Foreign Key: `project_id` -> links to `dashboard_project.id`
+  - Unique Constraint: `(project_id, table_name)` (each table can only be registered once per project)
+
+* Columns & Explanation:
+  - `id`: Unique database identifier for the table configuration.
+  - `project_id`: Links this table configuration to its owning project.
+  - `table_name`: Lowercase database table name (e.g. "products").
+  - `sync_mode`: Invalidation mode. Can be:
+    * `manual`: Cache only purges when manual refresh button is clicked.
+    * `schedule_5m` / `schedule_1h` / `schedule_1d` / `schedule_30d`: Poll intervals.
+    * `event`: Refreshes automatically on INSERT / UPDATE / DELETE signals.
+    * `hybrid`: Combines event-driven invalidation with daily checks.
+  - `last_sync`: DateTime of the last cache invalidation/refresh event.
+  - `active`: Boolean to enable/disable caching for the table entirely.
+  - `storage_mode`: Memory storage level: `ram_only` (in-memory), `ram_disk`
+    (in-memory and persistent on disk), or `disabled` (direct database access).
+  - `compression`: Compression algorithm: `none`, `lz4`, `zstd`, or `gzip`.
+  - `encryption`: Boolean to encrypt the local disk cache payload (AES-256).
+  - `priority`: Eviction priority: `low`, `medium`, or `high`.
+  - `refresh_interval`: Integer polling time in minutes (0 for event-only).
+  - `cache_version`: Monotonically increasing version number. Incremented on every
+    refresh. The SDK scheduler compares local version to this value to check if the
+    local cache needs to be purged.
+  - `rows_count`: Cache metric reporting how many rows are in the database table.
+  - `database_calls_saved`: Total database read calls avoided due to cache hits.
+  - `bandwidth_saved_mb`: Total network bandwidth saved due to compression and caching.
+  - `cache_hits`: Hits recorded on the cache engine.
+  - `cache_misses`: Misses recorded (queries fell back to the database).
+  - `total_requests`: Sum of hits and misses.
+  - `avg_response_time_ms`: Average latency of requests reading this dataset.
+
+--------------------------------------------------------------------------------
+5. Table: dashboard_syncevent
+--------------------------------------------------------------------------------
+Immutable audit log of all sync/refresh signals received by the server.
+
+* Keys:
+  - Primary Key: `id` (integer, auto-increment)
+  - Foreign Key: `table_config_id` -> links to `dashboard_tablesyncconfig.id`
+  - Foreign Key: `project_id` -> links to `dashboard_project.id`
+  - Indexes:
+    * Index on `(project_id, triggered_at)` (fast timeline rendering per project)
+    * Index on `(table_config_id, triggered_at)` (fast history rendering per table)
+
+* Columns & Explanation:
+  - `id`: Unique identifier for the audit event.
+  - `table_config_id`: Links the event to the registered table configuration.
+  - `project_id`: Links the event to the project.
+  - `action`: Type of sync action triggered (e.g. `refresh`, `insert`, `update`, `delete`).
+  - `status`: Outcome: `ok` (success), `error` (failed), or `retry`.
+  - `error_message`: Error logs if the refresh operation failed.
+  - `affected_ids`: JSON field storing record IDs modified during the sync event (useful for delta syncs).
+  - `triggered_at`: Timestamp when the refresh request was received.
+
+================================================================================
+                    LOCAL CLIENT METADATA TABLES (SDK SIDE)
+================================================================================
+The following table is not on the central SyncForge server but is created inside
+the developer's local app database by the SDK for local metadata state tracking.
+
+--------------------------------------------------------------------------------
+6. Table: syncforge_metadata
+--------------------------------------------------------------------------------
+Managed in the local database by the Python SDK adapters.
+
+* Keys:
+  - Primary Key / Unique: `table_name` (string)
+
+* Columns & Explanation:
+  - `table_name`: Name of the watched database table.
+  - `storage_mode`: Caching mode (`ram_only`, `ram_disk`, etc.) retrieved from server.
+  - `compression`: Compression algorithm matching the dashboard configuration.
+  - `encryption`: Boolean flag showing if local storage is encrypted.
+  - `cache_version`: Local cache version. The background SmartScheduler polls the
+    central SyncForge server's version and compares it with this value. If the
+    server's version is higher, the local cache is purged and this value is updated.
+  - `last_accessed`: DateTime when this table's cache was last queried.
+  - `size_bytes`: Estimated size of the table cache on local disk/RAM.
+  - `status`: State of the cache local tracking: `active` or `inactive`.
+================================================================================

@@ -380,6 +380,13 @@ function renderTables(tables) {
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="font-bold text-lg text-brand-primary mb-1">${escHtml(t.table_name)}</div>
+                    
+                    <div class="text-xs text-brand-muted mt-0.5 mb-2 flex flex-wrap gap-x-4 gap-y-1">
+                        <span>Scoped Name: <code class="font-mono bg-gray-100 px-1 py-0.5 rounded text-brand-primary">${escHtml(t.scoped_table_name || '')}</code></span>
+                        <span>Version: <code class="font-mono bg-gray-100 px-1 py-0.5 rounded">${t.cache_version}</code></span>
+                        <span>Last Sync: <code class="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-brand-secondary">${t.last_sync ? new Date(t.last_sync).toLocaleString() : 'Never'}</code></span>
+                    </div>
+
                     <div class="flex flex-wrap items-center gap-4 text-xs">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-md font-semibold ${MODE_BADGE[t.sync_mode] || 'bg-gray-100 text-gray-600'}">${escHtml(t.sync_mode)}</span>
                         <span class="text-brand-muted"><strong class="text-brand-primary">${t.rows_count}</strong> rows</span>
@@ -420,8 +427,12 @@ function renderTables(tables) {
                             </label>
                         </div>
                     </div>
+                <button onclick="refreshTable(${t.id})" id="refresh-tbl-btn-${t.id}"
+                        class="p-1.5 text-brand-accent hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all ml-2 h-fit" title="Refresh Table Cache">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
                 <button onclick="deleteTable(${t.id})"
-                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-2 h-fit">
+                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1 h-fit">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
             </div>
@@ -535,6 +546,36 @@ async function deleteTable(id) {
         invalidateCache();
         document.getElementById(`trow-${id}`)?.remove();
         showToast('Table removed.');
+    }
+}
+
+async function refreshTable(tableId) {
+    const btn = document.getElementById(`refresh-tbl-btn-${tableId}`);
+    const icon = btn.querySelector('svg');
+    icon.classList.add('animate-spin');
+    btn.disabled = true;
+    
+    try {
+        const res = await fetch(`/dashboard/api/projects/${SLUG}/tables/${tableId}/refresh/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF()
+            },
+            credentials: 'same-origin'
+        });
+        const json = await res.json();
+        if (res.ok) {
+            invalidateCache();
+            showToast(json.message || 'Table cache refreshed successfully!');
+            await loadData(true);
+        } else {
+            showToast(json.error || 'Failed to refresh table.', true);
+        }
+    } catch (e) {
+        showToast('Network error during refresh.', true);
+    } finally {
+        icon.classList.remove('animate-spin');
+        btn.disabled = false;
     }
 }
 

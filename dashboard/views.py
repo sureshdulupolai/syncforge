@@ -304,12 +304,30 @@ def ajax_projects(request):
 def ajax_project_detail(request, slug):
     """Returns single project data as JSON."""
     project = get_object_or_404(Project, slug=slug, user=request.user)
-    tables  = list(project.table_configs.values(
-        'id', 'table_name', 'sync_mode', 'rows_count',
-        'database_calls_saved', 'bandwidth_saved_mb', 'last_sync',
-        'cache_hits', 'cache_misses', 'total_requests', 'avg_response_time_ms',
-        'active', 'storage_mode', 'compression', 'encryption', 'priority', 'refresh_interval', 'cache_version'
-    ))
+    project_prefix = project.project_prefix or "default"
+    tables = []
+    for t in project.table_configs.all():
+        tables.append({
+            'id':                   t.id,
+            'table_name':           t.table_name,
+            'scoped_table_name':    f"sf_{project_prefix}_{t.table_name}",
+            'sync_mode':            t.sync_mode,
+            'rows_count':           t.rows_count,
+            'database_calls_saved': t.database_calls_saved,
+            'bandwidth_saved_mb':   t.bandwidth_saved_mb,
+            'last_sync':            t.last_sync.isoformat() if t.last_sync else None,
+            'cache_hits':           t.cache_hits,
+            'cache_misses':         t.cache_misses,
+            'total_requests':       t.total_requests,
+            'avg_response_time_ms': t.avg_response_time_ms,
+            'active':               t.active,
+            'storage_mode':         t.storage_mode,
+            'compression':          t.compression,
+            'encryption':           t.encryption,
+            'priority':            t.priority,
+            'refresh_interval':     t.refresh_interval,
+            'cache_version':        t.cache_version,
+        })
     keys    = []
     for k in project.api_keys.filter(is_active=True):
         # key_prefix stores the first 18 chars (e.g. 'sf_live_a1b2c3d4...')
@@ -380,8 +398,10 @@ def add_table(request, slug):
 
     t = TableSyncConfig.objects.create(
         project=project, table_name=table_name, sync_mode=sync_mode)
+    project_prefix = project.project_prefix or "default"
     return _json({
         'status': 'added', 'id': t.id, 'table_name': t.table_name,
+        'scoped_table_name': f"sf_{project_prefix}_{t.table_name}",
         'sync_mode': t.sync_mode, 'display': t.get_sync_mode_display(),
         'storage_mode': t.storage_mode, 'active': t.active
     })
@@ -430,4 +450,44 @@ def update_table(request, slug, table_id):
         'display': t.get_sync_mode_display(),
         'storage_mode': t.storage_mode,
         'active': t.active
+    })
+
+
+@login_required
+@require_POST
+def refresh_table(request, slug, table_id):
+    project = get_object_or_404(Project, slug=slug, user=request.user)
+    t = get_object_or_404(TableSyncConfig, id=table_id, project=project)
+    
+    # Cooldown check: max 1 refresh per 10 seconds per table
+    COOLDOWN_SECONDS = 10
+    from django.utils import timezone
+    if t.last_sync:
+        elapsed = (timezone.now() - t.last_sync).total_seconds()
+        if elapsed < COOLDOWN_SECONDS:
+            remaining = int(COOLDOWN_SECONDS - elapsed)
+            return _json({
+                "error": f"Please wait {remaining} seconds before refreshing again."
+            }, 429)
+            
+    # Atomically increment cache_version and update last_sync
+    from django.db.models import F
+    TableSyncConfig.objects.filter(pk=t.id).update(
+        cache_version=F("cache_version") + 1,
+        last_sync=timezone.now(),
+    )
+    t.refresh_from_db()
+    
+    # Log sync event
+    from api.views import _log_sync_event
+    _log_sync_event(project, t, action="refresh", status="ok")
+    
+    project_prefix = project.project_prefix or "default"
+    return _json({
+        "status": "ok",
+        "message": f"Successfully refreshed table `{t.table_name}`.",
+        "table_name": t.table_name,
+        "scoped_table_name": f"sf_{project_prefix}_{t.table_name}",
+        "cache_version": t.cache_version,
+        "last_sync": t.last_sync.isoformat() if t.last_sync else None
     })

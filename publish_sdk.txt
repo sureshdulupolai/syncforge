@@ -1,0 +1,57 @@
+================================================================================
+                    SYNCFORGE SDK - PYPI PUBLISHING INSTRUCTIONS
+================================================================================
+
+Follow these steps to package and publish the updated `syncforge` Python SDK 
+to PyPI manually. 
+
+Run these commands from the project root directory (where this file is located):
+
+--------------------------------------------------------------------------------
+STEP 1: Install or upgrade packaging tools
+--------------------------------------------------------------------------------
+pip install --upgrade build twine
+
+--------------------------------------------------------------------------------
+STEP 2: Clean up previous builds (to prevent uploading old versions)
+--------------------------------------------------------------------------------
+# In Windows PowerShell:
+Remove-Item -Recurse -Force sdk/dist
+
+# OR in Windows Command Prompt (CMD):
+rmdir /s /q sdk\dist
+
+--------------------------------------------------------------------------------
+STEP 3: Build the distribution packages (source tarball and wheels)
+--------------------------------------------------------------------------------
+python -m build sdk/
+
+--------------------------------------------------------------------------------
+STEP 4: Upload the distribution files to PyPI
+--------------------------------------------------------------------------------
+python -m twine upload sdk/dist/*
+
+--------------------------------------------------------------------------------
+Notes:
+- Make sure you update the version number in 'sdk/pyproject.toml' (currently "1.1.0") 
+  before running these commands, as PyPI will reject uploads with existing versions.
+- During the upload step, you will be prompted for your PyPI username and password 
+  (use API Tokens for authentication, with prefix 'pypi-').
+================================================================================
+
+
+Update :
+cd sdk
+rmdir /s /q dist
+rmdir /s /q build
+rmdir /s /q syncforge.egg-info
+python -m build
+
+check :
+dist/
+build/
+syncforge.egg-info/ 
+aise kuch bana ki ni
+
+Next cmd:
+python -m twine upload dist/*

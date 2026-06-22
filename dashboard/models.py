@@ -31,12 +31,13 @@ class DeveloperProfile(models.Model):
 # ─── Project ──────────────────────────────────────────────────────────────────
 
 class Project(models.Model):
-    user        = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
-    name        = models.CharField(max_length=120)
-    slug        = models.SlugField(max_length=140, unique=True, blank=True)
-    description = models.TextField(blank=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    user           = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
+    name           = models.CharField(max_length=120)
+    slug           = models.SlugField(max_length=140, unique=True, blank=True)
+    description    = models.TextField(blank=True)
+    project_prefix = models.CharField(max_length=8, blank=True, default='')
+    created_at     = models.DateTimeField(auto_now_add=True)
+    updated_at     = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -50,6 +51,8 @@ class Project(models.Model):
                 slug = f'{base}-{n}'
                 n += 1
             self.slug = slug
+        if not self.project_prefix:
+            self.project_prefix = hashlib.md5(self.name.encode('utf-8')).hexdigest()[:8]
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -116,6 +119,13 @@ class APIKey(models.Model):
         raw    = _generate_raw_api_key()
         hashed = hash_api_key(raw)
         prefix = raw[:18]
+        
+        # Set project prefix based on the first created key
+        proj_prefix = hashlib.md5(raw.encode('utf-8')).hexdigest()[:8]
+        if not project.project_prefix:
+            project.project_prefix = proj_prefix
+            project.save(update_fields=['project_prefix'])
+            
         obj    = cls.objects.create(
             project=project,
             name=name,
@@ -154,8 +164,6 @@ class TableSyncConfig(models.Model):
 
     # ── Timestamps ────────────────────────────────────────────────────────────
     last_sync          = models.DateTimeField(null=True, blank=True)
-    next_sync_expected = models.DateTimeField(null=True, blank=True)
-    last_change        = models.DateTimeField(null=True, blank=True)
 
     # ── Enterprise Cache Config ───────────────────────────────────────────────
     active           = models.BooleanField(default=True)
@@ -188,13 +196,8 @@ class TableSyncConfig(models.Model):
     # Clients can compare their version to detect staleness.
     cache_version  = models.BigIntegerField(default=1)
 
-    # SHA-256 hash of the last serialised dataset.
-    # Allows the server to return 304-like "not modified" responses.
-    content_hash   = models.CharField(max_length=64, blank=True, default='')
-
     # ── Analytics ─────────────────────────────────────────────────────────────
     rows_count           = models.IntegerField(default=0)
-    client_devices       = models.IntegerField(default=0)
 
     # How many times clients received data from cache instead of hitting DB.
     # Incremented on cache hit, NOT on refresh signal.

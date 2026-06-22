@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/projects/<slug:slug>/tables/add/',               views.add_table,    name='add_table'),
     path('api/projects/<slug:slug>/tables/<int:table_id>/delete/', views.delete_table, name='delete_table'),
     path('api/projects/<slug:slug>/tables/<int:table_id>/update/', views.update_table, name='update_table'),
+    path('api/projects/<slug:slug>/tables/<int:table_id>/refresh/', views.refresh_table, name='refresh_table'),
 ]

@@ -158,46 +158,55 @@ def smartdb_refresh(request, table_name: str):
     normalised = table_name.strip().lower()
 
     if project:
-        try:
-            config = TableSyncConfig.objects.get(project=project, table_name=normalised)
-
-            # Atomic update — no lost-update race condition under concurrency.
-            # F() expressions are evaluated by the database, not Python.
-            TableSyncConfig.objects.filter(pk=config.pk).update(
-                cache_version=F("cache_version") + 1,
-                last_sync=timezone.now(),
+        # Check if table config exists, otherwise auto-create/register it
+        config = TableSyncConfig.objects.filter(project=project, table_name=normalised).first()
+        if not config:
+            config = TableSyncConfig.objects.create(
+                project=project,
+                table_name=normalised,
+                sync_mode="manual"
             )
-            config.refresh_from_db(fields=["cache_version", "database_calls_saved"])
+            created_new = True
+        else:
+            created_new = False
 
-            _log_sync_event(project, config, action="refresh", status="ok")
-            logger.info(
-                "[SyncForge] Refresh: project='%s' table='%s' version=%d",
-                project.slug, normalised, config.cache_version,
-            )
+        # Cooldown rate limit check: maximum 1 refresh per 60 seconds (1 minute) per table
+        COOLDOWN_SECONDS = 60
+        if not created_new and config.last_sync:
+            elapsed = (timezone.now() - config.last_sync).total_seconds()
+            if elapsed < COOLDOWN_SECONDS:
+                remaining = int(COOLDOWN_SECONDS - elapsed)
+                return _json({
+                    "error": "Rate limit exceeded for table refresh.",
+                    "detail": f"Please wait {remaining} seconds before refreshing table `{normalised}` again.",
+                    "retry_after": remaining
+                }, 429)
 
-            return _json({
-                "status":               "ok",
-                "message":              f"Sync triggered for table `{normalised}`.",
-                "table":                normalised,
-                "project":              project.name,
-                "sync_mode":            config.get_sync_mode_display(),
-                "database_calls_saved": config.database_calls_saved,
-                "cache_version":        config.cache_version,
-            })
+        # Atomic update — no lost-update race condition under concurrency.
+        # F() expressions are evaluated by the database, not Python.
+        TableSyncConfig.objects.filter(pk=config.pk).update(
+            cache_version=F("cache_version") + 1,
+            last_sync=timezone.now(),
+        )
+        config.refresh_from_db(fields=["cache_version", "database_calls_saved"])
 
-        except TableSyncConfig.DoesNotExist:
-            # Table is not registered — still succeed but hint to the developer.
-            _log_sync_event(project, None, action="refresh", status="ok",
-                            error_message="Table not registered in dashboard.")
-            return _json({
-                "status":  "ok",
-                "message": (
-                    f"Sync triggered for `{normalised}`. "
-                    "Register this table in your SyncForge dashboard to track stats."
-                ),
-                "table":   normalised,
-                "project": project.name,
-            })
+        _log_sync_event(project, config, action="refresh", status="ok")
+        logger.info(
+            "[SyncForge] Refresh: project='%s' table='%s' version=%d",
+            project.slug, normalised, config.cache_version,
+        )
+
+        project_prefix = project.project_prefix or "default"
+        return _json({
+            "status":               "ok",
+            "message":              f"Sync triggered and table auto-registered for `{normalised}`." if created_new else f"Sync triggered for table `{normalised}`.",
+            "table":                normalised,
+            "scoped_table_name":    f"sf_{project_prefix}_{normalised}",
+            "project":              project.name,
+            "sync_mode":            config.get_sync_mode_display(),
+            "database_calls_saved": config.database_calls_saved,
+            "cache_version":        config.cache_version,
+        })
 
     elif user:
         # JWT / session auth — no project context; no stats tracked.
@@ -337,12 +346,14 @@ def tables_list(request):
                     "encryption", "priority", "refresh_interval"
                 ])
 
+        project_prefix = project.project_prefix or "default"
         return _json({
-            "status":     "ok",
-            "table_name": normalised,
-            "sync_mode":  config.sync_mode,
-            "storage_mode": config.storage_mode,
-            "created":    created,
+            "status":            "ok",
+            "table_name":        normalised,
+            "scoped_table_name": f"sf_{project_prefix}_{normalised}",
+            "sync_mode":         config.sync_mode,
+            "storage_mode":      config.storage_mode,
+            "created":           created,
         })
 
     # ── DELETE: Remove a table ────────────────────────────────────────────────
@@ -366,9 +377,22 @@ def tables_list(request):
         return _json({"status": "ok", "deleted": deleted > 0, "table_name": normalised})
 
     # ── GET: List all tables ──────────────────────────────────────────────────
-    tables = list(project.table_configs.values(
-        "table_name", "sync_mode", "rows_count",
-        "database_calls_saved", "cache_version", "last_sync",
-        "active", "storage_mode", "compression", "encryption", "priority", "refresh_interval"
-    ))
+    tables = []
+    project_prefix = project.project_prefix or "default"
+    for t in project.table_configs.all():
+        tables.append({
+            "table_name": t.table_name,
+            "scoped_table_name": f"sf_{project_prefix}_{t.table_name}",
+            "sync_mode": t.sync_mode,
+            "rows_count": t.rows_count,
+            "database_calls_saved": t.database_calls_saved,
+            "cache_version": t.cache_version,
+            "last_sync": t.last_sync.isoformat() if t.last_sync else None,
+            "active": t.active,
+            "storage_mode": t.storage_mode,
+            "compression": t.compression,
+            "encryption": t.encryption,
+            "priority": t.priority,
+            "refresh_interval": t.refresh_interval,
+        })
     return _json({"tables": tables, "count": len(tables)})

@@ -71,14 +71,21 @@
 <div class="mb-10">
     <h3 class="text-lg font-bold mb-2 flex items-center gap-2"><code class="text-brand-accent">sf.refresh()</code></h3>
     <p class="text-sm text-brand-secondary mb-4">
-        Signal SyncForge that data in one or more tables has changed. Call this after any database write.
+        Signal SyncForge that data in one or more tables has changed. Call this after any database write. This function can be called from inside your web application OR from any standalone Python script outside the web application.
     </p>
     <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
-        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"># After any DB write
-product = Product.objects.create(name='Widget', price=9.99)
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"># Works inside Django/Flask/FastAPI or in standalone scripts:
+from syncforge import SyncForge
+sf = SyncForge(api_key="sf_live_...")
+
+# Invalidate cache for tables:
 result = sf.refresh('products', 'categories')</pre>
     </div>
     <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> Returns a <code>SyncResult</code> object (or list of them) containing metrics like <code>calls_saved</code>.</p>
+    
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
+        <strong>Anti-Spam Cooldown Rate Limiting:</strong> Refreshes are restricted to at most 1 request per <strong>60 seconds (1 minute)</strong> per table. If you exceed this rate limit (via script or by spamming the manual refresh button in the dashboard), the API returns a <code>429 Too Many Requests</code> response, raising a <code>RateLimitError</code>.
+    </div>
 </div>
 
 <!-- track_key -->

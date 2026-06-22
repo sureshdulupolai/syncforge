@@ -26,8 +26,12 @@
         </div>
     </div>
     <div class="p-5">
-        <p class="text-sm text-brand-secondary mb-4">Signal that a table's data has changed. Increments the version number and logs a SyncEvent.</p>
+        <p class="text-sm text-brand-secondary mb-4">Signal that a table's data has changed. Increments the version number, purges/invalidates cache, and logs a SyncEvent.</p>
         
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-xs text-amber-800">
+            <strong>Cooldown Rate Limiting:</strong> Table refreshes are subject to a **60-second cooldown** per table per project. Rapid calls within this window return an <code>HTTP 429 Too Many Requests</code> response.
+        </div>
+
         <h3 class="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2">Headers</h3>
         <table class="w-full text-sm text-left mb-6">
             <tbody class="divide-y divide-brand-border text-brand-secondary">
@@ -53,10 +57,21 @@
         <div class="bg-[#1A1A1A] rounded-lg p-4 font-mono text-xs text-[#D4D4D4] overflow-x-auto">
 {
   <span class="text-[#9CDCFE]">"status"</span>: <span class="text-[#CE9178]">"ok"</span>,
-  <span class="text-[#9CDCFE]">"message"</span>: <span class="text-[#CE9178]">"Sync triggered for table `users` in project `MyApp`."</span>,
+  <span class="text-[#9CDCFE]">"message"</span>: <span class="text-[#CE9178]">"Sync triggered for table `users`."</span>,
   <span class="text-[#9CDCFE]">"table"</span>: <span class="text-[#CE9178]">"users"</span>,
+  <span class="text-[#9CDCFE]">"scoped_table_name"</span>: <span class="text-[#CE9178]">"sf_a1b2c3d4_users"</span>,
   <span class="text-[#9CDCFE]">"sync_mode"</span>: <span class="text-[#CE9178]">"Event — On INSERT / UPDATE / DELETE"</span>,
-  <span class="text-[#9CDCFE]">"database_calls_saved"</span>: <span class="text-[#B5CEA8]">1042</span>
+  <span class="text-[#9CDCFE]">"database_calls_saved"</span>: <span class="text-[#B5CEA8]">1042</span>,
+  <span class="text-[#9CDCFE]">"cache_version"</span>: <span class="text-[#B5CEA8]">42</span>
+}
+        </div>
+        
+        <h3 class="text-xs font-bold uppercase tracking-wider text-brand-muted mb-2 mt-4">Response (429 Rate Limit Exceeded)</h3>
+        <div class="bg-[#1A1A1A] rounded-lg p-4 font-mono text-xs text-[#D4D4D4] overflow-x-auto">
+{
+  <span class="text-[#9CDCFE]">"error"</span>: <span class="text-[#CE9178]">"Rate limit exceeded for table refresh."</span>,
+  <span class="text-[#9CDCFE]">"detail"</span>: <span class="text-[#CE9178]">"Please wait 45 seconds before refreshing table `users` again."</span>,
+  <span class="text-[#9CDCFE]">"retry_after"</span>: <span class="text-[#B5CEA8]">45</span>
 }
         </div>
     </div>
