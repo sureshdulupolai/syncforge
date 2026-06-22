@@ -1,5 +1,8 @@
 {% extends 'core/docs/base_docs.html' %}
 
+{% block title %}Django Cache Integration & Signal Synchronization — SyncForge{% endblock %}
+{% block meta_description %}Detailed guide to caching Django models using the @sync_model decorator. Sync caches instantly on .save() or .delete() database updates.{% endblock %}
+
 {% block docs_content %}
 
 <div class="mb-2"><span class="text-xs font-mono text-green-700 bg-green-50 px-2 py-0.5 rounded">Framework Guide</span></div>
@@ -90,7 +93,7 @@ class Product(models.Model):
 <span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
 <span class="text-blue-400">from</span> syncforge.django <span class="text-blue-400">import</span> sync_model
 
-<span class="text-yellow-300">@sync_model</span>(sf, sync_mode<span class="text-gray-400">=</span><span class="text-green-300">'event'</span>)
+<span class="text-yellow-300">@sync_model</span>(sf)
 <span class="text-blue-400">class</span> <span class="text-teal-300">Product</span>(models.Model):
     name   <span class="text-gray-400">=</span> models.CharField(max_length<span class="text-gray-400">=</span><span class="text-yellow-300">200</span>)
     price  <span class="text-gray-400">=</span> models.DecimalField(max_digits<span class="text-gray-400">=</span><span class="text-yellow-300">10</span>, decimal_places<span class="text-gray-400">=</span><span class="text-yellow-300">2</span>)
@@ -101,7 +104,40 @@ class Product(models.Model):
 </div>
 
 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 mb-8">
-    <strong>sync_mode options:</strong> <code class="font-mono text-xs">event</code> (on save/delete), <code class="font-mono text-xs">manual</code>, <code class="font-mono text-xs">schedule_5m</code>, <code class="font-mono text-xs">schedule_1h</code>, <code class="font-mono text-xs">schedule_1d</code>, <code class="font-mono text-xs">schedule_30d</code>, <code class="font-mono text-xs">hybrid</code>
+    <p><strong>sync_mode options:</strong> <code class="font-mono text-xs">event</code> (on save/delete), <code class="font-mono text-xs">manual</code>, <code class="font-mono text-xs">schedule_5m</code>, <code class="font-mono text-xs">schedule_1h</code>, <code class="font-mono text-xs">schedule_1d</code>, <code class="font-mono text-xs">schedule_30d</code>, <code class="font-mono text-xs">hybrid</code></p>
+    <p class="mt-2"><strong>Enterprise options:</strong> <code class="font-mono text-xs">storage_mode='ram_disk'</code>, <code class="font-mono text-xs">compression='lz4'</code>, <code class="font-mono text-xs">encryption=True</code>, <code class="font-mono text-xs">priority='high'</code></p>
+</div>
+
+<!-- Enterprise Parameters -->
+<h2 id="parameters" class="text-xl font-semibold mb-3 scroll-mt-20">Enterprise Cache Parameters Explained</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    The <code class="font-mono bg-gray-100 px-1 rounded text-sm text-gray-800">@sync_model</code> decorator accepts several parameters to fine-tune your enterprise caching strategy. Here is what they do and why you should use them:
+</p>
+<div class="space-y-4 mb-8">
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified to update the network.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'event'</code> (on every database write), <code>'manual'</code> (only when sf.refresh() is called), <code>'schedule_5m'</code>, <code>'schedule_1h'</code>, etc.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'event'</code> for data that needs real-time accuracy. Use <code>'schedule_1h'</code> for heavy data that is okay being up to an hour stale, reducing server load.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Defines where the cached data is physically stored on your server.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'ram_disk'</code> (default), <code>'disk_only'</code>, <code>'ram_only'</code>, <code>'disabled'</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> <code>'ram_disk'</code> is the default. It automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up data persistently and securely.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption to the data stored on disk.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>True</code> (default), <code>False</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Privacy and compliance. We default to <code>True</code> so that any PII or sensitive cached data is protected at rest automatically.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">compression</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Compresses the binary cache payload before storing it.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'none'</code> (default), <code>'lz4'</code>, <code>'zstd'</code>, <code>'gzip'</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'lz4'</code> or <code>'zstd'</code> for large JSON objects or massive querysets. It dramatically reduces disk footprint and I/O wait times with very little CPU overhead.</p>
+    </div>
 </div>
 
 <!-- 4 Reading Data -->
@@ -280,19 +316,19 @@ def bulk_activate(request):
         <span class="text-xs font-mono text-gray-400">settings.py</span>
         <button onclick="copyCode(this)" data-code="MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'syncforge.middleware.SyncForgeSecurityMiddleware',  # ← WAF + security headers
+    'syncforge.middleware.SyncForgeSecurityMiddleware',  # ← Request inspection + security headers
     'django.contrib.sessions.middleware.SessionMiddleware',
     # ... rest of middleware
 ]" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
     <pre class="p-4 text-sm font-mono text-gray-100">MIDDLEWARE <span class="text-gray-400">=</span> [
     <span class="text-green-300">'django.middleware.security.SecurityMiddleware'</span>,
-    <span class="text-yellow-300">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,  <span class="text-gray-500"># ← WAF + security headers</span>
+    <span class="text-yellow-300">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,  <span class="text-gray-500"># ← Request inspection + security headers</span>
     <span class="text-green-300">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
     <span class="text-gray-500"># ... rest of middleware</span>
 ]</pre>
 </div>
-<p class="text-sm text-brand-secondary mb-8">Adds: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, basic WAF (SQLi/XSS/path traversal scanning). See <a href="{% url 'docs_security' %}" class="text-brand-accent hover:underline">Security & WAF</a> for full docs.</p>
+<p class="text-sm text-brand-secondary mb-8">Adds: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, basic request inspection (SQLi/XSS/path traversal scanning). See <a href="{% url 'docs_security' %}" class="text-brand-accent hover:underline">Security Middleware</a> for full docs.</p>
 
 <!-- 9 Monthly refresh -->
 <h2 id="monthly" class="text-xl font-semibold mb-3 scroll-mt-20">9. Monthly / scheduled data refresh</h2>

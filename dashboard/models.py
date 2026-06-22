@@ -157,10 +157,36 @@ class TableSyncConfig(models.Model):
     next_sync_expected = models.DateTimeField(null=True, blank=True)
     last_change        = models.DateTimeField(null=True, blank=True)
 
+    # ── Enterprise Cache Config ───────────────────────────────────────────────
+    active           = models.BooleanField(default=True)
+    STORAGE_MODES = [
+        ('ram_only', 'RAM Only'),
+        ('ram_disk', 'RAM + Disk Persistent'),
+        ('disabled', 'Disabled (Direct DB)'),
+    ]
+    storage_mode     = models.CharField(max_length=20, choices=STORAGE_MODES, default='ram_disk')
+    
+    COMPRESSION_TYPES = [
+        ('none', 'No Compression'),
+        ('lz4', 'LZ4 (Fast)'),
+        ('zstd', 'Zstandard (High Ratio)'),
+        ('gzip', 'GZIP'),
+    ]
+    compression      = models.CharField(max_length=10, choices=COMPRESSION_TYPES, default='none')
+    encryption       = models.BooleanField(default=False)
+    
+    PRIORITIES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    priority         = models.CharField(max_length=10, choices=PRIORITIES, default='medium')
+    refresh_interval = models.IntegerField(default=0, help_text="Refresh interval in minutes (0 = event only)")
+
     # ── Versioning ────────────────────────────────────────────────────────────
     # Monotonically increasing version number — incremented on every refresh.
     # Clients can compare their version to detect staleness.
-    version_number = models.BigIntegerField(default=0)
+    cache_version  = models.BigIntegerField(default=1)
 
     # SHA-256 hash of the last serialised dataset.
     # Allows the server to return 304-like "not modified" responses.
@@ -176,6 +202,12 @@ class TableSyncConfig(models.Model):
 
     # Estimated bandwidth saved (MB) — updated periodically.
     bandwidth_saved_mb   = models.FloatField(default=0.0)
+
+    # ── Advanced Analytics ────────────────────────────────────────────────────
+    cache_hits           = models.BigIntegerField(default=0)
+    cache_misses         = models.BigIntegerField(default=0)
+    total_requests       = models.BigIntegerField(default=0)
+    avg_response_time_ms = models.FloatField(default=0.0)
 
     class Meta:
         unique_together = ('project', 'table_name')

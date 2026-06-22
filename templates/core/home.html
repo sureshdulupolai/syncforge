@@ -1,446 +1,328 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}SyncForge — Smart Data Sync & Security Firewall for Python{% endblock %}
+{% block meta_description %}SyncForge is a developer-first data synchronization and Web Application Firewall (WAF) framework for Django, FastAPI, and Flask. Build once. Sync smart. Scale safely.{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
-<section class="py-24 md:py-32 border-b border-brand-border" style="overflow: hidden;">
-    <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        <!-- Left: Heading with watermark logo behind -->
-        <div class="relative">
-            <!-- Watermark Logo: large, faded, positioned behind the text -->
-            <div class="absolute -left-8 -top-8 pointer-events-none select-none" style="z-index: 0;">
-                <img src="{% static 'logo_icon.png' %}" alt="" 
-                     style="width: 320px; height: 320px; opacity: 0.06; filter: blur(1px);"
-                     aria-hidden="true">
+<section class="relative py-24 md:py-32 border-b border-brand-border bg-white overflow-hidden">
+    <div class="absolute -left-12 -top-12 pointer-events-none select-none opacity-[0.03] blur-[2px]">
+        <img src="{% static 'logo_icon.png' %}" alt="" class="w-96 h-96">
+    </div>
+    
+    <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center relative z-10">
+        <!-- Left: Heading -->
+        <div>
+            <div class="flex items-center gap-3 mb-6">
+                <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-8 h-8">
+                <span class="text-sm font-bold tracking-widest uppercase text-brand-accent">SyncForge</span>
             </div>
-            <!-- Text content on top of watermark -->
-            <div style="position: relative; z-index: 1;">
-                <div class="flex items-center gap-3 mb-5">
-                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" style="width: 36px; height: 36px;">
-                    <span class="text-sm font-semibold tracking-widest uppercase text-brand-accent">SyncForge</span>
-                </div>
-                <h1 class="text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
-                    Build once.<br>
-                    Sync smart.<br>
-                    Scale safely.
-                </h1>
-                <p class="text-xl text-brand-secondary mb-10 max-w-lg leading-relaxed">
-                    A premium, developer-controlled smart data synchronization platform. Take full control over when and how your applications sync data, saving millions of unnecessary database calls.
-                </p>
-                <div class="flex items-center gap-4">
-                    <a href="{% url 'login' %}" class="bg-brand-primary text-white px-6 py-3 rounded-[4px] font-medium hover:bg-black transition-subtle">
-                        Start Building
-                    </a>
-                    <a href="{% url 'docs' %}" class="px-6 py-3 border border-brand-border rounded-[4px] font-medium hover:border-brand-secondary transition-subtle">
-                        Read Documentation
-                    </a>
-                </div>
-                <div class="mt-12 flex items-center gap-6 text-brand-muted text-sm font-medium uppercase tracking-widest">
-                    <span>Trusted by modern teams</span>
-                    <div class="h-px bg-brand-border flex-grow"></div>
-                </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-brand-primary">
+                Build once.<br>
+                Sync smart.<br>
+                Scale safely.
+            </h1>
+            <p class="text-lg text-brand-secondary mb-10 max-w-lg leading-relaxed">
+                A modern cache-aside synchronization framework for Python. Take control of your data layer, dramatically reduce database reads, and serve responses instantly from memory.
+            </p>
+            <div class="flex items-center gap-4">
+                <a href="{% url 'login' %}" class="btn-primary">Start Building</a>
+                <a href="{% url 'docs' %}" class="btn-secondary">Read Documentation</a>
             </div>
         </div>
         
-        <!-- Minimal Code Snippet Display -->
-        <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
+        <!-- Right: Code Snippet -->
+        <div class="card bg-[#0D1117] text-[#C9D1D9] border-[#30363D] p-6 shadow-none">
             <div class="flex gap-2 mb-4">
-                <div class="w-3 h-3 rounded-full bg-[#4A4A4A]"></div>
-                <div class="w-3 h-3 rounded-full bg-[#4A4A4A]"></div>
-                <div class="w-3 h-3 rounded-full bg-[#4A4A4A]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
             </div>
-            <div>
-                <span class="text-[#569CD6]">from</span> syncforge.django <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">sync_model</span><br>
-                <span class="text-[#569CD6]">from</span> syncforge <span class="text-[#569CD6]">import</span> sf<br><br>
-                <span class="text-[#6A9955]"># 1. Zero-code Django auto-sync</span><br>
-                <span class="text-[#4EC9B0]">@sync_model</span>(sf, sync_mode=<span class="text-[#CE9178]">'event'</span>)<br>
-                <span class="text-[#569CD6]">class</span> <span class="text-[#4EC9B0]">Product</span>(models.Model):<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;name = models.CharField(max_length=<span class="text-[#B5CEA8]">100</span>)<br><br>
-                <span class="text-[#6A9955]"># 2. Or manual push from FastAPI/Flask</span><br>
-                <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">update_catalog</span>():<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;sf.refresh(<span class="text-[#CE9178]">'products'</span>)
-            </div>
+            <pre class="text-sm font-mono leading-relaxed overflow-x-auto"><code class="language-python"><span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
+<span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> sf
+
+<span class="text-[#8B949E]"># 1. Zero-code Django auto-sync</span>
+<span class="text-[#D2A8FF]">@sync_model</span>(sf, storage_mode=<span class="text-[#A5D6FF]">'disk_only'</span>, encryption=<span class="text-[#79C0FF]">True</span>)
+<span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Product</span>(models.Model):
+    name = models.CharField(max_length=<span class="text-[#79C0FF]">100</span>)
+
+<span class="text-[#8B949E]"># 2. Or manual push from FastAPI/Flask</span>
+<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">update_catalog</span>():
+    sf.refresh(<span class="text-[#A5D6FF]">'products'</span>)</code></pre>
         </div>
     </div>
 </section>
 
-<!-- Sync Engine / Features Section -->
+<!-- Enterprise Cache Engine Flow Diagram -->
 <section class="py-24 bg-brand-secbg border-b border-brand-border">
     <div class="max-w-container mx-auto px-6">
-        <div class="mb-16 max-w-2xl">
-            <h2 class="text-3xl font-bold tracking-tight mb-4">Developer-Controlled Sync Engine</h2>
-            <p class="text-lg text-brand-secondary leading-relaxed">
-                Stop relying on dumb polling or expensive real-time sockets for static data. 
-                Configure granular sync modes per table directly from the dashboard.
+        <div class="text-center mb-16">
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-accent mb-3 block">Architecture</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 text-brand-primary">The Hybrid Cache Engine</h2>
+            <p class="text-brand-secondary text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light">
+                SyncForge combines ultra-fast RAM caching with an encrypted local disk fallback to minimize database queries while keeping data consistent.
             </p>
         </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 max-w-5xl mx-auto">
+            
+            <!-- Left: Read Flow -->
+            <div class="bg-white border border-brand-border rounded-2xl p-8 space-y-6 shadow-sm">
+                <div class="flex items-center gap-3 pb-4 border-b border-brand-border">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-brand-primary">Read Flow (Data Retrieval)</h3>
+                </div>
+                
+                <div class="relative border-l-2 border-brand-border pl-6 ml-3 space-y-8">
+                    <!-- Step 1 -->
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-brand-primary">1. Check Memory Cache (RAM)</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">SyncForge checks if the requested data exists in fast server memory.</p>
+                        <span class="inline-block text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 mt-2">RAM Hit: 0.1ms latency</span>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-indigo-500 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-brand-primary">2. Check Encrypted Disk Cache</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">If memory is empty, SyncForge reads the encrypted cache file from local disk storage.</p>
+                        <span class="inline-block text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 mt-2">Disk Hit: 2.0ms latency</span>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-red-500 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-brand-primary">3. Database Fetch & Save</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">If both caches miss, it queries PostgreSQL/MySQL and automatically updates the cache for future reads.</p>
+                        <span class="inline-block text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 mt-2">DB Hit: 50.0ms latency</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Write Flow -->
+            <div class="bg-white border border-brand-border rounded-2xl p-8 space-y-6 shadow-sm">
+                <div class="flex items-center gap-3 pb-4 border-b border-brand-border">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-brand-primary">Write Flow (Invalidation)</h3>
+                </div>
+                
+                <div class="relative border-l-2 border-brand-border pl-6 ml-3 space-y-8">
+                    <!-- Step 1 -->
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-brand-primary">1. Write to Database</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">Your application updates or inserts a record into the primary database.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-brand-primary">2. Invalidation Hook</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">An ORM hook or explicit SDK call triggers `sf.refresh('table_name')`.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-brand-primary">3. Evict Local Cache</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">The local server's memory is instantly wiped for the stale data.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        </div>
+                        <h4 class="text-sm font-bold text-brand-primary">4. Broadcast to Cluster</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">A light refresh signal is sent asynchronously to all other active application nodes.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-16 pt-8 border-t border-brand-border flex flex-wrap gap-6 justify-center text-sm font-semibold text-brand-secondary">
+            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Zero-Latency Reads</span>
+            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Background Parallel I/O</span>
+            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Cryptographic Wiping</span>
+        </div>
+    </div>
+</section>
+
+<!-- Enterprise Features Grid -->
+<section class="py-32 bg-white border-b border-brand-border">
+    <div class="max-w-container mx-auto px-6">
+        <div class="text-center mb-20">
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-muted mb-3 block">Platform Features</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight text-brand-primary">Engineered for Production</h2>
+        </div>
+        
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- Feature 1 -->
-            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
-                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
-                    <span class="font-mono text-xs font-bold">01</span>
+            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
                 </div>
-                <h3 class="font-semibold text-lg mb-3">Manual Mode</h3>
-                <p class="text-brand-secondary text-sm leading-relaxed">
-                    Zero database calls until you explicitly click "Refresh" or trigger the API. Perfect for static configurations.
-                </p>
+                <h3 class="text-xl font-bold text-brand-primary mb-3">Hybrid Persistence</h3>
+                <p class="text-brand-secondary leading-relaxed font-light">Background threads silently preload encrypted disk caches into RAM the moment your app starts, ensuring zero latency on the very first hit.</p>
             </div>
             <!-- Feature 2 -->
-            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
-                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
-                    <span class="font-mono text-xs font-bold">02</span>
+            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div class="w-14 h-14 bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
-                <h3 class="font-semibold text-lg mb-3">Schedule Mode</h3>
-                <p class="text-brand-secondary text-sm leading-relaxed">
-                    Set fixed intervals (5m, 1h, 30d). We handle the caching layer and only hit your database when the TTL expires.
-                </p>
+                <h3 class="text-xl font-bold text-brand-primary mb-3">AES-256 Encryption</h3>
+                <p class="text-brand-secondary leading-relaxed font-light">Enterprise-grade security. Data is compressed and encrypted at rest. On cache eviction, files are cryptographically overwritten before deletion to prevent recovery.</p>
             </div>
             <!-- Feature 3 -->
-            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
-                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6">
-                    <span class="font-mono text-xs font-bold">03</span>
+            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-green-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div class="w-14 h-14 bg-gradient-to-br from-green-50 to-green-100 text-green-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
-                <h3 class="font-semibold text-lg mb-3">Event Mode</h3>
-                <p class="text-brand-secondary text-sm leading-relaxed">
-                    Sync strictly on INSERT, UPDATE, or DELETE. Maximum efficiency for frequently changing, high-volume tables.
-                </p>
+                <h3 class="text-xl font-bold text-brand-primary mb-3">Parallel I/O Engine</h3>
+                <p class="text-brand-secondary leading-relaxed font-light">Data writes to RAM instantly for the user, while encryption, compression, and disk saves run simultaneously in background daemon threads.</p>
             </div>
             <!-- Feature 4 -->
-            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
-                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6 text-red-500 bg-red-50">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-amber-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div class="w-14 h-14 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                 </div>
-                <h3 class="font-semibold text-lg mb-3 flex items-center gap-2">Built-in WAF</h3>
-                <p class="text-brand-secondary text-sm leading-relaxed">
-                    Instantly protect your app from SQL Injection, XSS, and Path Traversal with our one-line Security Middleware.
-                </p>
+                <h3 class="text-xl font-bold text-brand-primary mb-3">Framework Native</h3>
+                <p class="text-brand-secondary leading-relaxed font-light">Drop-in integrations for Django, FastAPI, Flask, and SQLAlchemy. Works seamlessly with your existing ORM with zero configuration.</p>
             </div>
             <!-- Feature 5 -->
-            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
-                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6 text-blue-500 bg-blue-50">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-pink-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div class="w-14 h-14 bg-gradient-to-br from-pink-50 to-pink-100 text-pink-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                 </div>
-                <h3 class="font-semibold text-lg mb-3 flex items-center gap-2">Zero-Data Architecture <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold">Enterprise</span></h3>
-                <p class="text-brand-secondary text-sm leading-relaxed">
-                    We only sync metadata (table names, timestamps). Your actual customer data and query results never leave your infrastructure.
-                </p>
+                <h3 class="text-xl font-bold text-brand-primary mb-3">AI Agent Ready</h3>
+                <p class="text-brand-secondary leading-relaxed font-light">Copy our specialized <a href="/docs/ai-prompt/" class="text-brand-accent font-semibold hover:underline">AI Integration Prompt</a> to instantly add SyncForge into your codebase automatically via Cursor or ChatGPT.</p>
             </div>
             <!-- Feature 6 -->
-            <div class="bg-brand-bg p-8 border border-brand-border rounded-[4px]">
-                <div class="w-10 h-10 border border-brand-border flex items-center justify-center mb-6 text-green-500 bg-green-50">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-red-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div class="w-14 h-14 bg-gradient-to-br from-red-50 to-red-100 text-red-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
-                <h3 class="font-semibold text-lg mb-3 flex items-center gap-2">Framework Agnostic <span class="bg-green-100 text-green-600 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold">New</span></h3>
-                <p class="text-brand-secondary text-sm leading-relaxed">
-                    Native memory caching support for Django, FastAPI, Flask, and plain Python. Thread-safe and incredibly fast.
-                </p>
+                <h3 class="text-xl font-bold text-brand-primary mb-3">WAF Rate Limiting</h3>
+                <p class="text-brand-secondary leading-relaxed font-light">Stop DDoS cache-busting attacks instantly. Our middleware tracks and blocks abusive IPs before they even trigger a database lookup.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- The 0 DB Calls Advantage Section -->
+<!-- Unified Use Cases & Performance -->
 <section class="py-24 bg-white border-b border-brand-border">
     <div class="max-w-container mx-auto px-6">
-        <div class="mb-16 max-w-2xl text-center mx-auto">
-            <h2 class="text-3xl font-bold tracking-tight mb-4 text-brand-primary">The "0 DB Calls" Advantage</h2>
-            <p class="text-lg text-brand-secondary leading-relaxed">
-                SyncForge is engineered to give your application massive speed by completely eliminating redundant database queries.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <!-- Best Use Case -->
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-8 shadow-sm transition-all hover:shadow-md">
-                <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-blue-900">Where & When to use it?</h3>
-                <p class="text-blue-800 leading-relaxed mb-6">
-                    <strong>Best for Static Data:</strong> E-Commerce Products, Blog Articles, and Global Configurations.
-                </p>
-                <div class="bg-white border border-blue-100 p-5 rounded-lg text-sm text-blue-900 leading-relaxed shadow-sm">
-                    <strong>What happens?</strong> If you set your database cache to a 100-day timer, the very first user loads the data. For the next 100 days, every subsequent user instantly receives the data with <strong>0 Database Calls</strong>. Server load drops to practically zero, and UI speed multiplies instantly.
-                </div>
-            </div>
-
-            <!-- When NOT to use -->
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-8 shadow-sm transition-all hover:shadow-md">
-                <div class="w-12 h-12 bg-amber-500 text-white rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-amber-900">When NOT to use it?</h3>
-                <p class="text-amber-800 leading-relaxed mb-6">
-                    <strong>Avoid Highly Dynamic Data:</strong> Live Chats, Stock Market Tickers, and Real-Time Comments.
-                </p>
-                <div class="bg-white border border-amber-100 p-5 rounded-lg text-sm text-amber-900 leading-relaxed shadow-sm">
-                    <strong>The Warning:</strong> If data changes every second, using SyncForge will force you to call the <code class="font-mono bg-amber-50 px-1 py-0.5 rounded">refresh()</code> function continuously. This will increase database load rather than decrease it. Use standard WebSockets for those specific tables instead.
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Analytics & Performance Section -->
-<section class="py-24 border-b border-brand-border">
-    <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        <!-- Pure HTML Table representing Analytics -->
-        <div class="border border-brand-border rounded-[4px] overflow-hidden text-sm">
-            <div class="bg-brand-secbg p-4 border-b border-brand-border font-semibold">
-                Table: Products
-            </div>
-            <div class="p-6">
-                <div class="grid grid-cols-2 gap-y-4">
-                    <div class="text-brand-muted">Mode</div>
-                    <div class="font-medium text-right">Manual</div>
-                    
-                    <div class="text-brand-muted">Rows</div>
-                    <div class="font-medium text-right font-mono">300</div>
-                    
-                    <div class="text-brand-muted">Client Devices</div>
-                    <div class="font-medium text-right font-mono">12,483</div>
-                    
-                    <div class="text-brand-muted pt-4 border-t border-brand-border">Calls Saved</div>
-                    <div class="font-medium text-right text-green-600 font-mono pt-4 border-t border-brand-border">1,854,211</div>
-                    
-                    <div class="text-brand-muted">Bandwidth Saved</div>
-                    <div class="font-medium text-right text-brand-primary font-mono">87.4 GB</div>
-                </div>
-            </div>
-        </div>
-        
-        <div>
-            <h2 class="text-3xl font-bold tracking-tight mb-4">Unprecedented Efficiency</h2>
-            <p class="text-lg text-brand-secondary leading-relaxed mb-8">
-                By taking back control of your synchronization layer, you instantly cut out redundant API requests. Watch your server costs plummet as we absorb the polling traffic.
-            </p>
-            <ul class="space-y-4 text-brand-secondary">
-                <li class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
-                    <span>Zero unnecessary database checks</span>
-                </li>
-                <li class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
-                    <span>Instant Delta generation and delivery</span>
-                </li>
-                <li class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
-                    <span>Lighthouse performance score of 99+</span>
-                </li>
-            </ul>
-        </div>
-    </div>
-</section>
-
-<!-- Security Diagram Section -->
-<section class="py-24 bg-brand-secbg border-b border-brand-border">
-    <div class="max-w-container mx-auto px-6 text-center">
-        <h2 class="text-3xl font-bold tracking-tight mb-4">Enterprise-Grade Security</h2>
-        <p class="text-brand-secondary text-lg mb-16 max-w-xl mx-auto">Every data packet is encrypted, authenticated, and routed through our secure middleware layer.</p>
-        
-        <!-- Clean Architecture Flow Diagram -->
-        <div class="max-w-4xl mx-auto">
-            <div class="flex flex-col md:flex-row items-center justify-center gap-0">
-
-                <!-- Node 1: Client Device -->
-                <div class="flex flex-col items-center">
-                    <div class="bg-white border border-brand-border rounded-[6px] p-6 w-44 text-center">
-                        <div class="w-10 h-10 mx-auto mb-3 flex items-center justify-center bg-gray-100 rounded-full">
-                            <svg class="w-5 h-5 text-brand-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <div class="font-semibold text-sm text-brand-primary mb-1">Client Device</div>
-                        <div class="text-xs text-brand-muted font-mono bg-gray-50 px-2 py-1 rounded mt-2">JWT Auth</div>
-                    </div>
-                </div>
-
-                <!-- Connector 1 -->
-                <div class="hidden md:flex flex-col items-center mx-2 flex-shrink-0">
-                    <span class="text-[10px] font-semibold text-brand-accent tracking-widest uppercase mb-2 whitespace-nowrap">Encrypted</span>
-                    <div class="flex items-center gap-1">
-                        <div class="w-12 h-px bg-brand-border"></div>
-                        <svg class="w-4 h-4 text-brand-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <span class="text-[10px] text-brand-muted font-mono mt-2 whitespace-nowrap">Delta Payload</span>
-                </div>
-
-                <!-- Mobile Connector -->
-                <div class="md:hidden flex flex-col items-center my-3">
-                    <span class="text-[10px] text-brand-accent font-semibold tracking-widest uppercase">Encrypted Delta</span>
-                    <svg class="w-4 h-4 text-brand-accent mt-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Node 2: SyncForge Core (CENTER - highlighted) -->
-                <div class="flex flex-col items-center">
-                    <div class="bg-brand-accent rounded-[6px] p-6 w-48 text-center" style="box-shadow: 0 0 0 4px rgba(30,58,138,0.12);">
-                        <div class="w-10 h-10 mx-auto mb-3 flex items-center justify-center bg-white/20 rounded-full">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                        </div>
-                        <div class="font-bold text-sm text-white mb-1">SyncForge Core</div>
-                        <div class="text-xs font-mono text-blue-200 bg-white/10 px-2 py-1 rounded mt-2">Middleware</div>
-                    </div>
-                    <div class="mt-3 text-[10px] font-semibold text-brand-accent tracking-widest uppercase">Secure Hub</div>
-                </div>
-
-                <!-- Connector 2 -->
-                <div class="hidden md:flex flex-col items-center mx-2 flex-shrink-0">
-                    <span class="text-[10px] font-semibold text-brand-accent tracking-widest uppercase mb-2 whitespace-nowrap">Verified</span>
-                    <div class="flex items-center gap-1">
-                        <div class="w-12 h-px bg-brand-border"></div>
-                        <svg class="w-4 h-4 text-brand-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <span class="text-[10px] text-brand-muted font-mono mt-2 whitespace-nowrap">X-API-Key</span>
-                </div>
-
-                <!-- Mobile Connector 2 -->
-                <div class="md:hidden flex flex-col items-center my-3">
-                    <span class="text-[10px] text-brand-accent font-semibold tracking-widest uppercase">X-API-Key</span>
-                    <svg class="w-4 h-4 text-brand-accent mt-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Node 3: Your Database -->
-                <div class="flex flex-col items-center">
-                    <div class="bg-white border border-brand-border rounded-[6px] p-6 w-44 text-center">
-                        <div class="w-10 h-10 mx-auto mb-3 flex items-center justify-center bg-gray-100 rounded-full">
-                            <svg class="w-5 h-5 text-brand-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-                            </svg>
-                        </div>
-                        <div class="font-semibold text-sm text-brand-primary mb-1">Your Database</div>
-                        <div class="text-xs text-brand-muted font-mono bg-gray-50 px-2 py-1 rounded mt-2">Isolated</div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Security badges row -->
-            <div class="flex flex-wrap justify-center gap-4 mt-12">
-                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
-                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1l2.39 4.843 5.343.776-3.866 3.769.912 5.318L10 13.347l-4.779 2.359.912-5.318L2.267 6.619l5.343-.776L10 1z" clip-rule="evenodd"/></svg>
-                    End-to-End Encrypted
-                </div>
-                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
-                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                    JWT Authentication
-                </div>
-                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
-                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"/></svg>
-                    API Key Validation
-                </div>
-                <div class="flex items-center gap-2 text-xs text-brand-secondary border border-brand-border rounded-full px-4 py-2 bg-white">
-                    <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
-                    Database Isolation
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-<!-- Detailed SDK Integration Section -->
-<section class="py-24 border-b border-brand-border bg-[#FAFAFA]">
-    <div class="max-w-container mx-auto px-6">
-        <div class="mb-16 max-w-2xl text-center mx-auto">
-            <h2 class="text-3xl font-bold tracking-tight mb-4">How to Use SyncForge</h2>
-            <p class="text-lg text-brand-secondary leading-relaxed">
-                Integrate our framework into your application in less than 5 minutes. No complex infrastructure changes required.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 max-w-5xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             
-            <!-- Step 1 -->
-            <div class="md:col-span-5 flex flex-col justify-center">
-                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">1</div>
-                <h3 class="text-xl font-bold mb-3">Install the Framework</h3>
-                <p class="text-brand-secondary leading-relaxed">
-                    Add SyncForge to your project. Our SDK acts as a lightweight wrapper around your existing database calls, capturing mutations without adding overhead.
-                </p>
-            </div>
-            <div class="md:col-span-7">
-                <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
-                    <span class="text-[#6A9955]"># Install via pip — just like FastAPI</span><br>
-                    pip install <span class="text-[#4EC9B0]">syncforge</span><br><br>
-                    <span class="text-[#6A9955]"># Or for Node.js</span><br>
-                    npm install <span class="text-[#4EC9B0]">syncforge</span>
+            <!-- Left: Simple Explanation & Use Cases -->
+            <div class="space-y-8">
+                <div>
+                    <span class="text-xs font-bold tracking-widest uppercase text-brand-accent mb-3 block">Performance Comparison</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 text-brand-primary">How SyncForge Speeds Up Your Application</h2>
+                    <p class="text-brand-secondary text-base md:text-lg leading-relaxed font-light font-sans">
+                        Normally, every request hits your database, making responses slow and increasing database server load. SyncForge stores data in RAM and encrypted disk cache to bypass the database completely for almost all requests.
+                    </p>
                 </div>
-            </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <div class="border-l-2 border-green-500 pl-4">
+                        <strong class="text-brand-primary text-base font-bold block mb-1">99.9% Cache Hit Rate</strong>
+                        <p class="text-brand-secondary text-xs md:text-sm leading-relaxed font-light">
+                            Almost all read requests are served instantly from memory without querying your database.
+                        </p>
+                    </div>
+                    <div class="border-l-2 border-brand-accent pl-4">
+                        <strong class="text-brand-primary text-base font-bold block mb-1">0.1 ms Avg Latency</strong>
+                        <p class="text-brand-secondary text-xs md:text-sm leading-relaxed font-light">
+                            Sub-millisecond responses ensure your API stays fast even under heavy traffic spikes.
+                        </p>
+                    </div>
+                </div>
 
-            <!-- Step 2 -->
-            <div class="md:col-span-5 flex flex-col justify-center mt-8 md:mt-0">
-                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">2</div>
-                <h3 class="text-xl font-bold mb-3">Initialize with your API Key</h3>
-                <p class="text-brand-secondary leading-relaxed">
-                    Create a free Developer Account, generate an API key in the Dashboard, and instantiate the client in your backend.
-                </p>
-            </div>
-            <div class="md:col-span-7 mt-8 md:mt-0">
-                <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
-                    <span class="text-[#569CD6]">import</span> os<br>
-                    <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
-                    <span class="text-[#6A9955]"># Dead simple — like Flask or FastAPI</span><br>
-                    sf = <span class="text-[#4EC9B0]">SyncForge</span>(<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;api_key=os.environ.get(<span class="text-[#CE9178]">'SYNCFORGE_API_KEY'</span>)<br>
-                    )
+                <div class="space-y-4 pt-6 border-t border-brand-border">
+                    <h4 class="text-xs font-bold text-brand-muted uppercase tracking-wider">Common Real-World Use Cases</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <strong class="text-brand-primary text-sm font-semibold block mb-1">E-Commerce Catalogs</strong>
+                            <p class="text-brand-secondary text-xs leading-relaxed font-light">
+                                Keep product catalogs, categories, and inventory statuses in memory to support thousands of active buyers without saturating your PostgreSQL pool.
+                            </p>
+                        </div>
+                        <div>
+                            <strong class="text-brand-primary text-sm font-semibold block mb-1">Global Configurations</strong>
+                            <p class="text-brand-secondary text-xs leading-relaxed font-light">
+                                Store feature flags, localization data, and application settings in RAM for instant access across edge nodes.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Right: Simple Path Comparison -->
+            <div class="border border-brand-border rounded-2xl bg-brand-secbg p-8 md:p-10 space-y-6">
+                <h3 class="text-lg font-bold text-brand-primary mb-4">Request Flow & Response Times</h3>
+                
+                <div class="space-y-4">
+                    <!-- Path 1: RAM -->
+                    <div class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-150 uppercase tracking-wider">Option A (99.9% of Requests)</span>
+                            <h4 class="text-base font-bold text-brand-primary mt-1.5">RAM Cache Hit</h4>
+                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads directly from ultra-fast server memory.</p>
+                        </div>
+                        <div class="text-left md:text-right shrink-0">
+                            <div class="text-2xl font-black text-green-600">0.1 ms</div>
+                            <div class="text-xs font-semibold text-brand-muted mt-0.5">Hits Database: No</div>
+                        </div>
+                    </div>
 
-            <!-- Step 3 -->
-            <div class="md:col-span-5 flex flex-col justify-center mt-8 md:mt-0">
-                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">3</div>
-                <h3 class="text-xl font-bold mb-3">Configure Table Modes</h3>
-                <p class="text-brand-secondary leading-relaxed">
-                    Go to the SyncForge Dashboard. For each table, decide the behavior: <strong>Manual</strong> for static tables, <strong>Schedule</strong> for semi-static, or <strong>Event</strong> for high-velocity data.
-                </p>
-            </div>
-            <div class="md:col-span-7 mt-8 md:mt-0 border border-brand-border rounded-[4px] bg-white p-6 flex flex-col justify-center">
-                <div class="flex items-center justify-between border-b border-brand-border pb-4 mb-4">
-                    <span class="font-semibold">Table: products</span>
-                    <span class="bg-brand-border px-2 py-1 text-xs rounded font-medium">Edit Mode</span>
-                </div>
-                <div class="space-y-3">
-                    <label class="flex items-center gap-3">
-                        <input type="radio" name="mode_demo" checked class="accent-brand-primary">
-                        <span class="text-sm font-medium">Manual (Refresh Button Only)</span>
-                    </label>
-                    <label class="flex items-center gap-3">
-                        <input type="radio" name="mode_demo" class="accent-brand-primary">
-                        <span class="text-sm font-medium">Schedule (Every 1 Hour)</span>
-                    </label>
-                </div>
-            </div>
+                    <!-- Path 2: Disk -->
+                    <div class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-150 uppercase tracking-wider">Option B (Fallback)</span>
+                            <h4 class="text-base font-bold text-brand-primary mt-1.5">Disk Cache Hit</h4>
+                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads from local encrypted disk storage.</p>
+                        </div>
+                        <div class="text-left md:text-right shrink-0">
+                            <div class="text-2xl font-black text-brand-primary">2.0 ms</div>
+                            <div class="text-xs font-semibold text-brand-muted mt-0.5">Hits Database: No</div>
+                        </div>
+                    </div>
 
-            <!-- Step 4 -->
-            <div class="md:col-span-5 flex flex-col justify-center mt-8 md:mt-0">
-                <div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm mb-6">4</div>
-                <h3 class="text-xl font-bold mb-3">Trigger Manual Updates</h3>
-                <p class="text-brand-secondary leading-relaxed">
-                    If you selected <strong>Manual Mode</strong>, automatic polling is turned off. Your clients will never hit your database until you explicitly call the `refresh` method.
-                </p>
-            </div>
-            <div class="md:col-span-7 mt-8 md:mt-0">
-                <div class="bg-[#1A1A1A] rounded-[4px] p-6 text-sm font-mono text-[#D4D4D4] leading-relaxed shadow-none">
-                    <span class="text-[#569CD6]">def</span> <span class="text-[#DCDCAA]">admin_update_product</span>(request):<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;Product.objects.create(name=<span class="text-[#CE9178]">'New Item'</span>)<br><br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Broadcast delta to all connected clients</span><br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]"># Zero database polling required.</span><br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;sf.refresh(<span class="text-[#CE9178]">'products'</span>)<br><br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">return</span> success_response()
+                    <!-- Path 3: DB Query -->
+                    <div class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-150 uppercase tracking-wider">Option C (Cache Miss)</span>
+                            <h4 class="text-base font-bold text-brand-primary mt-1.5">Direct Database Query</h4>
+                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads from database (PostgreSQL/MySQL).</p>
+                        </div>
+                        <div class="text-left md:text-right shrink-0">
+                            <div class="text-2xl font-black text-red-600">50.0 ms</div>
+                            <div class="text-xs font-semibold text-red-600 mt-0.5">Hits Database: Yes</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
+            
         </div>
     </div>
 </section>

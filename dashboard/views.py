@@ -293,6 +293,9 @@ def ajax_projects(request):
             'api_key_count': p.api_keys.filter(is_active=True).count(),
             'table_count':  p.table_configs.count(),
             'calls_saved':  sum(t.database_calls_saved for t in p.table_configs.all()),
+            'cache_hits':   sum(t.cache_hits for t in p.table_configs.all()),
+            'cache_misses': sum(t.cache_misses for t in p.table_configs.all()),
+            'total_requests': sum(t.total_requests for t in p.table_configs.all()),
         })
     return _json({'projects': data, 'ts': timezone.now().isoformat()})
 
@@ -304,6 +307,8 @@ def ajax_project_detail(request, slug):
     tables  = list(project.table_configs.values(
         'id', 'table_name', 'sync_mode', 'rows_count',
         'database_calls_saved', 'bandwidth_saved_mb', 'last_sync',
+        'cache_hits', 'cache_misses', 'total_requests', 'avg_response_time_ms',
+        'active', 'storage_mode', 'compression', 'encryption', 'priority', 'refresh_interval', 'cache_version'
     ))
     keys    = []
     for k in project.api_keys.filter(is_active=True):
@@ -375,8 +380,11 @@ def add_table(request, slug):
 
     t = TableSyncConfig.objects.create(
         project=project, table_name=table_name, sync_mode=sync_mode)
-    return _json({'status': 'added', 'id': t.id, 'table_name': t.table_name,
-                  'sync_mode': t.sync_mode, 'display': t.get_sync_mode_display()})
+    return _json({
+        'status': 'added', 'id': t.id, 'table_name': t.table_name,
+        'sync_mode': t.sync_mode, 'display': t.get_sync_mode_display(),
+        'storage_mode': t.storage_mode, 'active': t.active
+    })
 
 
 @login_required
@@ -394,8 +402,32 @@ def update_table(request, slug, table_id):
     project = get_object_or_404(Project, slug=slug, user=request.user)
     t = get_object_or_404(TableSyncConfig, id=table_id, project=project)
     sync_mode = request.POST.get('sync_mode', t.sync_mode)
+    storage_mode = request.POST.get('storage_mode', t.storage_mode)
+    compression = request.POST.get('compression', t.compression)
+    priority = request.POST.get('priority', t.priority)
+    refresh_interval = int(request.POST.get('refresh_interval', t.refresh_interval))
+    active_str = request.POST.get('active')
+    if active_str is not None:
+        t.active = active_str.lower() == 'true'
+    encryption_str = request.POST.get('encryption')
+    if encryption_str is not None:
+        t.encryption = encryption_str.lower() == 'true'
+
     if sync_mode in dict(TableSyncConfig.SYNC_MODES):
         t.sync_mode = sync_mode
-        t.save()
-    return _json({'status': 'updated', 'sync_mode': t.sync_mode,
-                  'display': t.get_sync_mode_display()})
+    if storage_mode in dict(TableSyncConfig.STORAGE_MODES):
+        t.storage_mode = storage_mode
+    if compression in dict(TableSyncConfig.COMPRESSION_TYPES):
+        t.compression = compression
+    if priority in dict(TableSyncConfig.PRIORITIES):
+        t.priority = priority
+    t.refresh_interval = refresh_interval
+    t.save()
+    
+    return _json({
+        'status': 'updated', 
+        'sync_mode': t.sync_mode,
+        'display': t.get_sync_mode_display(),
+        'storage_mode': t.storage_mode,
+        'active': t.active
+    })

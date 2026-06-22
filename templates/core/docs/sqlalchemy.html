@@ -1,0 +1,110 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block title %}SQLAlchemy Cache Listeners & Events — SyncForge{% endblock %}
+{% block meta_description %}Integrate SyncForge directly with your SQLAlchemy declaratives. Automatically listen to ORM write events for zero-polling cache invalidation.{% endblock %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded">Framework Guide</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">SQLAlchemy Integration</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    Integrate SyncForge directly with your SQLAlchemy models using the <code class="font-mono bg-gray-100 px-1 rounded text-sm">@sync_model</code> decorator. SyncForge automatically hooks into SQLAlchemy's event listeners for cache invalidation.
+</p>
+
+<!-- 1 Install -->
+<h2 class="text-xl font-semibold mb-3">1. Install</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge sqlalchemy</pre>
+</div>
+
+<!-- 2 Client -->
+<h2 class="text-xl font-semibold mb-3">2. Initialise the Client and Models</h2>
+<p class="text-sm text-brand-secondary mb-3">Use <code class="font-mono bg-gray-100 px-1 rounded text-sm">@sync_model</code> on your declarative base models.</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> sqlalchemy <span class="text-blue-400">import</span> Column, Integer, String
+<span class="text-blue-400">from</span> sqlalchemy.orm <span class="text-blue-400">import</span> declarative_base
+<span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
+<span class="text-blue-400">from</span> syncforge.sqlalchemy <span class="text-blue-400">import</span> sync_model
+<span class="text-blue-400">import</span> os
+
+sf <span class="text-gray-400">=</span> SyncForge(api_key<span class="text-gray-400">=</span>os.environ.get(<span class="text-green-300">"SYNCFORGE_API_KEY"</span>))
+Base <span class="text-gray-400">=</span> declarative_base()
+
+<span class="text-yellow-300">@sync_model</span>(sf)
+<span class="text-blue-400">class</span> <span class="text-teal-300">User</span>(Base):
+    __tablename__ <span class="text-gray-400">=</span> <span class="text-green-300">"users"</span>
+    id <span class="text-gray-400">=</span> Column(Integer, primary_key<span class="text-gray-400">=</span><span class="text-blue-300">True</span>, index<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+    name <span class="text-gray-400">=</span> Column(String, index<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+</pre>
+</div>
+
+<!-- Enterprise Parameters -->
+<h2 id="parameters" class="text-xl font-semibold mb-3 scroll-mt-20">Enterprise Cache Parameters Explained</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    The <code class="font-mono bg-gray-100 px-1 rounded text-sm text-gray-800">@sync_model</code> decorator accepts several parameters to fine-tune your enterprise caching strategy. Here is what they do and why you should use them:
+</p>
+<div class="space-y-4 mb-8">
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified to update the network.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'event'</code> (on every database write), <code>'manual'</code> (only when sf.refresh() is called), <code>'schedule_5m'</code>, <code>'schedule_1h'</code>, etc.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'event'</code> for data that needs real-time accuracy. Use <code>'schedule_1h'</code> for heavy data that is okay being up to an hour stale, reducing server load.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Defines where the cached data is physically stored on your server.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'ram_disk'</code> (default), <code>'disk_only'</code>, <code>'ram_only'</code>, <code>'disabled'</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> <code>'ram_disk'</code> is the default. It automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up data persistently and securely.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption to the data stored on disk.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>True</code> (default), <code>False</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Privacy and compliance. We default to <code>True</code> so that any PII or sensitive cached data is protected at rest automatically.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">compression</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Compresses the binary cache payload before storing it.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'none'</code> (default), <code>'lz4'</code>, <code>'zstd'</code>, <code>'gzip'</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'lz4'</code> or <code>'zstd'</code> for large JSON objects or massive querysets. It dramatically reduces disk footprint and I/O wait times with very little CPU overhead.</p>
+    </div>
+</div>
+
+<!-- 3 Routes CRUD -->
+<h2 class="text-xl font-semibold mb-3">3. Cache-Aside Pattern with get_table()</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    Always use the 3-step Cache-Aside pattern. Because of the <code class="font-mono bg-gray-100 px-1 rounded text-sm">@sync_model</code> decorator, SyncForge automatically invalidates the <code class="font-mono bg-gray-100 px-1 rounded text-sm">"users"</code> cache on insert, update, or delete.
+</p>
+
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">def</span> <span class="text-teal-300">get_users</span>():
+    session <span class="text-gray-400">=</span> SessionLocal()
+    <span class="text-blue-400">try</span>:
+        <span class="text-gray-500"># 1. Fetch instantly from RAM Cache</span>
+        users <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">"users"</span>)
+        
+        <span class="text-blue-400">if not</span> users:
+            <span class="text-gray-500"># 2. On cache miss, run the DB query and cache it</span>
+            users <span class="text-gray-400">=</span> sf.cache_query(
+                table_name<span class="text-gray-400">=</span><span class="text-green-300">"users"</span>,
+                queryset<span class="text-gray-400">=</span>session.query(User).all(),
+                timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>
+            )
+        <span class="text-blue-400">return</span> users
+    <span class="text-blue-400">finally</span>:
+        session.close()
+
+<span class="text-blue-400">def</span> <span class="text-teal-300">create_user</span>(name: str):
+    session <span class="text-gray-400">=</span> SessionLocal()
+    <span class="text-blue-400">try</span>:
+        new_user <span class="text-gray-400">=</span> User(name<span class="text-gray-400">=</span>name)
+        session.add(new_user)
+        session.commit()
+        <span class="text-gray-500"># 3. Cache is AUTOMATICALLY refreshed here because of @sync_model!</span>
+        <span class="text-blue-400">return</span> new_user
+    <span class="text-blue-400">finally</span>:
+        session.close()
+</pre>
+</div>
+
+{% endblock %}

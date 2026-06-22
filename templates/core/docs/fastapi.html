@@ -1,242 +1,96 @@
 {% extends 'core/docs/base_docs.html' %}
 
+{% block title %}FastAPI Cache & WAF Middleware Integration — SyncForge{% endblock %}
+{% block meta_description %}Step-by-step guide to using SyncForge caching and Web Application Firewall (WAF) middleware inside FastAPI apps with Dependency Injection.{% endblock %}
+
 {% block docs_content %}
 
 <div class="mb-2"><span class="text-xs font-mono text-teal-700 bg-teal-50 px-2 py-0.5 rounded">Framework Guide</span></div>
 <h1 class="text-3xl font-bold tracking-tight mb-3">FastAPI Integration</h1>
 <p class="text-brand-secondary text-lg leading-relaxed mb-8">
-    Use SyncForge with async FastAPI routes. The SDK's <code class="font-mono bg-gray-100 px-1 rounded text-sm">refresh()</code> call is synchronous but runs in a background thread via <code class="font-mono bg-gray-100 px-1 rounded text-sm">async_mode=True</code> — safe inside async endpoints.
+    Integrate SyncForge into your FastAPI application using Dependency Injection and WAF middleware.
 </p>
 
 <!-- 1 Install -->
-<h2 class="text-xl font-semibold mb-3">1. Install</h2>
+<h2 id="install" class="text-xl font-semibold mb-3 scroll-mt-20">1. Installation</h2>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">terminal</span>
-        <button onclick="copyCode(this)" data-code="pip install syncforge fastapi uvicorn sqlalchemy" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
-    </div>
-    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge fastapi uvicorn sqlalchemy</pre>
+    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge fastapi uvicorn</pre>
 </div>
 
-<!-- 2 Client -->
-<h2 class="text-xl font-semibold mb-3">2. Initialise the client</h2>
+<!-- 2 Middleware and Client -->
+<h2 id="setup" class="text-xl font-semibold mb-3 scroll-mt-20">2. Setup Client and Middleware</h2>
+<p class="text-sm text-brand-secondary mb-3">Initialize the SyncForge client and attach the WAF middleware to protect your endpoints.</p>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">app/sf.py</span>
-        <button onclick="copyCode(this)" data-code="import os
-from syncforge import SyncForge
-
-# async_mode=True: refresh() launches a daemon thread and returns immediately.
-# This is the recommended setting for FastAPI (no blocking inside async routes).
-sf = SyncForge(
-    api_key=os.environ['SYNCFORGE_API_KEY'],
-    silent=True,
-    async_mode=True,   # fire-and-forget — safe inside async endpoints
-)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
-    </div>
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">import</span> os
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> fastapi <span class="text-blue-400">import</span> FastAPI, Depends
 <span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
+<span class="text-blue-400">from</span> syncforge.fastapi <span class="text-blue-400">import</span> SyncForgeWAFMiddleware, get_syncforge
+<span class="text-blue-400">import</span> os
 
-<span class="text-gray-500"># async_mode=True: refresh() launches a daemon thread and returns immediately.</span>
-<span class="text-gray-500"># Recommended for FastAPI (no blocking inside async routes).</span>
-sf <span class="text-gray-400">=</span> SyncForge(
-    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
-    silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,
-    async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,   <span class="text-gray-500"># fire-and-forget — safe inside async endpoints</span>
-)</pre>
+sf <span class="text-gray-400">=</span> SyncForge(api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>], async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+
+app <span class="text-gray-400">=</span> FastAPI()
+app.add_middleware(SyncForgeWAFMiddleware, sf_client<span class="text-gray-400">=</span>sf)
+</pre>
 </div>
 
-<!-- 3 App startup -->
-<h2 class="text-xl font-semibold mb-3">3. App lifespan &amp; startup</h2>
+<!-- 3 Dependency Injection -->
+<h2 id="di" class="text-xl font-semibold mb-3 scroll-mt-20">3. Using get_table() in routes</h2>
+<p class="text-sm text-brand-secondary mb-3">Use FastAPI's <code class="font-mono bg-gray-100 px-1 rounded">Depends</code> to inject the client and use the cache-aside pattern.</p>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">main.py</span>
-        <button onclick="copyCode(this)" data-code="from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from app.sf import sf
-import logging
-
-logger = logging.getLogger(__name__)
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    if sf.ping():
-        logger.info('SyncForge connected.')
-    else:
-        logger.warning('SyncForge unreachable — running in degraded mode.')
-    yield
-
-app = FastAPI(title='My API', lifespan=lifespan)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
-    </div>
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> contextlib <span class="text-blue-400">import</span> asynccontextmanager
-<span class="text-blue-400">from</span> fastapi <span class="text-blue-400">import</span> FastAPI
-<span class="text-blue-400">from</span> app.sf <span class="text-blue-400">import</span> sf
-<span class="text-blue-400">import</span> logging
-
-logger <span class="text-gray-400">=</span> logging.getLogger(<span class="text-blue-300">__name__</span>)
-
-<span class="text-yellow-300">@asynccontextmanager</span>
-<span class="text-blue-400">async def</span> <span class="text-yellow-300">lifespan</span>(app: FastAPI):
-    <span class="text-blue-400">if</span> sf.ping():
-        logger.info(<span class="text-green-300">'SyncForge connected.'</span>)
-    <span class="text-blue-400">else</span>:
-        logger.warning(<span class="text-green-300">'SyncForge unreachable — running in degraded mode.'</span>)
-    <span class="text-blue-400">yield</span>
-
-app <span class="text-gray-400">=</span> FastAPI(title<span class="text-gray-400">=</span><span class="text-green-300">'My API'</span>, lifespan<span class="text-gray-400">=</span>lifespan)</pre>
+    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-yellow-300">@app.get</span>(<span class="text-green-300">"/products"</span>)
+<span class="text-blue-400">def</span> <span class="text-teal-300">list_products</span>(sf_client: SyncForge <span class="text-gray-400">=</span> Depends(get_syncforge(sf))):
+    <span class="text-gray-500"># 1. Fetch from RAM Cache instantly</span>
+    data <span class="text-gray-400">=</span> sf_client.get_table(<span class="text-green-300">"products"</span>)
+    
+    <span class="text-blue-400">if not</span> data:
+        <span class="text-gray-500"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
+        data <span class="text-gray-400">=</span> sf_client.cache_query(
+            table_name<span class="text-gray-400">=</span><span class="text-green-300">"products"</span>,
+            cache_key<span class="text-gray-400">=</span><span class="text-green-300">"all_products"</span>,
+            queryset<span class="text-gray-400">=</span>[<span class="text-gray-500">... fetch from db ...</span>],
+            timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>
+        )
+    <span class="text-blue-400">return</span> {<span class="text-green-300">"products"</span>: data}
+    
+<span class="text-yellow-300">@app.post</span>(<span class="text-green-300">"/products"</span>)
+<span class="text-blue-400">def</span> <span class="text-teal-300">create_product</span>(sf_client: SyncForge <span class="text-gray-400">=</span> Depends(get_syncforge(sf))):
+    <span class="text-gray-500"># ... DB Write ...</span>
+    <span class="text-gray-500"># 3. Refresh cache across cluster instantly</span>
+    sf_client.refresh(<span class="text-green-300">"products"</span>)
+    <span class="text-blue-400">return</span> {<span class="text-green-300">"status"</span>: <span class="text-green-300">"created"</span>}
+</pre>
 </div>
 
-<!-- 4 Routes CRUD -->
-<h2 class="text-xl font-semibold mb-3">4. Reading Data (Cache-Aside Pattern)</h2>
+<!-- Enterprise Parameters -->
+<h2 id="parameters" class="text-xl font-semibold mb-3 scroll-mt-20">Enterprise Cache Parameters Explained</h2>
 <p class="text-sm text-brand-secondary mb-3">
-    SyncForge uses a smart cache-aside pattern to protect your database. Follow these 3 steps in your FastAPI routes:
+    When registering a table via <code class="font-mono bg-gray-100 px-1 rounded text-sm text-gray-800">sf.create_table()</code> or using it within your framework, you can use these enterprise features:
 </p>
-
-<div class="border border-brand-border rounded-xl p-5 mb-4 bg-brand-secbg text-sm text-brand-secondary">
-    <ol class="space-y-3 list-none">
-        <li class="flex items-start gap-2">
-            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
-            <div><strong>get_table()</strong>: Instantly fetches pre-warmed data from local memory. Zero database hits.</div>
-        </li>
-        <li class="flex items-start gap-2">
-            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
-            <div><strong>cache_query()</strong>: If memory is empty (cache miss), executes the DB query and automatically saves the result back to memory.</div>
-        </li>
-        <li class="flex items-start gap-2">
-            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
-            <div><strong>Combine Both</strong>: Use a simple <code class="font-mono bg-white px-1 rounded border border-brand-border text-xs">if/else</code> block to ensure only the very first user triggers a database query.</div>
-        </li>
-    </ol>
-</div>
-
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">app/routers/products.py</span>
-        <button onclick="copyCode(this)" data-code="from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from app.sf import sf
-from app.database import get_db
-from app.models import Product
-
-router = APIRouter(prefix='/products', tags=['Products'])
-
-class ProductCreate(BaseModel):
-    name:  str
-    price: float
-
-class ProductOut(BaseModel):
-    id:    int
-    name:  str
-    price: float
-    class Config:
-        from_attributes = True
-
-# LIST
-@router.get('/', response_model=list[ProductOut])
-async def list_products(db: Session = Depends(get_db)):
-    if sf.get_table('products'):
-        # 1. Cache Hit: Data found in memory! DB query skipped entirely.
-        products = sf.get_table('products')
-    else:
-        # 2. Cache Miss: Execute DB query and automatically save to memory
-        products = sf.cache_query(
-            table_name='products',
-            queryset=db.query(Product).all()
-        )
-        
-    # 3. Return data exactly as it came from the DB
-    return products
-
-# CREATE
-@router.post('/', response_model=ProductOut, status_code=201)
-async def create_product(data: ProductCreate, db: Session = Depends(get_db)):
-    product = Product(**data.model_dump())
-    db.add(product)
-    db.commit()
-    db.refresh(product)
-    sf.refresh('products')   # daemon thread — returns immediately and clears local cache
-    return product
-
-# UPDATE
-@router.put('/{product_id}', response_model=ProductOut)
-async def update_product(product_id: int, data: ProductCreate, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail='Product not found')
-    for field, value in data.model_dump().items():
-        setattr(product, field, value)
-    db.commit()
-    db.refresh(product)
-    sf.refresh('products')
-    return product
-
-# DELETE
-@router.delete('/{product_id}', status_code=204)
-async def delete_product(product_id: int, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail='Product not found')
-    db.delete(product)
-    db.commit()
-    sf.refresh('products')" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+<div class="space-y-4 mb-8">
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified to update the network.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'event'</code> (on every database write), <code>'manual'</code> (only when sf.refresh() is called), <code>'schedule_5m'</code>, <code>'schedule_1h'</code>, etc.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'event'</code> for data that needs real-time accuracy. Use <code>'schedule_1h'</code> for heavy data that is okay being up to an hour stale, reducing server load.</p>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> fastapi <span class="text-blue-400">import</span> APIRouter, Depends, HTTPException
-<span class="text-blue-400">from</span> pydantic <span class="text-blue-400">import</span> BaseModel
-<span class="text-blue-400">from</span> app.sf <span class="text-blue-400">import</span> sf
-
-router <span class="text-gray-400">=</span> APIRouter(prefix<span class="text-gray-400">=</span><span class="text-green-300">'/products'</span>, tags<span class="text-gray-400">=</span>[<span class="text-green-300">'Products'</span>])
-
-<span class="text-gray-500"># LIST (Cached)</span>
-<span class="text-yellow-300">@router.get</span>(<span class="text-green-300">'/'</span>)
-<span class="text-blue-400">async def</span> <span class="text-yellow-300">list_products</span>(db<span class="text-gray-400">=</span>Depends(get_db)):
-    <span class="text-blue-400">if</span> sf.get_table(<span class="text-green-300">'products'</span>):
-        <span class="text-gray-500"># Cache hit: Fetch directly from SyncForge memory cache</span>
-        products <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">'products'</span>)
-    <span class="text-blue-400">else</span>:
-        <span class="text-gray-500"># Cache miss: Run DB query and cache automatically</span>
-        products <span class="text-gray-400">=</span> sf.cache_query(
-            table_name<span class="text-gray-400">=</span><span class="text-green-300">'products'</span>,
-            queryset<span class="text-gray-400">=</span>db.query(Product).filter(Product.active <span class="text-gray-400">==</span> <span class="text-blue-300">True</span>).all()
-        )
-    <span class="text-blue-400">return</span> products
-
-<span class="text-gray-500"># CREATE</span>
-<span class="text-yellow-300">@router.post</span>(<span class="text-green-300">'/'</span>, status_code<span class="text-gray-400">=</span><span class="text-yellow-300">201</span>)
-<span class="text-blue-400">async def</span> <span class="text-yellow-300">create_product</span>(data: ProductCreate, db<span class="text-gray-400">=</span>Depends(get_db)):
-    product <span class="text-gray-400">=</span> Product(<span class="text-gray-400">**</span>data.model_dump())
-    db.add(product); db.commit(); db.refresh(product)
-    sf.refresh(<span class="text-green-300">'products'</span>)   <span class="text-gray-500"># async_mode=True → daemon thread, returns immediately</span>
-    <span class="text-blue-400">return</span> product
-
-<span class="text-gray-500"># UPDATE</span>
-<span class="text-yellow-300">@router.put</span>(<span class="text-green-300">'/{product_id}'</span>)
-<span class="text-blue-400">async def</span> <span class="text-yellow-300">update_product</span>(product_id: int, data: ProductCreate, db<span class="text-gray-400">=</span>Depends(get_db)):
-    product <span class="text-gray-400">=</span> db.query(Product).filter(Product.id <span class="text-gray-400">==</span> product_id).first()
-    <span class="text-blue-400">if not</span> product: <span class="text-blue-400">raise</span> HTTPException(<span class="text-yellow-300">404</span>)
-    [setattr(product, k, v) <span class="text-blue-400">for</span> k, v <span class="text-blue-400">in</span> data.model_dump().items()]
-    db.commit()
-    sf.refresh(<span class="text-green-300">'products'</span>)
-    <span class="text-blue-400">return</span> product
-
-<span class="text-gray-500"># DELETE</span>
-<span class="text-yellow-300">@router.delete</span>(<span class="text-green-300">'/{product_id}'</span>, status_code<span class="text-gray-400">=</span><span class="text-yellow-300">204</span>)
-<span class="text-blue-400">async def</span> <span class="text-yellow-300">delete_product</span>(product_id: int, db<span class="text-gray-400">=</span>Depends(get_db)):
-    product <span class="text-gray-400">=</span> db.query(Product).filter(Product.id <span class="text-gray-400">==</span> product_id).first()
-    db.delete(product); db.commit()
-    sf.refresh(<span class="text-green-300">'products'</span>)</pre>
-</div>
-
-<!-- Nav -->
-<div class="flex justify-between pt-6 border-t border-brand-border mt-10">
-    <a href="{% url 'docs_flask' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        Flask Guide
-    </a>
-    <a href="{% url 'docs_rest_api' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
-        REST API Reference
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    </a>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Defines where the cached data is physically stored on your server.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'ram_disk'</code> (default), <code>'disk_only'</code>, <code>'ram_only'</code>, <code>'disabled'</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> <code>'ram_disk'</code> is the default. It automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up data persistently and securely.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption to the data stored on disk.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>True</code> (default), <code>False</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Privacy and compliance. We default to <code>True</code> so that any PII or sensitive cached data is protected at rest automatically.</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">compression</code></h3>
+        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Compresses the binary cache payload before storing it.</p>
+        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'none'</code> (default), <code>'lz4'</code>, <code>'zstd'</code>, <code>'gzip'</code>.</p>
+        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'lz4'</code> or <code>'zstd'</code> for large JSON objects or massive querysets. It dramatically reduces disk footprint and I/O wait times with very little CPU overhead.</p>
+    </div>
 </div>
 
 {% endblock %}

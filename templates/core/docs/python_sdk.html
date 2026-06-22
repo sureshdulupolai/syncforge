@@ -1,0 +1,176 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block title %}SyncForge Python SDK API Reference{% endblock %}
+{% block meta_description %}Detailed methods reference for the SyncForge Python client. Learn how to use cache_query, get_table, refresh, and configure client options.{% endblock %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">API Reference</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">Python SDK Reference</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    Comprehensive reference for all methods available on the <code>SyncForge</code> client object.
+</p>
+
+<!-- Reading Data -->
+<h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border">Reading Data</h2>
+
+<!-- cache_query -->
+<div class="mb-10">
+    <h3 class="text-lg font-bold mb-2 flex items-center gap-2"><code class="text-brand-accent">sf.cache_query()</code></h3>
+    <p class="text-sm text-brand-secondary mb-4">
+        The heart of SyncForge's read path. A cache-aside implementation with built-in stampede protection. On a cache miss, it executes the DB query and automatically saves the result.
+    </p>
+    
+    <div class="overflow-x-auto mb-4">
+        <table class="w-full text-sm border-collapse">
+            <thead>
+                <tr class="border-b border-brand-border bg-brand-secbg">
+                    <th class="text-left px-4 py-2 font-semibold">Parameter</th>
+                    <th class="text-left px-4 py-2 font-semibold">Type</th>
+                    <th class="text-left px-4 py-2 font-semibold">Description</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-border">
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">table_name</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">str</td><td class="px-4 py-2 text-brand-secondary text-xs">The database table name.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">cache_key</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">str (optional)</td><td class="px-4 py-2 text-brand-secondary text-xs">Unique identifier for parameterised queries.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">queryset</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">Iterable</td><td class="px-4 py-2 text-brand-secondary text-xs">The Django QuerySet or SQLAlchemy query to execute on cache miss.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">timeout</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">int (default 3600)</td><td class="px-4 py-2 text-brand-secondary text-xs">Time in seconds before the RAM cache expires.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
+        <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">Example</span>
+        </div>
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">data = sf.cache_query(
+    table_name='core_report',
+    queryset=Product.objects.filter(active=True),
+    timeout=3600
+)</pre>
+    </div>
+    <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> Returns a <code>list</code> of model instances.</p>
+</div>
+
+<!-- get_table -->
+<div class="mb-10">
+    <h3 class="text-lg font-bold mb-2 flex items-center gap-2"><code class="text-brand-accent">sf.get_table()</code></h3>
+    <p class="text-sm text-brand-secondary mb-4">
+        Instantly fetches pre-warmed data from local memory or disk without triggering a database query.
+    </p>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">data = sf.get_table('core_report', cache_key='optional_dynamic_key')</pre>
+    </div>
+    <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> Returns the cached <code>list</code> of model instances, or <code>None</code> if not found.</p>
+</div>
+
+<!-- Invalidating Data -->
+<h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border mt-12">Invalidating Data</h2>
+
+<!-- refresh -->
+<div class="mb-10">
+    <h3 class="text-lg font-bold mb-2 flex items-center gap-2"><code class="text-brand-accent">sf.refresh()</code></h3>
+    <p class="text-sm text-brand-secondary mb-4">
+        Signal SyncForge that data in one or more tables has changed. Call this after any database write.
+    </p>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"># After any DB write
+product = Product.objects.create(name='Widget', price=9.99)
+result = sf.refresh('products', 'categories')</pre>
+    </div>
+    <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> Returns a <code>SyncResult</code> object (or list of them) containing metrics like <code>calls_saved</code>.</p>
+</div>
+
+<!-- track_key -->
+<div class="mb-10">
+    <h3 class="text-lg font-bold mb-2 flex items-center gap-2"><code class="text-brand-accent">sf.track_key()</code></h3>
+    <p class="text-sm text-brand-secondary mb-4">
+        Manually register a custom cache key to be cleared when <code>sf.refresh(table_name)</code> is called. This is done automatically by <code>cache_query</code>, but useful if you set caches manually.
+    </p>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">sf.track_key(table_name='products', cache_key='custom_query_123')</pre>
+    </div>
+    <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> <code>None</code></p>
+</div>
+
+<!-- Automatic Maintenance & Middleware -->
+<h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border mt-12">Automatic Maintenance & Middleware</h2>
+
+<div class="mb-10">
+    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-8">
+        <h3 class="text-lg font-bold text-indigo-800 mb-2 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> 4:00 AM Nightly Cache Refresh</h3>
+        <p class="text-sm text-indigo-700 leading-relaxed mb-0">
+            SyncForge natively runs a Python daemon in the background of your application. Every night precisely at <strong>4:00 AM</strong>, this daemon automatically purges all stale RAM memory and executes a fresh bulk-preload from your persistent disk cache. This guarantees your RAM doesn't become permanently bloated over the lifespan of your app, and ensures your cache is perfectly hot and ready for daily morning and afternoon traffic spikes without causing sudden latency drops.
+        </p>
+    </div>
+
+    <h3 class="text-xl font-bold mb-3">Framework Middleware (The First Request Preload)</h3>
+    <p class="text-sm text-brand-secondary mb-6 leading-relaxed">
+        While SyncForge background-preloads encrypted disk caches into RAM automatically, you can explicitly guarantee that the cache is 100% hot before the very first user is served by using our Middleware. 
+        <br><br>
+        <strong>How it works:</strong> The middleware intercepts the very first HTTP request that hits your server. Before routing the request to your views, it invokes the SyncForge C-optimized AES decrypter to immediately pump the on-disk cache into RAM. Once loaded, the request continues normally, ensuring absolute zero-latency for the user.
+    </p>
+
+    <!-- Django -->
+    <h3 class="text-lg font-bold mb-2 mt-6 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> Django</h3>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"># settings.py
+MIDDLEWARE = [
+    # ...
+    'syncforge.django.SyncForgePreloadMiddleware',
+]</pre>
+    </div>
+
+    <!-- FastAPI -->
+    <h3 class="text-lg font-bold mb-2 mt-6 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-teal-500"></div> FastAPI</h3>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"># main.py
+from fastapi import FastAPI
+from syncforge.fastapi import SyncForgePreloadMiddleware
+from sf_client import sf
+
+app = FastAPI()
+app.add_middleware(SyncForgePreloadMiddleware, sf_client=sf)</pre>
+    </div>
+
+    <!-- Flask -->
+    <h3 class="text-lg font-bold mb-2 mt-6 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-gray-300"></div> Flask</h3>
+    <p class="text-sm text-brand-secondary mb-2">Flask handles preloading automatically when you initialize the <code class="text-brand-accent">SyncForgeFlask</code> extension.</p>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"># app.py
+from flask import Flask
+from syncforge.flask import SyncForgeFlask
+from sf_client import sf
+
+app = Flask(__name__)
+sf_ext = SyncForgeFlask(app, sf) # Triggers preloading on first request</pre>
+    </div>
+</div>
+
+<!-- Management & Health -->
+<h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border mt-12">Management & Health</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+    <div class="border border-brand-border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-subtle">
+        <h3 class="font-bold text-brand-accent mb-2 font-mono">sf.ping()</h3>
+        <p class="text-sm text-brand-secondary mb-3">Checks if the SyncForge API is reachable and your API key is valid.</p>
+        <p class="text-xs text-brand-muted"><strong class="text-green-600">Returns:</strong> <code>bool</code> (True if successful)</p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-subtle">
+        <h3 class="font-bold text-brand-accent mb-2 font-mono">sf.project_info()</h3>
+        <p class="text-sm text-brand-secondary mb-3">Fetches project metadata and all registered tables for your API key.</p>
+        <p class="text-xs text-brand-muted"><strong class="text-green-600">Returns:</strong> <code>dict</code></p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-subtle">
+        <h3 class="font-bold text-brand-accent mb-2 font-mono">sf.list_tables()</h3>
+        <p class="text-sm text-brand-secondary mb-3">Returns a list of all tables registered in your project.</p>
+        <p class="text-xs text-brand-muted"><strong class="text-green-600">Returns:</strong> <code>list[dict]</code></p>
+    </div>
+    <div class="border border-brand-border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-subtle">
+        <h3 class="font-bold text-brand-accent mb-2 font-mono">sf.delete_table(name)</h3>
+        <p class="text-sm text-brand-secondary mb-3">Permanently removes a table from your SyncForge dashboard.</p>
+        <p class="text-xs text-brand-muted"><strong class="text-green-600">Returns:</strong> <code>bool</code> (True if deleted)</p>
+    </div>
+</div>
+
+{% endblock %}

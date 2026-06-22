@@ -40,6 +40,8 @@ import warnings
 from typing import Any, Dict, List, Optional, Union
 
 from .result import SyncResult
+from .engine import CacheEngine, StorageMode, CompressionType, EvictionPolicy
+from .scheduler import SmartScheduler
 from .exceptions import (
     SyncForgeError,
     AuthError,
@@ -215,6 +217,8 @@ class SyncForge:
         silent: bool = False,
         async_mode: bool = False,
         sign_requests: bool = True,
+        encryption_key: Optional[str] = None,
+        cache_dir: str = ".syncforge_cache",
     ) -> None:
         if not api_key or not isinstance(api_key, str):
             raise ConfigurationError("api_key is required and must be a non-empty string.")
@@ -233,6 +237,13 @@ class SyncForge:
         self._sign_requests = sign_requests
         self._local         = threading.local()
         self._waf_configs: Dict[str, dict] = {}
+        
+        # Enterprise Cache Engine
+        self.engine = CacheEngine(base_dir=cache_dir, encryption_key=encryption_key)
+        
+        # Scheduler (needs to be configured by framework adapter)
+        self.scheduler = None
+        self._metadata_provider = None
         
         # Generate a unique 8-character prefix based on the API key to prevent 
         # cache collisions if multiple projects share the same Redis instance.
@@ -316,10 +327,16 @@ class SyncForge:
         """
         self._validate_table_name(table_name)
         self._check_waf(table_name)
-        cache = _get_cache()
         if not cache_key:
             cache_key = f"sf_{self._project_prefix}_{table_name}"
-        return cache.get(cache_key)
+            
+        # Try to get metadata
+        storage_mode = StorageMode.RAM_DISK
+        if self._metadata_provider:
+            meta = self._metadata_provider([table_name]).get(table_name, {})
+            storage_mode = StorageMode(meta.get("storage_mode", "ram_disk"))
+            
+        return self.engine.get(table_name, cache_key, storage_mode)
 
     def cache_query(
         self,
@@ -404,41 +421,51 @@ class SyncForge:
         elif not isinstance(cache_key, str):
             raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
 
-        cache = _get_cache()
-        _warn_if_locmem_cache()
+        # ── Enterprise Cache Logic ─────────────────────────────────────────────
+        storage_mode = StorageMode.RAM_DISK
+        version = 1
+        comp_type = CompressionType.NONE
+        
+        if self._metadata_provider:
+            meta = self._metadata_provider([table_name]).get(table_name, {})
+            if not meta.get("active", True):
+                storage_mode = StorageMode.DISABLED
+            else:
+                storage_mode = StorageMode(meta.get("storage_mode", "ram_disk"))
+                version = meta.get("cache_version", 1)
+                comp_type = CompressionType(meta.get("compression", "none"))
 
         # ── Fast path: cache hit ───────────────────────────────────────────────
-        data = cache.get(cache_key)
+        data = self.engine.get(table_name, cache_key, storage_mode)
         if data is not None:
             logger.debug("[SyncForge] cache_query cache HIT for key=%r", cache_key)
-            # Report cache hit asynchronously — does not block the response.
             self._report_cache_hit_async(table_name)
-            return data  # type: ignore[return-value]
+            return data
 
-        # ── Stampede protection: serialise DB access per cache key ────────────
+        # ── Stampede protection ────────────────────────────────────────────────
         lock = _get_stampede_lock(cache_key)
         with lock:
-            # Double-checked locking: another thread may have populated the
-            # cache while we were waiting for the lock.
-            data = cache.get(cache_key)
+            data = self.engine.get(table_name, cache_key, storage_mode)
             if data is not None:
-                logger.debug(
-                    "[SyncForge] cache_query cache HIT (post-lock) for key=%r",
-                    cache_key,
-                )
+                logger.debug("[SyncForge] cache_query cache HIT (post-lock) for key=%r", cache_key)
                 self._report_cache_hit_async(table_name)
-                return data  # type: ignore[return-value]
+                return data
 
-            # ── Cache miss: evaluate queryset and populate cache ──────────────
             logger.debug("[SyncForge] cache_query cache MISS for key=%r — querying DB", cache_key)
             data = list(queryset)
-            cache.set(cache_key, data, timeout)
-
-            # Register this cache key in the table's invalidation registry so
-            # that @sync_model can clear it when the table changes.
+            
+            self.engine.set(
+                table_name=table_name,
+                cache_key=cache_key,
+                data=data,
+                storage=storage_mode,
+                version=version,
+                compression=comp_type,
+                timeout=timeout
+            )
             self._register_cache_key(table_name, cache_key, timeout)
 
-        return data  # type: ignore[return-value]
+        return data
 
     def track_key(self, table_name: str, cache_key: str, timeout: Optional[int] = 3600) -> None:
         """
@@ -449,6 +476,15 @@ class SyncForge:
         if not cache_key or not isinstance(cache_key, str):
             raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
         self._register_cache_key(table_name, cache_key, timeout)
+
+    def preload_cache(self) -> None:
+        """
+        Manually trigger the background disk-to-RAM cache preloading process.
+        Normally this is done automatically on startup, but it can be triggered 
+        manually or via middleware to ensure the cache is hot.
+        """
+        if hasattr(self, 'engine'):
+            self.engine.preload_to_ram()
 
     def ping(self) -> bool:
         """
@@ -503,7 +539,17 @@ class SyncForge:
         data = self._request("GET", url)
         return data.get("tables", [])
 
-    def create_table(self, table_name: str, sync_mode: str = "event") -> bool:
+    def create_table(
+        self, 
+        table_name: str, 
+        sync_mode: str = "event",
+        active: bool = True,
+        storage_mode: str = "ram_disk",
+        compression: str = "none",
+        encryption: bool = True,
+        priority: str = "medium",
+        refresh_interval: int = 0
+    ) -> bool:
         """
         Register a new table in this project programmatically.
 
@@ -517,6 +563,12 @@ class SyncForge:
                 One of ``'event'``, ``'manual'``, ``'schedule_5m'``,
                 ``'schedule_1h'``, ``'schedule_1d'``, ``'schedule_30d'``,
                 ``'hybrid'``.
+            active: Whether the cache is active for this table.
+            storage_mode: 'ram_only', 'ram_disk', or 'disabled'.
+            compression: 'none', 'lz4', 'zstd', 'gzip'.
+            encryption: Boolean to encrypt disk cache.
+            priority: 'low', 'medium', 'high'.
+            refresh_interval: Polling interval in minutes (0 for event-only).
 
         Returns:
             ``True`` if the table was newly created.
@@ -531,7 +583,17 @@ class SyncForge:
         table_name = table_name.strip().lower()
         url = f"{self._base_url}/v1/tables/"
         try:
-            res = self._request("POST", url, json_data={"table_name": table_name, "sync_mode": sync_mode})
+            payload = {
+                "table_name": table_name,
+                "sync_mode": sync_mode,
+                "active": active,
+                "storage_mode": storage_mode,
+                "compression": compression,
+                "encryption": encryption,
+                "priority": priority,
+                "refresh_interval": refresh_interval
+            }
+            res = self._request("POST", url, json_data=payload)
             return bool(res.get("created", False))
         except SyncForgeError as exc:
             if self._silent:
@@ -731,12 +793,8 @@ class SyncForge:
             registry_key = f"sf_registry_{table_name}"
             keys: set = cache.get(registry_key) or set()
             if keys:
-                # Provide a generic delete_many approach if the backend supports it
-                if hasattr(cache, 'delete_many'):
-                    cache.delete_many(list(keys))
-                else:
-                    for k in keys:
-                        cache.delete(k)
+                for k in keys:
+                    self.engine.delete(table_name, k)
                 cache.delete(registry_key)
                 logger.debug(
                     "[SyncForge] Invalidated %d cache key(s) for table '%s'.",
@@ -747,6 +805,17 @@ class SyncForge:
                 "[SyncForge] Cache invalidation failed for table '%s': %s",
                 table_name, exc,
             )
+
+    def configure_scheduler(self, fetch_metadata_fn: Callable) -> None:
+        """Called by the framework adapter to start the SmartScheduler."""
+        self._metadata_provider = fetch_metadata_fn
+        self.scheduler = SmartScheduler(
+            fetch_metadata_fn=fetch_metadata_fn,
+            invalidate_fn=self._invalidate_local_cache,
+            reload_fn=lambda t: None, # Reload can be customized later
+            check_interval_seconds=60
+        )
+        self.scheduler.start()
 
     # ── HTTP Layer ─────────────────────────────────────────────────────────────
 

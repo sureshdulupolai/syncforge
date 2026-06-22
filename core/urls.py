@@ -13,8 +13,10 @@ urlpatterns = [
     path('docs/django/',          views.docs_django,          name='docs_django'),
     path('docs/flask/',           views.docs_flask,           name='docs_flask'),
     path('docs/fastapi/',         views.docs_fastapi,         name='docs_fastapi'),
+    path('docs/sqlalchemy/',      views.docs_sqlalchemy,      name='docs_sqlalchemy'),
+    path('docs/ai-prompt/',       views.docs_ai_prompt,       name='docs_ai_prompt'),
     path('docs/rest-api/',        views.docs_rest_api,        name='docs_rest_api'),
-    path('docs/cache-query/',     views.docs_cache_query,     name='docs_cache_query'),
+    path('docs/python-sdk/',      views.docs_python_sdk,      name='docs_python_sdk'),
     path('docs/security/',        views.docs_security,        name='docs_security'),
     path('docs/deployment/',      views.docs_deployment,      name='docs_deployment'),
 ]

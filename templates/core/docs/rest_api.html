@@ -1,5 +1,8 @@
 {% extends 'core/docs/base_docs.html' %}
 
+{% block title %}SyncForge REST API Reference — Endpoint Documentation{% endblock %}
+{% block meta_description %}Complete reference for SyncForge HTTP API endpoints. Details authentication headers, sync payloads, status codes, and invalidation hooks.{% endblock %}
+
 {% block docs_content %}
 
 <div class="mb-2"><span class="text-xs font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded">API Reference</span></div>
@@ -131,8 +134,8 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         FastAPI Guide
     </a>
-    <a href="{% url 'docs_cache_query' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
-        cache_query()
+    <a href="{% url 'docs_python_sdk' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        Python SDK Reference
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     </a>
 </div>

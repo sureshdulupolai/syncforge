@@ -43,16 +43,78 @@ _registered_tables: Set[str] = set()
 _registration_lock = threading.Lock()
 
 try:
+    from django.db import models
     from django.db.models.signals import post_save, post_delete  # type: ignore[import]
     from django.apps import apps  # type: ignore[import]
     HAS_DJANGO = True
 except ImportError:
     HAS_DJANGO = False
 
+# ── Metadata Model ─────────────────────────────────────────────────────────────
+
+if HAS_DJANGO:
+    class SyncforgeMetadata(models.Model):
+        """
+        Internal table managed by SyncForge to track what is cached locally,
+        when it was last accessed, its size on disk/RAM, and overall status.
+        """
+        table_name = models.CharField(max_length=255, unique=True, primary_key=True)
+        storage_mode = models.CharField(max_length=50, default="ram_disk")
+        compression = models.CharField(max_length=50, default="none")
+        encryption = models.BooleanField(default=False)
+        cache_version = models.BigIntegerField(default=1)
+        last_accessed = models.DateTimeField(auto_now=True)
+        size_bytes = models.BigIntegerField(default=0)
+        status = models.CharField(max_length=50, default="active")
+
+        class Meta:
+            db_table = "syncforge_metadata"
+            verbose_name_plural = "Syncforge Metadata"
+
+    def update_local_metadata(table_name: str, **kwargs):
+        """Helper to safely update the local metadata table without triggering signals."""
+        try:
+            SyncforgeMetadata.objects.update_or_create(
+                table_name=table_name,
+                defaults=kwargs
+            )
+        except Exception as e:
+            logger.debug("[SyncForge] Failed to update local metadata: %s", e)
+
+    def fetch_django_metadata(table_names: List[str]) -> Dict[str, dict]:
+        """Callable for SmartScheduler to fetch local metadata configs."""
+        try:
+            records = SyncforgeMetadata.objects.filter(table_name__in=table_names)
+            return {
+                r.table_name: {
+                    "storage_mode": r.storage_mode,
+                    "compression": r.compression,
+                    "encryption": r.encryption,
+                    "cache_version": r.cache_version,
+                    "active": r.status == "active"
+                }
+                for r in records
+            }
+        except Exception as e:
+            logger.debug("[SyncForge] Failed to fetch local metadata: %s", e)
+            return {}
+
 
 # ── Decorator ─────────────────────────────────────────────────────────────────
 
-def sync_model(sf_client, sync_mode: str = "event", waf_enabled: bool = False, max_requests: int = 100, block_time_sec: int = 86400):
+def sync_model(
+    sf_client, 
+    sync_mode: str = "event",
+    active: bool = True,
+    storage_mode: str = "ram_disk",
+    compression: str = "none",
+    encryption: bool = True,
+    priority: str = "medium",
+    refresh_interval: int = 0,
+    waf_enabled: bool = False, 
+    max_requests: int = 100, 
+    block_time_sec: int = 86400
+):
     """
     Class decorator for Django models that enables automatic SyncForge
     synchronisation.
@@ -127,14 +189,32 @@ def sync_model(sf_client, sync_mode: str = "event", waf_enabled: bool = False, m
             # (usually during Django startup / AppConfig.ready()). We attempt
             # it but never let it crash the import.
             try:
-                sf_client.create_table(table_name, sync_mode=sync_mode)
+                sf_client.create_table(
+                    table_name, 
+                    sync_mode=sync_mode,
+                    active=active,
+                    storage_mode=storage_mode,
+                    compression=compression,
+                    encryption=encryption,
+                    priority=priority,
+                    refresh_interval=refresh_interval
+                )
+                update_local_metadata(
+                    table_name,
+                    storage_mode=storage_mode,
+                    compression=compression,
+                    encryption=encryption,
+                    status="active" if active else "inactive"
+                )
                 logger.info("[SyncForge] Registered table '%s' (mode=%s).", table_name, sync_mode)
+                print(f"\033[92m🚀 [SyncForge] Successfully registered table '{table_name}' (mode={sync_mode}, storage={storage_mode}, enc={encryption})\033[0m")
             except Exception as exc:
                 logger.warning(
                     "[SyncForge] Could not register table '%s' on SyncForge server: %s. "
                     "Local cache invalidation will still work correctly.",
                     table_name, exc,
                 )
+                print(f"\033[91m❌ [SyncForge] Failed to register table '{table_name}': {exc}\033[0m")
 
             # ── 2. Connect ORM signals ────────────────────────────────────────
             _connect_signals(sf_client, cls, table_name)
@@ -292,6 +372,28 @@ def sync_migrations(sf_client) -> None:
 
 
 # ── Middleware ─────────────────────────────────────────────────────────────────
+
+class SyncForgePreloadMiddleware:
+    """
+    Middleware to automatically preload the SyncForge cache from Disk to RAM 
+    on the first request to the application.
+    
+    This ensures that before a user hits a cache_query() execution path, the 
+    encrypted disk payloads are already decompressed and ready in RAM for 
+    zero-latency reads.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        import sys
+        # Trigger preload on any instantiated SyncForge client in sys.modules
+        for mod_name, mod in list(sys.modules.items()):
+            sf_client = getattr(mod, 'sf', None)
+            if sf_client and hasattr(sf_client, 'preload_cache'):
+                sf_client.preload_cache()
+                
+        return self.get_response(request)
 
 class SyncForgeWAFMiddleware:
     """

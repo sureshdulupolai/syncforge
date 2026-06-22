@@ -1,5 +1,8 @@
 {% extends 'core/docs/base_docs.html' %}
 
+{% block title %}Getting Started with SyncForge — 5 Minute Install Guide{% endblock %}
+{% block meta_description %}Learn how to install the SyncForge SDK, configure environment variables, create a project, and make your first sync call in under 5 minutes.{% endblock %}
+
 {% block docs_content %}
 
 <div class="mb-2"><span class="text-xs font-mono text-brand-accent bg-blue-50 px-2 py-0.5 rounded">Overview</span></div>
@@ -140,7 +143,7 @@ else:
     </thead>
     <tbody class="divide-y divide-brand-border">
         <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">api_key</td><td class="px-4 py-2.5 text-brand-muted">required</td><td class="px-4 py-2.5 text-brand-secondary">API key from dashboard (sf_live_...)</td></tr>
-        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">base_url</td><td class="px-4 py-2.5 font-mono text-xs text-brand-muted">syncforge.dev/api</td><td class="px-4 py-2.5 text-brand-secondary">Override for self-hosted deployments</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">base_url</td><td class="px-4 py-2.5 font-mono text-xs text-brand-muted">Optional (syncforge.dev/api)</td><td class="px-4 py-2.5 text-brand-secondary"><strong>Do not provide this</strong> unless you are self-hosting SyncForge on your own servers.</td></tr>
         <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">timeout</td><td class="px-4 py-2.5 text-brand-muted">10</td><td class="px-4 py-2.5 text-brand-secondary">HTTP timeout in seconds</td></tr>
         <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">silent</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Suppress exceptions — log warnings instead (recommended in production)</td></tr>
         <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">async_mode</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Fire-and-forget refresh() — returns None immediately</td></tr>

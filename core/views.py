@@ -32,12 +32,20 @@ def docs_fastapi(request):
     return render(request, 'core/docs/fastapi.html')
 
 
+def docs_sqlalchemy(request):
+    return render(request, 'core/docs/sqlalchemy.html')
+
+
+def docs_ai_prompt(request):
+    return render(request, 'core/docs/ai_setup.html')
+
+
 def docs_rest_api(request):
     return render(request, 'core/docs/rest_api.html')
 
 
-def docs_cache_query(request):
-    return render(request, 'core/docs/cache_query.html')
+def docs_python_sdk(request):
+    return render(request, 'core/docs/python_sdk.html')
 
 
 def docs_security(request):

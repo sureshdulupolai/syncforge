@@ -119,7 +119,8 @@ def project_info(request):
     tables = list(project.table_configs.values(
         "table_name", "sync_mode", "rows_count",
         "database_calls_saved", "bandwidth_saved_mb",
-        "version_number", "last_sync",
+        "cache_version", "last_sync",
+        "active", "storage_mode", "compression", "encryption", "priority", "refresh_interval"
     ))
     return _json({
         "project":     project.name,
@@ -163,15 +164,15 @@ def smartdb_refresh(request, table_name: str):
             # Atomic update — no lost-update race condition under concurrency.
             # F() expressions are evaluated by the database, not Python.
             TableSyncConfig.objects.filter(pk=config.pk).update(
-                version_number=F("version_number") + 1,
+                cache_version=F("cache_version") + 1,
                 last_sync=timezone.now(),
             )
-            config.refresh_from_db(fields=["version_number", "database_calls_saved"])
+            config.refresh_from_db(fields=["cache_version", "database_calls_saved"])
 
             _log_sync_event(project, config, action="refresh", status="ok")
             logger.info(
                 "[SyncForge] Refresh: project='%s' table='%s' version=%d",
-                project.slug, normalised, config.version_number,
+                project.slug, normalised, config.cache_version,
             )
 
             return _json({
@@ -181,7 +182,7 @@ def smartdb_refresh(request, table_name: str):
                 "project":              project.name,
                 "sync_mode":            config.get_sync_mode_display(),
                 "database_calls_saved": config.database_calls_saved,
-                "version_number":       config.version_number,
+                "cache_version":        config.cache_version,
             })
 
         except TableSyncConfig.DoesNotExist:
@@ -274,6 +275,12 @@ def tables_list(request):
 
         table_name = body.get("table_name", "")
         sync_mode  = body.get("sync_mode", "event")
+        active = body.get("active", True)
+        storage_mode = body.get("storage_mode", "ram_disk")
+        compression = body.get("compression", "none")
+        encryption = body.get("encryption", False)
+        priority = body.get("priority", "medium")
+        refresh_interval = body.get("refresh_interval", 0)
 
         valid, err = _validate_table_name(table_name)
         if not valid:
@@ -290,16 +297,51 @@ def tables_list(request):
 
         config, created = project.table_configs.get_or_create(
             table_name=normalised,
-            defaults={"sync_mode": sync_mode},
+            defaults={
+                "sync_mode": sync_mode,
+                "active": active,
+                "storage_mode": storage_mode,
+                "compression": compression,
+                "encryption": encryption,
+                "priority": priority,
+                "refresh_interval": refresh_interval
+            },
         )
-        if not created and config.sync_mode != sync_mode:
-            config.sync_mode = sync_mode
-            config.save(update_fields=["sync_mode"])
+        if not created:
+            updated = False
+            if config.sync_mode != sync_mode:
+                config.sync_mode = sync_mode
+                updated = True
+            if config.active != active:
+                config.active = active
+                updated = True
+            if config.storage_mode != storage_mode:
+                config.storage_mode = storage_mode
+                updated = True
+            if config.compression != compression:
+                config.compression = compression
+                updated = True
+            if config.encryption != encryption:
+                config.encryption = encryption
+                updated = True
+            if config.priority != priority:
+                config.priority = priority
+                updated = True
+            if config.refresh_interval != refresh_interval:
+                config.refresh_interval = refresh_interval
+                updated = True
+                
+            if updated:
+                config.save(update_fields=[
+                    "sync_mode", "active", "storage_mode", "compression",
+                    "encryption", "priority", "refresh_interval"
+                ])
 
         return _json({
             "status":     "ok",
             "table_name": normalised,
             "sync_mode":  config.sync_mode,
+            "storage_mode": config.storage_mode,
             "created":    created,
         })
 
@@ -326,6 +368,7 @@ def tables_list(request):
     # ── GET: List all tables ──────────────────────────────────────────────────
     tables = list(project.table_configs.values(
         "table_name", "sync_mode", "rows_count",
-        "database_calls_saved", "version_number", "last_sync",
+        "database_calls_saved", "cache_version", "last_sync",
+        "active", "storage_mode", "compression", "encryption", "priority", "refresh_interval"
     ))
     return _json({"tables": tables, "count": len(tables)})

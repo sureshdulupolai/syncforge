@@ -1,11 +1,16 @@
 {% extends 'core/docs/base_docs.html' %}
 
+{% block title %}SyncForge Security Middleware & Request Inspection (WAF){% endblock %}
+{% block meta_description %}Protect your application with built-in Web Application Firewall middleware. Scans for SQLi, XSS, path traversal, and injects hardening HTTP headers.{% endblock %}
+
 {% block docs_content %}
 
-<div class="mb-2"><span class="text-xs font-mono text-orange-700 bg-orange-50 px-2 py-0.5 rounded">Security Guide</span></div>
-<h1 class="text-3xl font-bold tracking-tight mb-3">Security & WAF</h1>
+<div class="mb-2">
+    <span class="text-xs font-mono text-brand-accent bg-blue-50 px-2 py-0.5 rounded">Reference</span>
+</div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">Security Middleware</h1>
 <p class="text-brand-secondary text-lg leading-relaxed mb-8">
-    SyncForge isn't just for syncing. The SDK includes a production-ready Web Application Firewall (WAF) and comprehensive security headers to protect your Django app.
+    SyncForge isn't just for syncing. The SDK includes a lightweight request inspection middleware and comprehensive security headers to protect your Django app.
 </p>
 
 <!-- 0. Zero-Data Privacy -->
@@ -134,9 +139,9 @@
 
 <!-- Nav -->
 <div class="flex justify-between pt-6 border-t border-brand-border mt-10">
-    <a href="{% url 'docs_cache_query' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+    <a href="{% url 'docs_python_sdk' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        cache_query()
+        Python SDK Reference
     </a>
     <a href="{% url 'docs_deployment' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
         Deployment

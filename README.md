@@ -4,69 +4,87 @@
   <p><b>The Developer-Controlled Smart Data Synchronization Platform</b></p>
   <p>
     <a href="https://syncforge.dev/docs/">Documentation</a> •
-    <a href="https://syncforge.dev/dashboard/">Dashboard</a> •
-    <a href="#security--zero-data-privacy">Security</a>
+    <a href="https://syncforge.dev/dashboard/">Dashboard</a>
   </p>
+
+  ![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
+  ![License](https://img.shields.io/badge/license-MIT-green)
+  ![Framework](https://img.shields.io/badge/framework-Django%20%7C%20FastAPI%20%7C%20Flask-orange)
 </div>
 
 ---
 
-SyncForge is the ultimate missing link between simple caching and complex real-time push systems. Built for modern Python frameworks (Django, FastAPI, Flask), it provides an intelligent cache-aside engine with **built-in stampede protection** and a **Web Application Firewall (WAF)**.
+SyncForge is a flexible cache-aside synchronization framework built for modern Python environments. It provides intelligent data synchronization across clients, aiming to drastically reduce database reads for highly static or periodically updated data.
 
-Instead of expiring cached data on an arbitrary timer (TTL), SyncForge lets you decide exactly when data becomes stale. 
+Instead of relying solely on arbitrary time-to-live (TTL) expiration, SyncForge allows developers to decide exactly when data becomes stale, pushing updates instantly to connected systems.
 
-## 🚀 Why Use SyncForge? (The "0 DB Calls" Advantage)
+## 🚀 Why Use SyncForge?
 
-SyncForge is designed to give your applications **massive speed** and save your database from unnecessary load. 
+SyncForge is engineered to minimize database query volume by intelligently managing cached datasets in application memory.
 
-**Best Use Case:** It is perfect for data that remains static for long periods (e.g., E-Commerce Products, Blog Articles, Global Settings). 
-**The Advantage:** If you set a 100-day timer on your database cache, the first user loads the data. For the next 100 days, every subsequent request is served with **0 Database Calls**. The load on your database drops to practically zero, and your application speed multiplies.
+**Ideal Use Cases:**
+- E-Commerce Product Catalogs
+- Blog Articles and Static FAQs
+- Global Configuration Settings
+- Category and Country Lists
+- Admin Dashboards & Reporting
 
-### Advanced In-Memory Filtering (Cache as a DB)
-Instead of running N+1 queries to filter data (e.g., `category_id=1`), SyncForge allows you to cache the **entire table** once and perform filters instantly in Python RAM. This guarantees 0 database hits across all your filter combinations and eliminates Cache Key Fragmentation.
+**When NOT to use SyncForge:**
+- Highly dynamic real-time data (Live Chat, Multiplayer Games)
+- Stock Market Tickers
+- Frequently changing user session data
 
-*(Note: Do not use SyncForge for highly dynamic real-time data like Live Chat, where data changes every second.)*
+### Request Flow Architecture
 
----
+```mermaid
+graph TD
+    A[Client Request] --> B[SyncForge Middleware]
+    B --> C{Data in Cache?}
+    C -->|Yes| D[Return Cached Delta]
+    C -->|No| E[(Database)]
+    E --> F[Store in Memory/Redis]
+    F --> D
+```
 
-## 🔒 Enterprise-Grade Security & Isolation
+## 🔒 Security & Performance Features
 
-### 1. Zero-Data Privacy Architecture
-A common misconception is that caching platforms store your users or products on their central servers. **SyncForge does NOT.**
-- **What We Sync:** Only lightweight metadata is exchanged (table names, timestamps, HMAC signatures).
-- **What Stays Local:** All your actual query results remain strictly inside your own server's RAM or Redis. 
+### 1. Near-Zero Database Reads
+By leveraging application-level caching, you can serve thousands of concurrent requests from memory without hitting your primary database for read operations.
 
-### 2. Multi-Tenant Cache Key Isolation
-If multiple clients or projects use SyncForge on the same shared Redis cluster, their data will never mix. The SyncForge SDK automatically hashes your secret `API_KEY` to generate a mathematically unique prefix (e.g., `sf_8a7b9c1d_products`). Client A's data can never overwrite Client B's data.
+### 2. Built-in Rate Limiter
+Protect your endpoints from brute-force cache-busting attacks. The built-in rate limiter monitors IP addresses and automatically returns `429 Too Many Requests` when access limits are breached.
 
-### 3. Built-in WAF (Web Application Firewall)
-The Python SDK includes a production-ready WAF that automatically intercepts malicious payloads.
+### 3. Lightweight Request Inspection
+Included in the Python SDK is a lightweight middleware designed to inspect request payloads for common attack vectors, providing an additional layer of security before requests reach your views.
 
-### 4. Zero-Code Anti-DDoS Rate Limiter 🛡️ [NEW]
-Protect your database from cache-busting brute force attacks. Our IP-based Anti-DDoS middleware automatically tracks fetches per IP (even behind proxies like Cloudflare via `HTTP_X_FORWARDED_FOR`).
-If an attacker excessively hits the same table, the SDK instantly blocks the IP and returns a `429 Too Many Requests` JSON response.
-**Zero code required in your views** — simply enable it on the model:
-`@sync_model(sf, sync_mode='event', waf_enabled=True, max_requests=3, block_time_sec=86400)`
+### 4. Zero-Data Architecture
+SyncForge central servers only synchronize metadata (table names, timestamps, and HMAC signatures). Your actual database query results and proprietary customer data remain strictly within your local infrastructure.
 
-## 📂 Project Structure (A-Z)
+### 5. Enterprise Cache Engine (v1.2+)
+Features `disk_only` storage by default to protect your server's RAM from exhaustion, with **AES-256 encryption enabled out of the box** to ensure complete privacy and compliance for your cached data.
 
-This repository contains both the Central Server (Dashboard/API) and the SDK.
+### 6. AI Agent Ready
+Easily integrate SyncForge into any project using our [AI Setup Prompt](https://syncforge.dev/docs/ai-prompt/). Just paste the prompt into Cursor, GitHub Copilot, or Antigravity IDE, and let the AI automatically write the cache-aside integration code for you!
 
-- **`config/`**: Core Django settings. Fully optimized for high-concurrency SQLite (WAL Mode, Memory-Mapped I/O, 20-second timeout locks).
-- **`core/`**: Main frontend templates (`templates/core/`), including the heavily optimized 3-column UI, pricing, and all framework-specific documentation (Django, FastAPI, Flask).
-- **`dashboard/`**: The developer portal where you create projects, generate API keys, and track analytics (bandwidth saved, database calls saved).
-- **`api/`**: The high-speed REST API endpoints that the SDK communicates with using HMAC-SHA256 signatures.
-- **`sdk/`**: The actual `syncforge` Python library installed via `pip`. Contains the framework-agnostic client, Django `@sync_model` decorator, and WAF middleware.
+## 📂 Project Structure
+
+- **`config/`**: Core Django settings configured for high-concurrency environments.
+- **`core/`**: Main frontend marketing templates and documentation sections.
+- **`dashboard/`**: The developer portal for managing API keys and table synchronization configurations.
+- **`api/`**: High-speed REST API endpoints for SDK communication.
+- **`sdk/`**: Python SDK library source (published on PyPI).
 
 ---
 
 ## 💻 Installation
 
+Install via pip:
+
 ```bash
 pip install syncforge
 ```
 
-## ⚡ Quick Start
+## ⚡ Quick Start (Django Example)
 
 ### 1. Initialize
 
@@ -74,57 +92,53 @@ pip install syncforge
 import os
 from syncforge import SyncForge
 
-# Initialize the client with your unique API key
-sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
+sf = SyncForge(api_key=os.environ.get('SYNCFORGE_API_KEY'))
 ```
 
-### 2. Auto-sync your models (Django Example)
+### 2. Auto-sync Models
 
 ```python
-# models.py
 from myproject.sf import sf
 from syncforge.django import sync_model
 from django.db import models
 
-# On every save() or delete(), SyncForge automatically invalidates cache
-@sync_model(sf, sync_mode='event')
+# SyncForge automatically handles invalidation upon save() or delete()
+@sync_model(sf, sync_mode='event', storage_mode='disk_only', encryption=True)
 class Product(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 ```
 
-### 3. Read Data (Framework Agnostic)
+### Cache Lifecycle Diagram
 
-SyncForge natively supports Django's cache framework, but automatically falls back to an internal, highly-concurrent `InMemoryCache` for **FastAPI, Flask, and plain Python**.
-
-```python
-# views.py (or FastAPI router)
-from myproject.sf import sf
-from .models import Product
-
-def product_list(request):
-    # 1. First, try to fetch the ENTIRE table from fast memory (0 DB calls!)
-    all_products = sf.get_table("core_product")
+```mermaid
+sequenceDiagram
+    participant DB as Database
+    participant SF as SyncForge Cache
+    participant Client
     
-    # 2. On Cache Miss: Hit DB, and save to memory
-    if not all_products:
-        all_products = list(Product.objects.all())
-        # Track this key so @sync_model deletes it when data changes
-        sf.track_key("core_product", "sf_myproj_products")
-        
-    # 3. Filter directly in RAM (Instant speed, 0 DB load)
-    active_products = [p for p in all_products if p.is_active]
-        
-    return render(request, 'list.html', {'products': active_products})
+    Client->>SF: Request Data
+    alt Cache Miss
+        SF->>DB: Query Database
+        DB-->>SF: Return Data
+        SF->>SF: Store Data in RAM
+    end
+    SF-->>Client: Return Response
+    
+    Note over DB,SF: On Data Mutation (Event Mode)
+    DB->>SF: Trigger Invalidation
+    SF->>SF: Clear Stale Cache
 ```
 
 ---
 
-## 📖 Documentation
+## 📖 Documentation & Support
 
-Comprehensive guides for Django, FastAPI, Flask, and the REST API are available at:
+Comprehensive guides for Django, FastAPI, and Flask are available at:
 
 **[https://syncforge.dev/docs/](https://syncforge.dev/docs/)**
+
+Please review our [Contributing Guidelines](CONTRIBUTING.md) to learn how to open issues or submit pull requests.
 
 ## 📄 License
 

@@ -21,6 +21,10 @@
                class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_getting_started' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
                 Getting Started
             </a>
+            <a href="{% url 'docs_ai_prompt' %}"
+               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_ai_prompt' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                AI Setup Prompt
+            </a>
 
             <div class="pt-4 pb-1">
                 <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider">Framework Guides</span>
@@ -37,6 +41,10 @@
                class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_fastapi' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
                 FastAPI
             </a>
+            <a href="{% url 'docs_sqlalchemy' %}"
+               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_sqlalchemy' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                SQLAlchemy
+            </a>
             <a href="{% url 'docs_rest_api' %}"
                class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_rest_api' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
                 REST API Reference
@@ -45,13 +53,13 @@
             <div class="pt-4 pb-1">
                 <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider">Core Concepts</span>
             </div>
-            <a href="{% url 'docs_cache_query' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_cache_query' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                cache_query()
+            <a href="{% url 'docs_python_sdk' %}"
+               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_python_sdk' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                Python SDK Reference
             </a>
             <a href="{% url 'docs_security' %}"
                class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_security' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Security & WAF
+                Security Middleware
             </a>
             <a href="{% url 'docs_deployment' %}"
                class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_deployment' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">

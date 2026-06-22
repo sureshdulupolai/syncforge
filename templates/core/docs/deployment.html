@@ -1,5 +1,8 @@
 {% extends 'core/docs/base_docs.html' %}
 
+{% block title %}Production Deployment Guide & Redis Config — SyncForge{% endblock %}
+{% block meta_description %}Prepare your cache engine for production. Checklist for gunicorn/uwsgi multi-worker configs, env variables, and shared Redis cache backends.{% endblock %}
+
 {% block docs_content %}
 
 <div class="mb-2"><span class="text-xs font-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">Operations</span></div>
@@ -56,7 +59,7 @@ sf <span class="text-gray-400">=</span> SyncForge(
 <div class="flex justify-between pt-6 border-t border-brand-border mt-10">
     <a href="{% url 'docs_security' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        Security & WAF
+        Security Middleware
     </a>
     <div class="flex items-center gap-2 text-sm font-medium text-brand-muted">
         End of Docs

@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Project Console — SyncForge{% endblock %}
+{% block meta_description %}Monitor synchronized database tables, manage API credentials, track caching analytics, and view WAF middleware logs.{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-white">
 
@@ -50,20 +53,20 @@
             </div>
             <!-- Stats -->
             <div class="hidden md:flex items-center gap-6">
-                <div class="text-center">
-                    <div class="text-xl font-bold text-brand-primary" id="p-stat-tables">{{ tables.count }}</div>
+                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
+                    <div class="text-2xl font-bold text-brand-primary" id="p-stat-tables">{{ tables.count }}</div>
                     <div class="text-xs text-brand-muted">Tables</div>
                 </div>
-                <div class="text-center">
-                    <div class="text-xl font-bold text-green-600" id="p-stat-calls">0</div>
+                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
+                    <div class="text-2xl font-bold text-green-600" id="p-stat-calls">0</div>
                     <div class="text-xs text-brand-muted">DB Calls Saved</div>
                 </div>
-                <div class="text-center">
-                    <div class="text-xl font-bold text-blue-600" id="p-stat-bandwidth">0.0</div>
-                    <div class="text-xs text-brand-muted">MB Saved</div>
+                <div class="text-center card p-3 shadow-none border-l-4 border-l-blue-500 min-w-[100px]">
+                    <div class="text-2xl font-bold text-blue-600 font-mono" id="p-stat-hitratio">0%</div>
+                    <div class="text-xs text-brand-muted">Avg Hit Ratio</div>
                 </div>
-                <div class="text-center">
-                    <div class="text-xl font-bold text-brand-primary" id="p-stat-keys">{{ api_keys.count }}</div>
+                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
+                    <div class="text-2xl font-bold text-brand-primary" id="p-stat-keys">{{ api_keys.count }}</div>
                     <div class="text-xs text-brand-muted">API Keys</div>
                 </div>
             </div>
@@ -343,10 +346,13 @@ function renderData({ tables, api_keys }) {
     renderKeys(api_keys);
     // Update stats
     const calls = tables.reduce((s, t) => s + (t.database_calls_saved || 0), 0);
-    const bandwidth = tables.reduce((s, t) => s + (t.bandwidth_saved_mb || 0), 0);
+    const totalHits = tables.reduce((s, t) => s + (t.cache_hits || 0), 0);
+    const totalReqs = tables.reduce((s, t) => s + (t.total_requests || 0), 0);
+    const hitRatio = totalReqs > 0 ? Math.round((totalHits / totalReqs) * 100) : 0;
+    
     document.getElementById('p-stat-tables').textContent = tables.length;
     document.getElementById('p-stat-calls').textContent  = calls.toLocaleString();
-    document.getElementById('p-stat-bandwidth').textContent = bandwidth.toFixed(1);
+    document.getElementById('p-stat-hitratio').textContent = hitRatio + '%';
     document.getElementById('p-stat-keys').textContent   = api_keys.length;
 }
 
@@ -367,30 +373,55 @@ function renderTables(tables) {
     const list = document.getElementById('tables-list');
     list.classList.remove('hidden');
     list.innerHTML = tables.map(t => `
-        <div class="bg-white rounded-xl border border-brand-border p-5 flex items-center gap-4 hover:border-blue-200 transition-all" id="trow-${t.id}">
-            <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-brand-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"/></svg>
-            </div>
-            <div class="flex-1 min-w-0">
-                <div class="font-semibold text-sm text-brand-primary font-mono">${escHtml(t.table_name)}</div>
-                <div class="flex items-center gap-3 mt-1">
-                    <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full font-medium ${MODE_BADGE[t.sync_mode] || 'bg-gray-100 text-gray-600'}">${escHtml(t.sync_mode)}</span>
-                    <span class="text-xs text-brand-muted">${t.rows_count} rows</span>
-                    <span class="text-xs text-green-600 font-semibold">${(t.database_calls_saved||0).toLocaleString()} calls saved</span>
+        <div class="bg-white rounded-xl border border-brand-border p-5 hover:border-brand-accent transition-all card p-6 shadow-sm" id="trow-${t.id}">
+            <div class="flex items-center gap-4 w-full">
+                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"/></svg>
                 </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <select onchange="updateTableMode(${t.id}, this.value)"
-                        class="text-xs border border-brand-border rounded-lg px-2 py-1.5 outline-none focus:border-brand-accent bg-gray-50">
-                    <option value="manual"      ${t.sync_mode==='manual'?'selected':''}>Manual</option>
-                    <option value="schedule_5m" ${t.sync_mode==='schedule_5m'?'selected':''}>5 min</option>
-                    <option value="schedule_1h" ${t.sync_mode==='schedule_1h'?'selected':''}>1 hour</option>
-                    <option value="schedule_1d" ${t.sync_mode==='schedule_1d'?'selected':''}>1 day</option>
-                    <option value="event"       ${t.sync_mode==='event'?'selected':''}>Event</option>
-                    <option value="hybrid"      ${t.sync_mode==='hybrid'?'selected':''}>Hybrid</option>
-                </select>
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-lg text-brand-primary mb-1">${escHtml(t.table_name)}</div>
+                    <div class="flex flex-wrap items-center gap-4 text-xs">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md font-semibold ${MODE_BADGE[t.sync_mode] || 'bg-gray-100 text-gray-600'}">${escHtml(t.sync_mode)}</span>
+                        <span class="text-brand-muted"><strong class="text-brand-primary">${t.rows_count}</strong> rows</span>
+                        <span class="text-green-600 font-bold"><svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/></svg>${(t.database_calls_saved||0).toLocaleString()} calls saved</span>
+                        <span class="text-blue-600 font-bold"><svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>${t.avg_response_time_ms||0}ms avg response</span>
+                        <span class="text-brand-muted ml-auto font-mono">Hit Ratio: ${t.total_requests > 0 ? Math.round((t.cache_hits/t.total_requests)*100) : 0}%</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 border-l border-brand-border pl-4">
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <select onchange="updateTableSetting(${t.id}, 'sync_mode', this.value)"
+                                class="border border-brand-border rounded-lg px-2 py-1 outline-none focus:border-brand-accent bg-gray-50">
+                            <option value="manual"      ${t.sync_mode==='manual'?'selected':''}>Manual</option>
+                            <option value="schedule_5m" ${t.sync_mode==='schedule_5m'?'selected':''}>5 min</option>
+                            <option value="schedule_1h" ${t.sync_mode==='schedule_1h'?'selected':''}>1 hour</option>
+                            <option value="schedule_1d" ${t.sync_mode==='schedule_1d'?'selected':''}>1 day</option>
+                            <option value="event"       ${t.sync_mode==='event'?'selected':''}>Event</option>
+                            <option value="hybrid"      ${t.sync_mode==='hybrid'?'selected':''}>Hybrid</option>
+                        </select>
+                        <select onchange="updateTableSetting(${t.id}, 'storage_mode', this.value)"
+                                class="border border-brand-border rounded-lg px-2 py-1 outline-none focus:border-brand-accent bg-gray-50">
+                            <option value="ram_only" ${t.storage_mode==='ram_only'?'selected':''}>RAM Only</option>
+                            <option value="ram_disk" ${t.storage_mode==='ram_disk'?'selected':''}>RAM+Disk</option>
+                            <option value="disabled" ${t.storage_mode==='disabled'?'selected':''}>Disabled</option>
+                        </select>
+                        <select onchange="updateTableSetting(${t.id}, 'compression', this.value)"
+                                class="border border-brand-border rounded-lg px-2 py-1 outline-none focus:border-brand-accent bg-gray-50">
+                            <option value="none" ${t.compression==='none'?'selected':''}>No Compression</option>
+                            <option value="lz4"  ${t.compression==='lz4'?'selected':''}>LZ4</option>
+                            <option value="zstd" ${t.compression==='zstd'?'selected':''}>Zstd</option>
+                            <option value="gzip" ${t.compression==='gzip'?'selected':''}>GZIP</option>
+                        </select>
+                        <div class="flex items-center gap-2 px-1">
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="checkbox" onchange="updateTableSetting(${t.id}, 'encryption', this.checked)"
+                                    ${t.encryption ? 'checked' : ''} class="w-3 h-3 text-brand-accent rounded">
+                                <span>Encrypted</span>
+                            </label>
+                        </div>
+                    </div>
                 <button onclick="deleteTable(${t.id})"
-                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-2 h-fit">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
             </div>
@@ -507,12 +538,15 @@ async function deleteTable(id) {
     }
 }
 
-async function updateTableMode(id, mode) {
+async function updateTableSetting(id, field, value) {
     const fd = new FormData();
-    fd.append('sync_mode', mode);
+    fd.append(field, value);
     const res  = await fetch(`/dashboard/api/projects/${SLUG}/tables/${id}/update/`, { method:'POST', body:fd, headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' });
     const json = await res.json();
-    if (json.status === 'updated') { invalidateCache(); showToast(`Sync mode updated to "${json.display}"`); }
+    if (json.status === 'updated') { 
+        invalidateCache(); 
+        showToast(`${field} updated!`); 
+    }
 }
 
 async function refreshData() {
