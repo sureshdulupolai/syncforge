@@ -219,8 +219,59 @@ def sync_model(
             # ── 2. Connect ORM signals ────────────────────────────────────────
             _connect_signals(sf_client, cls, table_name)
 
+            # ── 3. Configure background scheduler for remote invalidation check ──
+            if sf_client.scheduler is None:
+                def fetch_remote_metadata(table_names: list[str]) -> dict[str, dict]:
+                    try:
+                        remote_tables = sf_client.list_tables()
+                        remote_map = {t["table_name"]: t for t in remote_tables}
+                    except Exception as e:
+                        logger.debug("[SyncForge Scheduler] Failed to fetch remote metadata: %s", e)
+                        remote_map = {}
+
+                    local_records = fetch_django_metadata(table_names)
+                    merged = {}
+                    for name in table_names:
+                        local_meta = local_records.get(name, {})
+                        remote_meta = remote_map.get(name, {})
+                        
+                        remote_version = remote_meta.get("cache_version", 1)
+                        local_version = local_meta.get("cache_version", 1)
+                        
+                        active = remote_meta.get("active", local_meta.get("active", True))
+                        storage_mode = remote_meta.get("storage_mode", local_meta.get("storage_mode", "ram_disk"))
+                        compression = remote_meta.get("compression", local_meta.get("compression", "none"))
+                        encryption = remote_meta.get("encryption", local_meta.get("encryption", False))
+                        
+                        if remote_version > local_version:
+                            update_local_metadata(
+                                name,
+                                cache_version=remote_version,
+                                storage_mode=storage_mode,
+                                compression=compression,
+                                encryption=encryption,
+                                status="active" if active else "inactive"
+                            )
+                            current_version = remote_version
+                        else:
+                            current_version = local_version
+                            
+                        merged[name] = {
+                            "storage_mode": storage_mode,
+                            "compression": compression,
+                            "encryption": encryption,
+                            "cache_version": current_version,
+                            "active": active
+                        }
+                    return merged
+
+                sf_client.configure_scheduler(fetch_remote_metadata)
+
+            if sf_client.scheduler:
+                sf_client.scheduler.add_table(table_name)
+
             _registered_tables.add(table_name)
-            logger.debug("[SyncForge] Signal hooks installed for table '%s'.", table_name)
+            logger.debug("[SyncForge] Signal hooks installed and scheduler active for table '%s'.", table_name)
 
         return cls
     return decorator

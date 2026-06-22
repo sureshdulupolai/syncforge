@@ -160,9 +160,12 @@ def _get_cache() -> Any:
     Return Django's cache if available, else the internal fallback cache.
     """
     try:
+        from django.conf import settings
+        if not settings.configured:
+            return _fallback_cache
         from django.core.cache import cache  # type: ignore[import]
         return cache
-    except ImportError:
+    except Exception:
         return _fallback_cache
 
 
