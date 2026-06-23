@@ -39,17 +39,22 @@
                 <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
                 <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
             </div>
-            <pre class="text-sm font-mono leading-relaxed overflow-x-auto"><code class="language-python"><span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
-<span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> sf
+            <pre class="text-sm font-mono leading-relaxed overflow-x-auto"><code class="language-python"><span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
+<span class="text-[#FF7B72]">from</span> syncforge.decorators <span class="text-[#FF7B72]">import</span> sync_function
 
-<span class="text-[#8B949E]"># 1. Zero-code Django auto-sync</span>
-<span class="text-[#D2A8FF]">@sync_model</span>(sf, storage_mode=<span class="text-[#A5D6FF]">'disk_only'</span>, encryption=<span class="text-[#79C0FF]">True</span>)
-<span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Product</span>(models.Model):
-    name = models.CharField(max_length=<span class="text-[#79C0FF]">100</span>)
+<span class="text-[#8B949E]"># 1. Initialize Engine</span>
+sf = SyncForge(backend=<span class="text-[#A5D6FF]">'in_memory'</span>)
 
-<span class="text-[#8B949E]"># 2. Or manual push from FastAPI/Flask</span>
-<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">update_catalog</span>():
-    sf.refresh(<span class="text-[#A5D6FF]">'products'</span>)</code></pre>
+<span class="text-[#8B949E]"># 2. Smart Cache-Aside Query</span>
+users = sf.cache_query(
+    table_name=<span class="text-[#A5D6FF]">"users"</span>,
+    queryset=db.query(User).all()
+)
+
+<span class="text-[#8B949E]"># 3. Auto-Invalidation on write</span>
+<span class="text-[#D2A8FF]">@sync_function</span>(sf, table_name=<span class="text-[#A5D6FF]">"users"</span>)
+<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">update_user</span>(user_id: <span class="text-[#79C0FF]">int</span>):
+    db.execute(<span class="text-[#A5D6FF]">"UPDATE users..."</span>)</code></pre>
         </div>
     </div>
 </section>
