@@ -36,10 +36,6 @@ def docs_sqlalchemy(request):
     return render(request, 'core/docs/sqlalchemy.html')
 
 
-def docs_ai_prompt(request):
-    return render(request, 'core/docs/ai_setup.html')
-
-
 def docs_rest_api(request):
     return render(request, 'core/docs/rest_api.html')
 
