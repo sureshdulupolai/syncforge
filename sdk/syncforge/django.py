@@ -171,107 +171,33 @@ def sync_model(
             )
 
         table_name: str = cls._meta.db_table
-        
-        if waf_enabled:
-            sf_client.register_waf_config(table_name, max_requests, block_time_sec)
 
         with _registration_lock:
             if table_name in _registered_tables:
-                # Idempotent — already registered (e.g. AppConfig.ready() called twice).
-                logger.debug(
-                    "[SyncForge] @sync_model: '%s' already registered — skipping.",
-                    table_name,
-                )
+                # Idempotent — already registered.
                 return cls
 
-            # ── 1. Register table on the SyncForge dashboard ─────────────────
-            # This is a network call that happens at class-definition time
-            # (usually during Django startup / AppConfig.ready()). We attempt
-            # it but never let it crash the import.
-            try:
-                sf_client.create_table(
-                    table_name, 
-                    sync_mode=sync_mode,
-                    active=active,
-                    storage_mode=storage_mode,
-                    compression=compression,
-                    encryption=encryption,
-                    priority=priority,
-                    refresh_interval=refresh_interval
-                )
-                update_local_metadata(
-                    table_name,
-                    storage_mode=storage_mode,
-                    compression=compression,
-                    encryption=encryption,
-                    status="active" if active else "inactive"
-                )
-                logger.info("[SyncForge] Registered table '%s' (mode=%s).", table_name, sync_mode)
-                print(f"\033[92m🚀 [SyncForge] Successfully registered table '{table_name}' (mode={sync_mode}, storage={storage_mode}, enc={encryption})\033[0m")
-            except Exception as exc:
-                logger.warning(
-                    "[SyncForge] Could not register table '%s' on SyncForge server: %s. "
-                    "Local cache invalidation will still work correctly.",
-                    table_name, exc,
-                )
-                print(f"\033[91m❌ [SyncForge] Failed to register table '{table_name}': {exc}\033[0m")
+            # Delegate entirely to unified Core Engine
+            sf_client.core.register_model(
+                table_name=table_name,
+                sync_mode=sync_mode,
+                active=active,
+                storage_mode=storage_mode,
+                compression=compression,
+                encryption=encryption,
+                priority=priority,
+                refresh_interval=refresh_interval,
+                waf_enabled=waf_enabled,
+                max_requests=max_requests,
+                block_time_sec=block_time_sec,
+                local_metadata_updater=update_local_metadata,
+                local_metadata_fetcher=fetch_django_metadata,
+            )
 
-            # ── 2. Connect ORM signals ────────────────────────────────────────
+            # ── Connect ORM signals ────────────────────────────────────────
             _connect_signals(sf_client, cls, table_name)
 
-            # ── 3. Configure background scheduler for remote invalidation check ──
-            if sf_client.scheduler is None:
-                def fetch_remote_metadata(table_names: list[str]) -> dict[str, dict]:
-                    try:
-                        remote_tables = sf_client.list_tables()
-                        remote_map = {t["table_name"]: t for t in remote_tables}
-                    except Exception as e:
-                        logger.debug("[SyncForge Scheduler] Failed to fetch remote metadata: %s", e)
-                        remote_map = {}
-
-                    local_records = fetch_django_metadata(table_names)
-                    merged = {}
-                    for name in table_names:
-                        local_meta = local_records.get(name, {})
-                        remote_meta = remote_map.get(name, {})
-                        
-                        remote_version = remote_meta.get("cache_version", 1)
-                        local_version = local_meta.get("cache_version", 1)
-                        
-                        active = remote_meta.get("active", local_meta.get("active", True))
-                        storage_mode = remote_meta.get("storage_mode", local_meta.get("storage_mode", "ram_disk"))
-                        compression = remote_meta.get("compression", local_meta.get("compression", "none"))
-                        encryption = remote_meta.get("encryption", local_meta.get("encryption", False))
-                        
-                        if remote_version > local_version:
-                            update_local_metadata(
-                                name,
-                                cache_version=remote_version,
-                                storage_mode=storage_mode,
-                                compression=compression,
-                                encryption=encryption,
-                                status="active" if active else "inactive"
-                            )
-                            current_version = remote_version
-                        else:
-                            current_version = local_version
-                            
-                        merged[name] = {
-                            "storage_mode": storage_mode,
-                            "compression": compression,
-                            "encryption": encryption,
-                            "cache_version": current_version,
-                            "active": active
-                        }
-                    return merged
-
-                sf_client.configure_scheduler(fetch_remote_metadata)
-
-            if sf_client.scheduler:
-                sf_client.scheduler.add_table(table_name)
-
             _registered_tables.add(table_name)
-            logger.debug("[SyncForge] Signal hooks installed and scheduler active for table '%s'.", table_name)
 
         return cls
     return decorator
@@ -280,30 +206,10 @@ def sync_model(
 def _connect_signals(sf_client, model_cls: Type, table_name: str) -> None:
     """
     Connect ``post_save`` and ``post_delete`` signals for ``model_cls``.
-
-    The ``dispatch_uid`` parameter ensures each signal handler is registered
-    exactly once, even if this function is called multiple times (e.g., during
-    Django's app-ready cycle with autoreload).
     """
-    def _trigger_sync(sender, **kwargs) -> None:  # noqa: ANN001
-        """
-        Signal handler — runs synchronously in the caller's thread.
-
-        It immediately invalidates the local cache (fast, in-process) and
-        then spawns a daemon thread for the network call to the SyncForge
-        server (slow, non-blocking).
-        """
-        # ── Step 1: Invalidate local cache (fast, synchronous) ────────────────
-        _invalidate_local_cache(table_name)
-
-        # ── Step 2: Notify SyncForge server (slow, async) ────────────────────
-        thread = threading.Thread(
-            target=_notify_server,
-            args=(sf_client, table_name),
-            daemon=True,
-            name=f"sf-sync-{table_name}",
-        )
-        thread.start()
+    def _trigger_sync(sender, **kwargs) -> None:
+        """Signal handler — delegates entirely to the core engine."""
+        sf_client.core.trigger_sync(table_name)
 
     post_save.connect(
         _trigger_sync,
@@ -317,47 +223,6 @@ def _connect_signals(sf_client, model_cls: Type, table_name: str) -> None:
         weak=False,
         dispatch_uid=f"sf_delete_{table_name}",
     )
-
-
-def _invalidate_local_cache(table_name: str) -> None:
-    """
-    Delete all cache entries registered under ``table_name``'s invalidation
-    registry. This is the fast, synchronous part of the sync handler.
-    """
-    try:
-        from django.core.cache import cache  # type: ignore[import]
-        registry_key = f"sf_registry_{table_name}"
-        keys: set = cache.get(registry_key) or set()
-        if keys:
-            cache.delete_many(list(keys))
-            cache.delete(registry_key)
-            logger.debug(
-                "[SyncForge] Invalidated %d cache key(s) for table '%s'.",
-                len(keys), table_name,
-            )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "[SyncForge] Cache invalidation failed for table '%s': %s",
-            table_name, exc,
-        )
-
-
-def _notify_server(sf_client, table_name: str) -> None:
-    """
-    Send a refresh signal to the SyncForge server. Runs in a daemon thread.
-
-    Errors are logged but never re-raised — a SyncForge service interruption
-    must never affect the application's database write path.
-    """
-    try:
-        sf_client.refresh(table_name)
-        logger.debug("[SyncForge] Server notified of change in table '%s'.", table_name)
-    except Exception as exc:  # noqa: BLE001
-        logger.error(
-            "[SyncForge] Failed to notify server of change in table '%s': %s. "
-            "Local cache has already been invalidated.",
-            table_name, exc,
-        )
 
 
 # ── Migration Cleanup ──────────────────────────────────────────────────────────

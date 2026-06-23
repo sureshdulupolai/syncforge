@@ -1,7 +1,7 @@
 {% extends 'core/docs/base_docs.html' %}
 
 {% block title %}Production Deployment Guide & Redis Config — SyncForge{% endblock %}
-{% block meta_description %}Prepare your cache engine for production. Checklist for gunicorn/uwsgi multi-worker configs, env variables, and shared Redis cache backends.{% endblock %}
+{% block meta_description %}Prepare your cache engine for production. Checklist for gunicorn/uwsgi multi-worker configs, env variables, and shared RedisStore backends.{% endblock %}
 
 {% block docs_content %}
 
@@ -30,6 +30,7 @@
 
 sf <span class="text-gray-400">=</span> SyncForge(
     api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
+    backend<span class="text-gray-400">=</span><span class="text-green-300">'in_memory'</span>, <span class="text-gray-500"># Optional: switch to 'redis' if running multi-worker Gunicorn</span>
     silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,       <span class="text-gray-500"># CRITICAL: Prevents your app from crashing if SyncForge API is down</span>
     async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,   <span class="text-gray-500"># Fire-and-forget background threads for maximum performance</span>
 )</pre>
@@ -38,21 +39,21 @@ sf <span class="text-gray-400">=</span> SyncForge(
 <!-- 3. Multi-worker -->
 <h2 class="text-xl font-semibold mb-3">3. Multi-Worker Deployments (Gunicorn / uWSGI)</h2>
 <p class="text-sm text-brand-secondary mb-4">
-    If you deploy your app with multiple worker processes (e.g., <code class="font-mono bg-gray-100 px-1 rounded">gunicorn -w 4</code>), you <strong>MUST</strong> use a shared cache backend like Redis or Memcached.
+    If you deploy your app with multiple worker processes (e.g., <code class="font-mono bg-gray-100 px-1 rounded">gunicorn -w 4</code>), you <strong>SHOULD</strong> use a shared cache backend like <code class="font-mono bg-gray-100 px-1 rounded">backend='redis'</code>.
 </p>
 <div class="border border-brand-border rounded-xl p-5 mb-8 bg-gray-50">
     <h3 class="font-bold text-brand-primary mb-2 text-sm flex items-center gap-2">
         <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-        Why LocMemCache fails in production
+        Why InMemoryStore requires consideration
     </h3>
     <p class="text-sm text-brand-secondary mb-3">
-        Django's default <code class="font-mono bg-white px-1 rounded border border-brand-border">LocMemCache</code> stores data in the local memory of a single Python process. If Worker 1 handles a DB write and calls <code class="font-mono bg-white px-1 rounded border border-brand-border">sf.refresh()</code>, it clears its own cache. Workers 2, 3, and 4 do NOT know about the change and will continue serving stale data.
+        SyncForge's default <code class="font-mono bg-white px-1 rounded border border-brand-border">InMemoryStore</code> stores data in the local memory of a single Python process. If Worker 1 handles a DB write and calls <code class="font-mono bg-white px-1 rounded border border-brand-border">sf.refresh()</code>, it clears its own cache. Workers 2, 3, and 4 do NOT instantly know about the change until the SyncForge Server dispatches a web-hook to them, leaving a short window of stale data.
     </p>
     <h3 class="font-bold text-brand-primary mb-2 text-sm flex items-center gap-2 mt-4">
         <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l3-3z" clip-rule="evenodd"/></svg>
         The Fix
     </h3>
-    <p class="text-sm text-brand-secondary">Configure Django to use Redis. When Worker 1 clears a cache key, it deletes it from the central Redis server, so all workers instantly get the cache miss on the next request.</p>
+    <p class="text-sm text-brand-secondary">Configure SyncForge to use <code class="font-mono bg-white px-1 rounded border border-brand-border">backend='redis'</code>. When Worker 1 clears a cache key, it deletes it from the central Redis server, so all workers instantly get the cache miss on the next request. Note that if Redis goes down, SyncForge will automatically failover back to InMemoryStore.</p>
 </div>
 
 <!-- Nav -->

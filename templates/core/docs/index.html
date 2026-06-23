@@ -1,7 +1,7 @@
 {% extends 'core/docs/base_docs.html' %}
 
 {% block title %}SyncForge Documentation — Overview & Architecture{% endblock %}
-{% block meta_description %}Get started with the SyncForge Enterprise Cache Engine. Learn about the multi-level cache architecture and best practices for smart data sync.{% endblock %}
+{% block meta_description %}Get started with the SyncForge Enterprise Cache Engine. Learn about the framework-agnostic architecture and best practices for smart data sync.{% endblock %}
 
 {% block docs_content %}
 
@@ -10,42 +10,34 @@
 </div>
 <h1 class="text-3xl font-bold tracking-tight mb-3">SyncForge Enterprise Cache Engine</h1>
 <p class="text-brand-secondary text-lg leading-relaxed mb-8">
-    SyncForge is a <strong>complete Enterprise Cache Management Engine</strong>.
-    It provides a multi-level cache architecture (RAM → Disk → Database) with smart eviction policies, binary serialization, compression, and AES-256 encryption.
+    SyncForge is a <strong>framework-agnostic intelligent caching engine</strong>.
+    It manages high-speed cache states directly in your application's memory with zero external dependencies required.
     You decide exactly when your data becomes stale — by calling <code class="text-sm font-mono bg-gray-100 px-1 py-0.5 rounded">sf.refresh()</code>.
 </p>
 
-<!-- What is SyncForge -->
+<!-- How SyncForge works internally -->
 <div class="border border-brand-border rounded-xl p-6 mb-8 bg-brand-secbg">
-    <h2 class="text-base font-semibold mb-3">Multi-Level Cache Architecture</h2>
-    <pre class="text-sm font-mono text-brand-secondary leading-relaxed overflow-x-auto">
-Request
-   │
-   ▼
-RAM Cache
-   │
-   ├── Found ──────────────▶ Return Response
-   │
-   ▼
-Disk Cache
-   │
-   ├── Found ──────────────▶ Load into RAM & Return
-   │
-   ▼
-Database
-   │
-   ▼
-Fetch Data ───────────────▶ Store according to cache policy & Return</pre>
+    <h2 class="text-base font-semibold mb-3">How SyncForge works internally</h2>
+    <p class="text-sm text-brand-secondary mb-4">SyncForge uses a smart cache-aside pattern combined with asynchronous background invalidation. Here is the step-by-step lifecycle of a request:</p>
+    <ol class="space-y-3 text-sm text-brand-secondary list-decimal ml-4">
+        <li><strong>Request comes in:</strong> A user hits your API endpoint to fetch data.</li>
+        <li><strong>Adapter triggers core engine:</strong> Your framework view (via <code>sf.get_table()</code>) asks the Core Engine for the data.</li>
+        <li><strong>Core checks cache store:</strong> The engine queries the statically selected backend (e.g., <code>InMemoryStore</code>).</li>
+        <li><strong class="text-green-600">Cache hit → return instantly:</strong> If the data is hot, it is returned in &lt;1ms.</li>
+        <li><strong class="text-amber-600">Cache miss → DB query + store result:</strong> If stale or missing, SyncForge executes your DB query, populates the store, and returns the result.</li>
+        <li><strong>Update event system:</strong> Internal telemetry non-blockingly tracks the hit/miss ratio.</li>
+        <li><strong>Background sync:</strong> On database writes, a non-blocking thread instantly alerts the SyncForge cluster to drop stale data globally.</li>
+    </ol>
 </div>
 
 <!-- Best Practices & Speed Advantage -->
 <div class="mb-10">
     <h2 class="text-xl font-semibold mb-4">When to use SyncForge (The Enterprise Advantage)</h2>
     <p class="text-sm text-brand-secondary leading-relaxed mb-4">
-        SyncForge is best utilized when you need high performance, high availability, and smart resource management across your servers. It drastically reduces database read operations while managing RAM and disk resources automatically.
+        SyncForge is a highly optimized, framework-agnostic caching engine that requires <strong>zero external infrastructure</strong>. It eliminates redundant database queries by keeping data securely in native RAM (or optionally Redis) and self-optimizing its own memory footprint.
     </p>
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-blue-900 leading-relaxed">
-        <strong>Benefit:</strong> The multi-level cache ensures extremely fast responses from RAM, falling back to persistent encrypted Disk Cache to survive application restarts, and finally querying the database only when absolutely necessary.
+        <strong>Benefit:</strong> A unified SDK completely abstracts away stampede protection, memory deduplication, and cross-cluster invalidation. Your read queries respond instantly from the <code>InMemoryStore</code>, vastly lowering latency and database I/O costs.
     </div>
     <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 leading-relaxed">
         <strong>Smart Background Scheduler:</strong> The internal daemon synchronises metadata and dynamically adjusts cache policies without blocking your web request threads.

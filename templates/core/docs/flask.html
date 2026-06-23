@@ -27,6 +27,7 @@
 
 sf <span class="text-gray-400">=</span> SyncForge(
     api_key<span class="text-gray-400">=</span>os.environ.get(<span class="text-green-300">"SYNCFORGE_API_KEY"</span>),
+    backend<span class="text-gray-400">=</span><span class="text-green-300">'in_memory'</span>,  <span class="text-gray-500"># Zero external dependencies required</span>
     async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>
 )
 

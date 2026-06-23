@@ -296,6 +296,8 @@ def ajax_projects(request):
             'cache_hits':   sum(t.cache_hits for t in p.table_configs.all()),
             'cache_misses': sum(t.cache_misses for t in p.table_configs.all()),
             'total_requests': sum(t.total_requests for t in p.table_configs.all()),
+            'bandwidth_saved_mb': sum(t.bandwidth_saved_mb for t in p.table_configs.all()),
+            'duplicates_prevented': sum(t.duplicates_prevented for t in p.table_configs.all()),
         })
     return _json({'projects': data, 'ts': timezone.now().isoformat()})
 

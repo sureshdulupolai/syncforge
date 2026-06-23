@@ -118,7 +118,8 @@ def project_info(request):
 
     tables = list(project.table_configs.values(
         "table_name", "sync_mode", "rows_count",
-        "database_calls_saved", "bandwidth_saved_mb",
+        "database_calls_saved", "bandwidth_saved_mb", "duplicates_prevented",
+        "cache_hits", "cache_misses", "total_requests",
         "cache_version", "last_sync",
         "active", "storage_mode", "compression", "encryption", "priority", "refresh_interval"
     ))
@@ -170,17 +171,23 @@ def smartdb_refresh(request, table_name: str):
         else:
             created_new = False
 
-        # Cooldown rate limit check: maximum 1 refresh per 60 seconds (1 minute) per table
+        # Cooldown rate limit check: Server-Side Request Coalescing
         COOLDOWN_SECONDS = 60
         if not created_new and config.last_sync:
             elapsed = (timezone.now() - config.last_sync).total_seconds()
             if elapsed < COOLDOWN_SECONDS:
-                remaining = int(COOLDOWN_SECONDS - elapsed)
+                # Instead of HTTP 429 Error, Coalesce the request!
                 return _json({
-                    "error": "Rate limit exceeded for table refresh.",
-                    "detail": f"Please wait {remaining} seconds before refreshing table `{normalised}` again.",
-                    "retry_after": remaining
-                }, 429)
+                    "status": "ok",
+                    "message": f"Sync coalesced for table `{normalised}` (within cooldown).",
+                    "table": normalised,
+                    "scoped_table_name": f"sf_{project.project_prefix or 'default'}_{normalised}",
+                    "project": project.name,
+                    "sync_mode": config.get_sync_mode_display(),
+                    "database_calls_saved": config.database_calls_saved,
+                    "cache_version": config.cache_version,
+                    "coalesced": True
+                })
 
         # Atomic update — no lost-update race condition under concurrency.
         # F() expressions are evaluated by the database, not Python.

@@ -81,14 +81,7 @@ if HAS_SQLALCHEMY:
 # ── Sync Event Listener ────────────────────────────────────────────────────────
 
 def _trigger_sync(sf_client, table_name: str):
-    sf_client._invalidate_local_cache(table_name)
-    thread = threading.Thread(
-        target=sf_client.refresh,
-        args=(table_name,),
-        daemon=True,
-        name=f"sf-sync-{table_name}",
-    )
-    thread.start()
+    sf_client.core.trigger_sync(table_name)
 
 def sync_model(
     sf_client, 
@@ -99,6 +92,9 @@ def sync_model(
     encryption: bool = True,
     priority: str = "medium",
     refresh_interval: int = 0,
+    waf_enabled: bool = False,
+    max_requests: int = 100,
+    block_time_sec: int = 86400,
     session_maker=None
 ):
     """
@@ -116,97 +112,34 @@ def sync_model(
             if table_name in _registered_tables:
                 return cls
 
-            try:
-                sf_client.create_table(
-                    table_name, 
-                    sync_mode=sync_mode,
-                    active=active,
-                    storage_mode=storage_mode,
-                    compression=compression,
-                    encryption=encryption,
-                    priority=priority,
-                    refresh_interval=refresh_interval
-                )
-                
+            def local_updater(**kwargs):
                 if session_maker:
                     session = session_maker()
                     try:
-                        update_local_metadata(
-                            session,
-                            table_name,
-                            storage_mode=storage_mode,
-                            compression=compression,
-                            encryption=encryption,
-                            status="active" if active else "inactive"
-                        )
+                        update_local_metadata(session, **kwargs)
                     finally:
                         session.close()
-                        
-                logger.info("[SyncForge] Registered SQLAlchemy table '%s' (mode=%s).", table_name, sync_mode)
-                print(f"\033[92m🚀 [SyncForge] Successfully registered table '{table_name}' (mode={sync_mode}, storage={storage_mode}, enc={encryption})\033[0m")
-            except Exception as exc:
-                logger.warning(
-                    "[SyncForge] Could not register table '%s' on SyncForge server: %s.",
-                    table_name, exc,
-                )
-                print(f"\033[91m❌ [SyncForge] Failed to register table '{table_name}': {exc}\033[0m")
 
-            if sf_client.scheduler is None and session_maker:
-                local_fetcher = fetch_sqlalchemy_metadata(session_maker)
-                
-                def fetch_remote_metadata(table_names: list[str]) -> dict[str, dict]:
-                    try:
-                        remote_tables = sf_client.list_tables()
-                        remote_map = {t["table_name"]: t for t in remote_tables}
-                    except Exception as e:
-                        logger.debug("[SyncForge Scheduler] Failed to fetch remote metadata: %s", e)
-                        remote_map = {}
+            def local_fetcher(table_names):
+                if session_maker:
+                    return fetch_sqlalchemy_metadata(session_maker)(table_names)
+                return {}
 
-                    local_records = local_fetcher(table_names)
-                    merged = {}
-                    session = session_maker()
-                    try:
-                        for name in table_names:
-                            local_meta = local_records.get(name, {})
-                            remote_meta = remote_map.get(name, {})
-                            
-                            remote_version = remote_meta.get("cache_version", 1)
-                            local_version = local_meta.get("cache_version", 1)
-                            
-                            active = remote_meta.get("active", local_meta.get("active", True))
-                            storage_mode = remote_meta.get("storage_mode", local_meta.get("storage_mode", "ram_disk"))
-                            compression = remote_meta.get("compression", local_meta.get("compression", "none"))
-                            encryption = remote_meta.get("encryption", local_meta.get("encryption", False))
-                            
-                            if remote_version > local_version:
-                                update_local_metadata(
-                                    session,
-                                    name,
-                                    cache_version=remote_version,
-                                    storage_mode=storage_mode,
-                                    compression=compression,
-                                    encryption=encryption,
-                                    status="active" if active else "inactive"
-                                )
-                                current_version = remote_version
-                            else:
-                                current_version = local_version
-                                
-                            merged[name] = {
-                                "storage_mode": storage_mode,
-                                "compression": compression,
-                                "encryption": encryption,
-                                "cache_version": current_version,
-                                "active": active
-                            }
-                    finally:
-                        session.close()
-                    return merged
-
-                sf_client.configure_scheduler(fetch_remote_metadata)
-
-            if sf_client.scheduler:
-                sf_client.scheduler.add_table(table_name)
+            sf_client.core.register_model(
+                table_name=table_name,
+                sync_mode=sync_mode,
+                active=active,
+                storage_mode=storage_mode,
+                compression=compression,
+                encryption=encryption,
+                priority=priority,
+                refresh_interval=refresh_interval,
+                waf_enabled=waf_enabled,
+                max_requests=max_requests,
+                block_time_sec=block_time_sec,
+                local_metadata_updater=local_updater,
+                local_metadata_fetcher=local_fetcher,
+            )
 
             # Hook into SQLAlchemy events
             def _after_change(mapper, connection, target):

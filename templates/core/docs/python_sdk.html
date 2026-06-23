@@ -7,9 +7,16 @@
 
 <div class="mb-2"><span class="text-xs font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">API Reference</span></div>
 <h1 class="text-3xl font-bold tracking-tight mb-3">Python SDK Reference</h1>
-<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+<p class="text-brand-secondary text-lg leading-relaxed mb-4">
     Comprehensive reference for all methods available on the <code>SyncForge</code> client object.
 </p>
+
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+    <h3 class="text-blue-800 font-bold mb-2">Self-Contained & Framework-Agnostic</h3>
+    <p class="text-sm text-blue-800">
+        SyncForge requires <strong>zero external infrastructure</strong> (no Redis, Kafka, or RabbitMQ required). It uses a static <code>backend</code> selection at initialization (<code>'in_memory'</code>, <code>'django_cache'</code>, <code>'redis'</code>) and behaves identically across all Python frameworks. Redis is purely optional.
+    </p>
+</div>
 
 <!-- Reading Data -->
 <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border">Reading Data</h2>
@@ -76,15 +83,19 @@
     <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
         <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"># Works inside Django/Flask/FastAPI or in standalone scripts:
 from syncforge import SyncForge
-sf = SyncForge(api_key="sf_live_...")
+sf = SyncForge(api_key="sf_live_...", backend="in_memory")
 
 # Invalidate cache for tables:
 result = sf.refresh('products', 'categories')</pre>
     </div>
     <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> Returns a <code>SyncResult</code> object (or list of them) containing metrics like <code>calls_saved</code>.</p>
     
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 mb-4">
         <strong>Anti-Spam Cooldown Rate Limiting:</strong> Refreshes are restricted to at most 1 request per <strong>60 seconds (1 minute)</strong> per table. If you exceed this rate limit (via script or by spamming the manual refresh button in the dashboard), the API returns a <code>429 Too Many Requests</code> response, raising a <code>RateLimitError</code>.
+    </div>
+
+    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-xs text-indigo-800">
+        <strong>Enterprise Feature — Request Coalescing:</strong> SyncForge automatically coalesces concurrent identical <code>sf.refresh()</code> calls made within a 2-second window. A massive stampede of 50 background workers triggering invalidation simultaneously will result in exactly <strong>one</strong> network request, automatically shielding your API layer.
     </div>
 </div>
 
@@ -152,6 +163,19 @@ from sf_client import sf
 app = Flask(__name__)
 sf_ext = SyncForgeFlask(app, sf) # Triggers preloading on first request</pre>
     </div>
+</div>
+
+<!-- Telemetry & Analytics -->
+<h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border mt-12">Telemetry & Analytics</h2>
+
+<div class="mb-10">
+    <h3 class="text-xl font-bold mb-3">Non-Intrusive Telemetry Piggybacking</h3>
+    <p class="text-sm text-brand-secondary mb-6 leading-relaxed">
+        SyncForge Enterprise automatically tracks your Cache Hit Ratios, Bandwidth Saved, and Duplicates Prevented. To ensure zero performance penalty, these analytics are never sent as standalone API requests. Instead, they are <strong>piggybacked as HTTP headers (`X-SF-Telemetry`)</strong> onto existing background synchronization signals.
+    </p>
+    <p class="text-sm text-brand-secondary mb-6 leading-relaxed">
+        This means your application receives advanced observability absolutely free of I/O latency or networking overhead.
+    </p>
 </div>
 
 <!-- Management & Health -->

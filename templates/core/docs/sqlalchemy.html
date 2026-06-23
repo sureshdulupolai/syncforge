@@ -27,7 +27,10 @@
 <span class="text-blue-400">from</span> syncforge.sqlalchemy <span class="text-blue-400">import</span> sync_model
 <span class="text-blue-400">import</span> os
 
-sf <span class="text-gray-400">=</span> SyncForge(api_key<span class="text-gray-400">=</span>os.environ.get(<span class="text-green-300">"SYNCFORGE_API_KEY"</span>))
+sf <span class="text-gray-400">=</span> SyncForge(
+    api_key<span class="text-gray-400">=</span>os.environ.get(<span class="text-green-300">"SYNCFORGE_API_KEY"</span>),
+    backend<span class="text-gray-400">=</span><span class="text-green-300">'in_memory'</span>  <span class="text-gray-500"># Zero infrastructure dependencies</span>
+)
 Base <span class="text-gray-400">=</span> declarative_base()
 
 <span class="text-yellow-300">@sync_model</span>(sf)

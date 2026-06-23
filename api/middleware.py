@@ -310,4 +310,30 @@ class UnifiedAuthMiddleware:
                 status=401,
             )
 
+        # ── Piggybacked Telemetry ─────────────────────────────────────────────
+        telemetry = request.headers.get("X-SF-Telemetry")
+        if telemetry and request.api_project:
+            self._process_telemetry_async(request.api_project.pk, telemetry, request.path)
+
         return self.get_response(request)
+
+    def _process_telemetry_async(self, project_id: int, telemetry: str, path: str) -> None:
+        def _do():
+            try:
+                # Extract hit=1 from header
+                if "hit=" in telemetry:
+                    # try to extract table from path /api/v1/sync/<table_name>/ or /api/v1/cache-hit/<table_name>/
+                    import re
+                    match = re.search(r'/v1/(?:sync|cache-hit)/([^/]+)/', path)
+                    if match:
+                        table_name = match.group(1).lower()
+                        from dashboard.models import TableSyncConfig
+                        from django.db.models import F
+                        TableSyncConfig.objects.filter(
+                            project_id=project_id, table_name=table_name
+                        ).update(database_calls_saved=F("database_calls_saved") + 1)
+            except Exception as e:
+                logger.debug("[SyncForge] Telemetry async processing failed: %s", e)
+        
+        # Dispatch to background maintenance thread
+        threading.Thread(target=_do, daemon=True, name="sf-telemetry").start()

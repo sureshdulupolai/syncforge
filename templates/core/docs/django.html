@@ -49,6 +49,7 @@ from syncforge import SyncForge
 
 sf = SyncForge(
     api_key=os.environ['SYNCFORGE_API_KEY'],
+    backend='django_cache',  # Or 'in_memory' / 'redis'
     silent=True,       # Recommended: never crash app if SyncForge is unreachable
     async_mode=False,  # True = fire-and-forget refresh()
 )" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
@@ -201,6 +202,17 @@ def product_list(request):
         
     <span class="text-gray-500"># 3. Return data exactly as it came from the DB</span>
     <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'products/list.html'</span>, {<span class="text-green-300">'products'</span>: log})</pre>
+</div>
+
+<div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-8">
+    <h3 class="text-lg font-bold text-indigo-800 mb-2 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Enterprise: Stale-While-Revalidate</h3>
+    <p class="text-sm text-indigo-700 leading-relaxed mb-3">
+        SyncForge naturally eliminates cache stampedes during sudden traffic spikes. When an object expires during peak load, the very first thread automatically locks the background DB fetch. <strong>Every other simultaneous user thread instantaneously receives the stale payload from RAM</strong>, utterly bypassing P99 block latency and keeping your app fully responsive.
+    </p>
+    <h3 class="text-lg font-bold text-indigo-800 mb-2 flex items-center gap-2 mt-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Enterprise: Intelligent Heat Engine</h3>
+    <p class="text-sm text-indigo-700 leading-relaxed mb-0">
+        You never have to manually define <code>max_items</code> again. The engine dynamically profiles active RAM footprint against a safe 256MB boundary, assigning "Heat Scores" to payloads based on hits and recency. If memory peaks, cold objects gracefully flush themselves.
+    </p>
 </div>
 
 <!-- 5 Template -->
@@ -378,6 +390,7 @@ def monthly_report(request):
         <span class="text-xs font-mono text-gray-400">production client</span>
         <button onclick="copyCode(this)" data-code="sf = SyncForge(
     api_key=os.environ['SYNCFORGE_API_KEY'],
+    backend='django_cache',
     silent=True,       # Log warnings, never raise — keeps your app running
     async_mode=True,   # refresh() returns immediately, runs in background
     sign_requests=True,# HMAC signing for replay protection (default: True)

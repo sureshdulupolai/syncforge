@@ -54,20 +54,20 @@
             <!-- Stats -->
             <div class="hidden md:flex items-center gap-6">
                 <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
-                    <div class="text-2xl font-bold text-brand-primary" id="p-stat-tables">{{ tables.count }}</div>
-                    <div class="text-xs text-brand-muted">Tables</div>
-                </div>
-                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
                     <div class="text-2xl font-bold text-green-600" id="p-stat-calls">0</div>
-                    <div class="text-xs text-brand-muted">DB Calls Saved</div>
+                    <div class="text-xs text-brand-muted">Queries Saved</div>
                 </div>
                 <div class="text-center card p-3 shadow-none border-l-4 border-l-blue-500 min-w-[100px]">
                     <div class="text-2xl font-bold text-blue-600 font-mono" id="p-stat-hitratio">0%</div>
-                    <div class="text-xs text-brand-muted">Avg Hit Ratio</div>
+                    <div class="text-xs text-brand-muted">Cache Efficiency</div>
                 </div>
                 <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
-                    <div class="text-2xl font-bold text-brand-primary" id="p-stat-keys">{{ api_keys.count }}</div>
-                    <div class="text-xs text-brand-muted">API Keys</div>
+                    <div class="text-2xl font-bold text-purple-600 font-mono" id="p-stat-bandwidth">0 MB</div>
+                    <div class="text-xs text-brand-muted">Bandwidth Saved</div>
+                </div>
+                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
+                    <div class="text-2xl font-bold text-brand-primary" id="p-stat-dupes">0</div>
+                    <div class="text-xs text-brand-muted">Duplicates Prevented</div>
                 </div>
             </div>
         </div>
@@ -349,11 +349,13 @@ function renderData({ tables, api_keys }) {
     const totalHits = tables.reduce((s, t) => s + (t.cache_hits || 0), 0);
     const totalReqs = tables.reduce((s, t) => s + (t.total_requests || 0), 0);
     const hitRatio = totalReqs > 0 ? Math.round((totalHits / totalReqs) * 100) : 0;
+    const bandwidth = tables.reduce((s, t) => s + (t.bandwidth_saved_mb || 0), 0);
+    const duplicates = tables.reduce((s, t) => s + (t.duplicates_prevented || 0), 0);
     
-    document.getElementById('p-stat-tables').textContent = tables.length;
     document.getElementById('p-stat-calls').textContent  = calls.toLocaleString();
     document.getElementById('p-stat-hitratio').textContent = hitRatio + '%';
-    document.getElementById('p-stat-keys').textContent   = api_keys.length;
+    document.getElementById('p-stat-bandwidth').textContent = bandwidth.toFixed(1) + ' MB';
+    document.getElementById('p-stat-dupes').textContent = duplicates.toLocaleString();
 }
 
 const MODE_BADGE = {

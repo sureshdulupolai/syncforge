@@ -211,6 +211,7 @@ class TableSyncConfig(models.Model):
     cache_misses         = models.BigIntegerField(default=0)
     total_requests       = models.BigIntegerField(default=0)
     avg_response_time_ms = models.FloatField(default=0.0)
+    duplicates_prevented = models.BigIntegerField(default=0)
 
     class Meta:
         unique_together = ('project', 'table_name')

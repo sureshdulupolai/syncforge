@@ -74,12 +74,18 @@
             <button onclick="copyCode(this)" data-code="import os
 from syncforge import SyncForge
 
-sf = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+sf = SyncForge(
+    api_key=os.environ['SYNCFORGE_API_KEY'],
+    backend='in_memory'
+)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
         </div>
         <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">import</span> os
 <span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
 
-sf <span class="text-gray-400">=</span> SyncForge(api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>])</pre>
+sf <span class="text-gray-400">=</span> SyncForge(
+    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
+    backend<span class="text-gray-400">=</span><span class="text-green-300">'in_memory'</span>
+)</pre>
     </div>
 </div>
 
