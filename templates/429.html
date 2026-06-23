@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Too Many Requests - SyncForge{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-64px)] flex items-center justify-center py-16 px-4 bg-[#FAFAFA]">
+    <div class="w-full max-w-[480px] text-center">
+        <!-- Icon -->
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-orange-50 border border-orange-100 shadow-sm mb-6 relative group">
+            <div class="absolute inset-0 bg-orange-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <svg class="w-10 h-10 text-orange-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+
+        <!-- Heading -->
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 mb-3">Too Many Requests</h1>
+        
+        <!-- Description -->
+        <p class="text-gray-500 font-medium mb-8">
+            You've hit the rate limit. Please wait a moment before trying again.
+        </p>
+
+        <!-- Action Button -->
+        <a href="{% url 'home' %}" class="inline-flex justify-center items-center gap-2 bg-brand-primary text-white py-3.5 px-8 rounded-xl font-semibold text-sm transition-all hover:bg-brand-primary/90 hover:shadow-lg hover:shadow-brand-primary/20 active:scale-[0.99]">
+            Return Home
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        </a>
+    </div>
+</section>
+{% endblock %}

@@ -19,6 +19,8 @@ from django.urls import path, include
 from django.views.generic.base import RedirectView
 from django.templatetags.static import static
 
+handler404 = 'core.views.custom_404'
+
 urlpatterns = [
     path('sf-internal-admin-7x9q/', admin.site.urls),
     path('', include('core.urls')),
@@ -28,3 +30,13 @@ urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url=static('logo_icon.png'), permanent=True)),
 ]
 
+from django.conf import settings
+from django.urls import re_path
+from django.views.static import serve
+
+if not settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^static/(?P<path>.*)$', serve, {
+            'document_root': settings.STATICFILES_DIRS[0],
+        }),
+    ]

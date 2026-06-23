@@ -5,29 +5,27 @@
 {% block meta_description %}Register for a free developer account to start caching database models, configure security WAF rules, and manage cluster endpoints.{% endblock %}
 
 {% block content %}
-<section class="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 bg-white">
+<section class="min-h-[calc(100vh-64px)] flex items-center justify-center py-16 px-4 bg-[#FAFAFA]">
 
-    <!-- Decorative blobs -->
-    <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
-        <div style="position:absolute;top:-100px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(30,58,138,0.045) 0%,transparent 70%);"></div>
-        <div style="position:absolute;bottom:-60px;left:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,0.035) 0%,transparent 70%);"></div>
-    </div>
-
-    <div class="w-full max-w-lg relative">
-
-        <!-- Logo + Heading -->
-        <div class="text-center mb-8">
-            <div class="flex justify-center mb-5">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center border border-brand-border bg-white">
-                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-8 h-8">
-                </div>
-            </div>
-            <h1 class="text-2xl font-bold tracking-tight text-brand-primary">Create your account</h1>
-            <p class="text-brand-secondary text-sm mt-1.5">Start syncing smarter with SyncForge</p>
-        </div>
+    <div class="w-full max-w-[480px] relative">
 
         <!-- Card -->
-        <div class="bg-white rounded-2xl p-8 border border-brand-border" style="box-shadow:0 1px 3px rgba(0,0,0,0.05),0 8px 32px rgba(0,0,0,0.04);">
+        <div class="bg-white rounded-2xl p-8 sm:p-10 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
+            <!-- Subtle top accent line -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-brand-accent"></div>
+
+            <!-- Logo + Heading (Inside Card) -->
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm mb-5 relative group">
+                    <div class="absolute inset-0 bg-blue-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-9 h-9 relative z-10">
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 flex items-center justify-center gap-2">
+                    Create account
+                    <svg class="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                </h1>
+                <p class="text-gray-500 text-sm mt-2.5 font-medium">Start syncing smarter with SyncForge</p>
+            </div>
 
             <form method="post" action="{% url 'register' %}" id="registerForm" novalidate>
                 {% csrf_token %}
@@ -40,20 +38,20 @@
                             <span id="email-counter" class="text-xs text-brand-muted font-mono">0 / 254</span>
                         </div>
                         <div class="relative" id="email-wrap">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
                             </span>
                             <input id="r_email" type="email" name="email"
                                    value="{{ form_data.email|default:'' }}"
                                    placeholder="you@company.com"
                                    maxlength="254"
-                                   class="w-full pl-10 pr-10 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
-                                   style="border: 1.5px solid {{ errors.email|yesno:'#f87171,#e8e8e8' }};"
+                                   class="w-full pl-11 pr-10 py-3 rounded-xl text-sm text-gray-900 bg-gray-50/50 border outline-none transition-all focus:bg-white focus:ring-4 focus:ring-brand-accent/10"
+                                   style="border-color: {{ errors.email|yesno:'#fca5a5,#e5e7eb' }};"
                                    autocomplete="email"
-                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
-                                   onblur="this.style.background='#f9fafb';liveValidateEmail()"
+                                   onfocus="this.style.borderColor='#3b82f6'"
+                                   onblur="this.style.borderColor='{{ errors.email|yesno:'#fca5a5,#e5e7eb' }}';liveValidateEmail()"
                                    oninput="updateCounter('r_email','email-counter',254,'email-limit-tip');clearErr('email-wrap','email-err')"
                                    required>
                             <span id="email-valid-icon" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
@@ -92,23 +90,23 @@
                             </div>
                         </div>
                         <div class="relative" id="pw1-wrap">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                             </span>
                             <input id="r_password1" type="password" name="password1"
                                    placeholder="Min 8 chars · A–Z · 0–9 · symbol"
                                    maxlength="128"
-                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
-                                   style="border: 1.5px solid {{ errors.password1|yesno:'#f87171,#e8e8e8' }};"
+                                   class="w-full pl-11 pr-12 py-3 rounded-xl text-sm text-gray-900 bg-gray-50/50 border outline-none transition-all focus:bg-white focus:ring-4 focus:ring-brand-accent/10"
+                                   style="border-color: {{ errors.password1|yesno:'#fca5a5,#e5e7eb' }};"
                                    oninput="updateCounter('r_password1','pw-counter',128,'pw-limit-tip');checkStrength(this.value);checkMatch();clearErr('pw1-wrap','pw1-err')"
-                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
-                                   onblur="this.style.background='#f9fafb'"
+                                   onfocus="this.style.borderColor='#3b82f6'"
+                                   onblur="this.style.borderColor='{{ errors.password1|yesno:'#fca5a5,#e5e7eb' }}'"
                                    autocomplete="new-password" required>
                             <button type="button" onclick="togglePw('r_password1','eye-p1')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-subtle" tabindex="-1">
-                                <svg id="eye-p1" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1" tabindex="-1">
+                                <svg id="eye-p1" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </button>
                             <div id="pw-limit-tip" class="hidden absolute right-0 top-full mt-1.5 z-20 bg-brand-primary text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap">
@@ -151,23 +149,23 @@
                             <span id="pw2-counter" class="text-xs text-brand-muted font-mono">0 / 128</span>
                         </div>
                         <div class="relative" id="pw2-wrap">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                             </span>
                             <input id="r_password2" type="password" name="password2"
                                    placeholder="Re-enter your password"
                                    maxlength="128"
-                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
-                                   style="border: 1.5px solid {{ errors.password2|yesno:'#f87171,#e8e8e8' }};"
+                                   class="w-full pl-11 pr-12 py-3 rounded-xl text-sm text-gray-900 bg-gray-50/50 border outline-none transition-all focus:bg-white focus:ring-4 focus:ring-brand-accent/10"
+                                   style="border-color: {{ errors.password2|yesno:'#fca5a5,#e5e7eb' }};"
                                    oninput="updateCounter('r_password2','pw2-counter',128,null);checkMatch()"
-                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
-                                   onblur="this.style.background='#f9fafb'"
+                                   onfocus="this.style.borderColor='#3b82f6'"
+                                   onblur="this.style.borderColor='{{ errors.password2|yesno:'#fca5a5,#e5e7eb' }}'"
                                    autocomplete="new-password" required>
                             <button type="button" onclick="togglePw('r_password2','eye-p2')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-subtle" tabindex="-1">
-                                <svg id="eye-p2" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1" tabindex="-1">
+                                <svg id="eye-p2" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </button>
                         </div>
@@ -190,16 +188,20 @@
                     </div>
 
                     <button type="submit" id="submitBtn"
-                            class="w-full bg-brand-accent text-white py-3 px-6 rounded-xl font-semibold text-sm transition-subtle hover:bg-brand-accenthover active:scale-[0.99]">
+                            class="w-full bg-brand-primary text-white py-3.5 px-6 rounded-xl font-semibold text-sm transition-all hover:bg-brand-primary/90 hover:shadow-lg hover:shadow-brand-primary/20 active:scale-[0.99] flex justify-center items-center gap-2 mt-4">
                         Create Free Account
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
                 </div>
             </form>
 
-            <div class="mt-6 pt-5 border-t border-brand-border text-center text-sm text-brand-secondary">
-                Already have an account?
-                <a href="{% url 'login' %}" class="text-brand-accent font-semibold hover:underline ml-1">Sign in →</a>
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-500 font-medium">
+                    Already have an account?
+                    <a href="{% url 'login' %}" class="text-brand-accent font-bold hover:text-blue-700 transition-colors ml-1">Sign in</a>
+                </p>
             </div>
+        </div>
     </div>
 </section>
 

@@ -5,126 +5,132 @@
 {% block meta_description %}Access your SyncForge account to configure synchronization engines, view table metrics, and copy API keys.{% endblock %}
 
 {% block content %}
-<section class="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 bg-white">
+<section class="min-h-[calc(100vh-64px)] flex items-center justify-center py-16 px-4 bg-[#FAFAFA]">
 
-    <!-- Subtle decorative blobs -->
-    <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
-        <div style="position:absolute;top:-100px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(30,58,138,0.045) 0%,transparent 70%);"></div>
-        <div style="position:absolute;bottom:-60px;left:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,0.035) 0%,transparent 70%);"></div>
-    </div>
-
-    <div class="w-full max-w-md relative">
-
-        <!-- Logo + Heading -->
-        <div class="text-center mb-8">
-            <div class="flex justify-center mb-5">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center border border-brand-border bg-white">
-                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-8 h-8">
-                </div>
-            </div>
-            <h1 class="text-2xl font-bold tracking-tight text-brand-primary">Welcome back</h1>
-            <p class="text-brand-secondary text-sm mt-1.5">Sign in to your SyncForge account</p>
-        </div>
+    <div class="w-full max-w-[440px] relative">
 
         <!-- Card -->
-        <div class="bg-white rounded-2xl p-8 border border-brand-border" style="box-shadow:0 1px 3px rgba(0,0,0,0.05),0 8px 32px rgba(0,0,0,0.04);">
+        <div class="bg-white rounded-2xl p-8 sm:p-10 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
+            <!-- Subtle top accent line -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-brand-accent"></div>
+
+            <!-- Logo + Heading (Inside Card) -->
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm mb-5 relative group">
+                    <div class="absolute inset-0 bg-blue-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <img src="{% static 'logo_icon.png' %}" alt="SyncForge" class="w-9 h-9 relative z-10">
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 flex items-center justify-center gap-2">
+                    Welcome back
+                    <svg class="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </h1>
+                <p class="text-gray-500 text-sm mt-2.5 font-medium">Enter your details to access your dashboard</p>
+            </div>
 
             {% if errors.general %}
-            <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
-                <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <div class="mb-6 flex items-start gap-3 bg-red-50/50 border border-red-100 text-red-600 text-sm px-4 py-3.5 rounded-xl">
+                <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                 </svg>
-                <span>{{ errors.general }}</span>
+                <span class="font-medium">{{ errors.general }}</span>
             </div>
             {% endif %}
 
             <form method="post" action="{% url 'login' %}" id="loginForm" novalidate>
                 {% csrf_token %}
-                <div class="space-y-5">
+                <div class="space-y-6">
 
                     <!-- Email -->
                     <div>
-                        <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="id_email">Email address</label>
-                        <div class="relative" id="email-wrap">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2" for="id_email">Email address</label>
+                        <div class="relative group" id="email-wrap">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-accent transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
                             </span>
                             <input id="id_email" type="email" name="email"
                                    value="{{ form_data.email|default:'' }}"
                                    placeholder="you@company.com"
                                    maxlength="254"
-                                   class="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
-                                   style="border: 1.5px solid {% if errors.email %}#f87171{% else %}#e8e8e8{% endif %};"
+                                   class="w-full pl-11 pr-4 py-3 rounded-xl text-sm text-gray-900 bg-gray-50/50 border outline-none transition-all focus:bg-white focus:ring-4 focus:ring-brand-accent/10"
+                                   style="border-color: {% if errors.email %}#fca5a5{% else %}#e5e7eb{% endif %};"
                                    autocomplete="email"
-                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
-                                   onblur="this.style.background='#f9fafb'"
+                                   onfocus="this.style.borderColor='#3b82f6'"
+                                   onblur="this.style.borderColor='{% if errors.email %}#fca5a5{% else %}#e5e7eb{% endif %}'"
                                    oninput="clearErr('email-wrap','email-err')"
                                    required>
                         </div>
                         {% if errors.email %}
-                        <p id="email-err" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-                            <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <p id="email-err" class="mt-2 text-xs text-red-500 font-medium flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                             {{ errors.email }}
                         </p>
                         {% else %}
-                        <p id="email-err" class="mt-1.5 text-xs text-red-500 flex items-center gap-1 hidden"></p>
+                        <p id="email-err" class="mt-2 text-xs text-red-500 font-medium flex items-center gap-1.5 hidden"></p>
                         {% endif %}
                     </div>
 
                     <!-- Password -->
                     <div>
-                        <label class="block text-sm font-semibold text-brand-primary mb-1.5" for="id_password">Password</label>
-                        <div class="relative" id="pw-wrap">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-semibold text-gray-700" for="id_password">Password</label>
+                        </div>
+                        <div class="relative group" id="pw-wrap">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-accent transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                 </svg>
                             </span>
                             <input id="id_password" type="password" name="password"
                                    placeholder="••••••••"
                                    maxlength="128"
-                                   class="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-brand-primary bg-gray-50 outline-none transition-all focus:bg-white"
-                                   style="border: 1.5px solid {% if errors.password %}#f87171{% else %}#e8e8e8{% endif %};"
+                                   class="w-full pl-11 pr-12 py-3 rounded-xl text-sm text-gray-900 bg-gray-50/50 border outline-none transition-all focus:bg-white focus:ring-4 focus:ring-brand-accent/10"
+                                   style="border-color: {% if errors.password %}#fca5a5{% else %}#e5e7eb{% endif %};"
                                    autocomplete="current-password"
-                                   onfocus="this.style.borderColor='#1E3A8A';this.style.background='#fff'"
-                                   onblur="this.style.background='#f9fafb'"
+                                   onfocus="this.style.borderColor='#3b82f6'"
+                                   onblur="this.style.borderColor='{% if errors.password %}#fca5a5{% else %}#e5e7eb{% endif %}'"
                                    oninput="clearErr('pw-wrap','pw-err')"
                                    required>
                             <button type="button" onclick="togglePw('id_password','eye-login')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-subtle" tabindex="-1">
-                                <svg id="eye-login" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1" tabindex="-1">
+                                <svg id="eye-login" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </button>
                         </div>
                         {% if errors.password %}
-                        <p id="pw-err" class="mt-1.5 text-xs text-red-500">{{ errors.password }}</p>
+                        <p id="pw-err" class="mt-2 text-xs text-red-500 font-medium flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ errors.password }}
+                        </p>
                         {% else %}
-                        <p id="pw-err" class="mt-1.5 text-xs text-red-500 hidden"></p>
+                        <p id="pw-err" class="mt-2 text-xs text-red-500 font-medium flex items-center gap-1.5 hidden"></p>
                         {% endif %}
                     </div>
 
                     <!-- Security info -->
-                    <div class="flex items-center gap-2.5 text-xs text-brand-muted bg-gray-50 px-3 py-2.5 rounded-xl border border-brand-border">
-                        <svg class="w-3.5 h-3.5 text-brand-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="flex items-center gap-3 text-xs text-gray-500 bg-gray-50/50 px-4 py-3 rounded-xl border border-gray-100">
+                        <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
-                        Secured with JWT · Session auto-renews every 15 minutes
+                        <span class="leading-relaxed">Secured with JWT.<br>Session auto-renews every 15 mins.</span>
                     </div>
 
                     <button type="submit"
-                            class="w-full bg-brand-accent text-white py-3 px-6 rounded-xl font-semibold text-sm transition-subtle hover:bg-brand-accenthover active:scale-[0.99]">
+                            class="w-full bg-brand-primary text-white py-3.5 px-6 rounded-xl font-semibold text-sm transition-all hover:bg-brand-primary/90 hover:shadow-lg hover:shadow-brand-primary/20 active:scale-[0.99] flex justify-center items-center gap-2">
                         Sign In to Dashboard
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
                 </div>
             </form>
 
-            <div class="mt-6 pt-5 border-t border-brand-border text-center text-sm text-brand-secondary">
-                New developer?
-                <a href="{% url 'register' %}" class="text-brand-accent font-semibold hover:underline ml-1">Create free account →</a>
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-500 font-medium">
+                    New developer?
+                    <a href="{% url 'register' %}" class="text-brand-accent font-bold hover:text-blue-700 transition-colors ml-1">Create free account</a>
+                </p>
             </div>
         </div>
 

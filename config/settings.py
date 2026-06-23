@@ -43,9 +43,14 @@ if _env_file.exists():
 
 SECRET_KEY = _env('DJANGO_SECRET_KEY', required=True)
 
-DEBUG = _env('DEBUG', 'False') == 'True'
+DEBUG = False
 
-ALLOWED_HOSTS = [h.strip() for h in _env('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+# Set this to 'PRODUCTION' when deploying to real servers.
+# Set this to 'LOCAL' when testing on your own PC.
+ENVIRONMENT_MODE = _env('ENVIRONMENT_MODE', 'LOCAL') 
+
+# Added '*' so you can test using http://127.0.0.2:8000 to bypass the HTTPS cache
+ALLOWED_HOSTS = ['*']
 
 
 # ─── Application Definition ───────────────────────────────────────────────────
@@ -74,6 +79,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Unified: handles X-API-Key + JWT cookie + Django session
     'api.middleware.UnifiedAuthMiddleware',
+    # Custom UI Loader Injection
+    'core.middleware.UILoaderMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -190,10 +197,19 @@ SESSION_COOKIE_SECURE    = not DEBUG  # True in production
 
 # ─── Security Headers (production) ────────────────────────────────────────────
 
-if not DEBUG:
+if ENVIRONMENT_MODE == 'PRODUCTION':
+    # Real World Deploy Protection (Strict HTTPS)
     SECURE_HSTS_SECONDS             = 31536000   # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS  = True
     SECURE_HSTS_PRELOAD             = True
     SECURE_SSL_REDIRECT             = True
     CSRF_COOKIE_SECURE              = True
     SESSION_COOKIE_SECURE           = True
+else:
+    # Local Testing Mode (HTTP only, no forced SSL)
+    SECURE_HSTS_SECONDS             = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS  = False
+    SECURE_HSTS_PRELOAD             = False
+    SECURE_SSL_REDIRECT             = False
+    CSRF_COOKIE_SECURE              = False
+    SESSION_COOKIE_SECURE           = False

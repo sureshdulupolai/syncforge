@@ -1,12 +1,21 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 
 def home(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
     return render(request, 'core/home.html')
 
 
 def pricing(request):
     return render(request, 'core/pricing.html')
+
+
+def custom_404(request, exception=None):
+    """
+    Custom 404 error handler that renders the professional 404.html template.
+    """
+    return render(request, '404.html', status=404)
 
 
 # ── Docs views ────────────────────────────────────────────────────────────────

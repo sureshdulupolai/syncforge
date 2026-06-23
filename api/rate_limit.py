@@ -107,14 +107,19 @@ def rate_limit(requests_per_minute: int = 60) -> Callable:
                         "(estimated %d/%d requests in window).",
                         identifier, estimated_count, requests_per_minute,
                     )
-                    response = JsonResponse(
-                        {
-                            "error": "Rate limit exceeded.",
-                            "detail": f"Maximum {requests_per_minute} requests per minute.",
-                            "retry_after": 60,
-                        },
-                        status=429,
-                    )
+                    if request.path.startswith('/api/'):
+                        response = JsonResponse(
+                            {
+                                "error": "Rate limit exceeded.",
+                                "detail": f"Maximum {requests_per_minute} requests per minute.",
+                                "retry_after": 60,
+                            },
+                            status=429,
+                        )
+                    else:
+                        from django.shortcuts import render
+                        response = render(request, '429.html', status=429)
+
                     response["Retry-After"]           = "60"
                     response["X-RateLimit-Limit"]     = str(requests_per_minute)
                     response["X-RateLimit-Remaining"] = "0"
