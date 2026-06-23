@@ -428,6 +428,12 @@ function renderTables(tables) {
                                 <span>Encrypted</span>
                             </label>
                         </div>
+                        <div class="flex items-center border border-brand-border rounded-lg px-2 bg-gray-50 focus-within:border-brand-accent col-span-2 mt-1">
+                            <span class="text-gray-400 mr-2 text-xs font-semibold">Timeout (s):</span>
+                            <input type="number" value="${t.timeout !== null ? t.timeout : ''}" placeholder="Infinite"
+                                   onchange="updateTableSetting(${t.id}, 'timeout', this.value === '' ? null : parseInt(this.value, 10))"
+                                   class="w-full py-1 outline-none bg-transparent text-xs" title="Set to empty for Infinite">
+                        </div>
                     </div>
                 <button onclick="refreshTable(${t.id})" id="refresh-tbl-btn-${t.id}"
                         class="p-1.5 text-brand-accent hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all ml-2 h-fit" title="Refresh Table Cache">

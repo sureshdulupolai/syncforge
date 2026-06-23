@@ -37,6 +37,7 @@ class SyncForgeCoreAdapter:
         encryption: bool = True,
         priority: str = "medium",
         refresh_interval: int = 0,
+        timeout: Optional[int] = 3600,
         waf_enabled: bool = False,
         max_requests: int = 100,
         block_time_sec: int = 86400,
@@ -63,7 +64,8 @@ class SyncForgeCoreAdapter:
                 compression=compression,
                 encryption=encryption,
                 priority=priority,
-                refresh_interval=refresh_interval
+                refresh_interval=refresh_interval,
+                timeout=timeout
             )
             
             # 2. Update Local Metadata Storage (Framework-specific adapter injects this)
@@ -108,6 +110,7 @@ class SyncForgeCoreAdapter:
                     m_storage_mode = remote_meta.get("storage_mode", local_meta.get("storage_mode", "ram_disk"))
                     m_compression = remote_meta.get("compression", local_meta.get("compression", "none"))
                     m_encryption = remote_meta.get("encryption", local_meta.get("encryption", False))
+                    m_timeout = remote_meta.get("timeout", local_meta.get("timeout", 3600))
                     
                     if remote_version > local_version:
                         local_metadata_updater(
@@ -116,6 +119,7 @@ class SyncForgeCoreAdapter:
                             storage_mode=m_storage_mode,
                             compression=m_compression,
                             encryption=m_encryption,
+                            timeout=m_timeout,
                             status="active" if m_active else "inactive"
                         )
                         current_version = remote_version
@@ -126,6 +130,7 @@ class SyncForgeCoreAdapter:
                         "storage_mode": m_storage_mode,
                         "compression": m_compression,
                         "encryption": m_encryption,
+                        "timeout": m_timeout,
                         "cache_version": current_version,
                         "active": m_active
                     }

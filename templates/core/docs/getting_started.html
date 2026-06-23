@@ -62,7 +62,7 @@
 <!-- Step 4 -->
 <div class="mb-8">
     <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
-        <span class="w-6 h-6 bg-brand-accent text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
+        <span class="w-8 h-8 rounded bg-gray-100 border border-brand-border flex items-center justify-center text-sm font-bold">2</span>
         Initialise the client
     </h2>
     <p class="text-sm text-brand-secondary mb-3">
@@ -87,6 +87,38 @@ sf <span class="text-gray-400">=</span> SyncForge(
     backend<span class="text-gray-400">=</span><span class="text-green-300">'in_memory'</span>
 )</pre>
     </div>
+</div>
+
+<div class="mb-10">
+    <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+        <span class="w-8 h-8 rounded bg-gray-100 border border-brand-border flex items-center justify-center text-sm font-bold">3</span>
+        Smart Cache-Aside Reading
+    </h2>
+    <p class="text-sm text-brand-secondary mb-3">
+        In your view or endpoint, wrap your database fetch with <code class="font-mono bg-white px-1 rounded border border-brand-border text-brand-primary">sf.cache_query()</code>. If <code class="font-mono bg-white px-1 rounded border border-brand-border">cache_key</code> is omitted, SyncForge securely auto-generates a unique cache key by hashing the exact query, ensuring perfect project and dataset isolation.
+    </p>
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">views.py</span>
+            <button onclick="copyCode(this)" data-code="from .syncforge_client import sf
+
+# The cache_key is auto-generated based on the query if omitted.
+def product_list(request):
+    products = sf.cache_query(
+        table_name='core_product',
+        queryset=Product.objects.filter(active=True)
+    )
+    return render(request, 'products.html', {'products': products})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+        </div>
+        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> .syncforge_client <span class="text-blue-400">import</span> sf
+
+<span class="text-gray-500"># The cache_key is auto-generated based on the query if omitted.</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-200">product_list</span>(request):
+    products <span class="text-gray-400">=</span> sf.cache_query(
+        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,
+        queryset<span class="text-gray-400">=</span>Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+    )
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'products.html'</span>, {<span class="text-green-300">'products'</span>: products})</pre>   </div>
 </div>
 
 <!-- Step 5 -->

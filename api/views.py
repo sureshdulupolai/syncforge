@@ -297,6 +297,7 @@ def tables_list(request):
         encryption = body.get("encryption", False)
         priority = body.get("priority", "medium")
         refresh_interval = body.get("refresh_interval", 0)
+        timeout = body.get("timeout", None)
 
         valid, err = _validate_table_name(table_name)
         if not valid:
@@ -320,7 +321,8 @@ def tables_list(request):
                 "compression": compression,
                 "encryption": encryption,
                 "priority": priority,
-                "refresh_interval": refresh_interval
+                "refresh_interval": refresh_interval,
+                "timeout": timeout
             },
         )
         if not created:
@@ -346,11 +348,14 @@ def tables_list(request):
             if config.refresh_interval != refresh_interval:
                 config.refresh_interval = refresh_interval
                 updated = True
+            if config.timeout != timeout:
+                config.timeout = timeout
+                updated = True
                 
             if updated:
                 config.save(update_fields=[
                     "sync_mode", "active", "storage_mode", "compression",
-                    "encryption", "priority", "refresh_interval"
+                    "encryption", "priority", "refresh_interval", "timeout"
                 ])
 
         project_prefix = project.project_prefix or "default"
@@ -401,5 +406,6 @@ def tables_list(request):
             "encryption": t.encryption,
             "priority": t.priority,
             "refresh_interval": t.refresh_interval,
+            "timeout": t.timeout,
         })
     return _json({"tables": tables, "count": len(tables)})

@@ -190,6 +190,7 @@ class TableSyncConfig(models.Model):
     ]
     priority         = models.CharField(max_length=10, choices=PRIORITIES, default='medium')
     refresh_interval = models.IntegerField(default=0, help_text="Refresh interval in minutes (0 = event only)")
+    timeout          = models.IntegerField(null=True, blank=True, help_text="Cache timeout in seconds. None means no expiry.")
 
     # ── Versioning ────────────────────────────────────────────────────────────
     # Monotonically increasing version number — incremented on every refresh.

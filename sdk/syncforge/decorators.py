@@ -8,7 +8,7 @@ Can be used with plain Python scripts, Flask, FastAPI, or any custom backend.
 import asyncio
 import logging
 from functools import wraps
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 
 logger = logging.getLogger("syncforge.decorators")
 
@@ -22,6 +22,7 @@ def sync_function(
     encryption: bool = True,
     priority: str = "medium",
     refresh_interval: int = 0,
+    timeout: Optional[int] = 3600,
     waf_enabled: bool = False,
     max_requests: int = 100,
     block_time_sec: int = 86400,
@@ -46,6 +47,7 @@ def sync_function(
             encryption=encryption,
             priority=priority,
             refresh_interval=refresh_interval,
+            timeout=timeout,
             waf_enabled=waf_enabled,
             max_requests=max_requests,
             block_time_sec=block_time_sec,

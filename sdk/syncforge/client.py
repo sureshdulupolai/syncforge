@@ -366,7 +366,10 @@ class SyncForge:
             raise ValueError("queryset must be provided.")
             
         if not cache_key:
-            cache_key = f"sf_{self._project_prefix}_{table_name}"
+            import hashlib
+            query_str = str(getattr(queryset, 'query', queryset))
+            query_hash = hashlib.sha256(query_str.encode('utf-8')).hexdigest()[:16]
+            cache_key = f"sf_{self._project_prefix}_{table_name}_{query_hash}"
         elif not isinstance(cache_key, str):
             raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
 
@@ -521,7 +524,8 @@ class SyncForge:
         compression: str = "none",
         encryption: bool = True,
         priority: str = "medium",
-        refresh_interval: int = 0
+        refresh_interval: int = 0,
+        timeout: Optional[int] = 3600
     ) -> bool:
         """
         Register a new table in this project programmatically.
@@ -542,6 +546,7 @@ class SyncForge:
             encryption: Boolean to encrypt disk cache.
             priority: 'low', 'medium', 'high'.
             refresh_interval: Polling interval in minutes (0 for event-only).
+            timeout: Default cache timeout for this table.
 
         Returns:
             ``True`` if the table was newly created.
@@ -564,7 +569,8 @@ class SyncForge:
                 "compression": compression,
                 "encryption": encryption,
                 "priority": priority,
-                "refresh_interval": refresh_interval
+                "refresh_interval": refresh_interval,
+                "timeout": timeout
             }
             res = self._request("POST", url, json_data=payload)
             return bool(res.get("created", False))

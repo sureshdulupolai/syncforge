@@ -329,6 +329,7 @@ def ajax_project_detail(request, slug):
             'priority':            t.priority,
             'refresh_interval':     t.refresh_interval,
             'cache_version':        t.cache_version,
+            'timeout':              t.timeout,
         })
     keys    = []
     for k in project.api_keys.filter(is_active=True):

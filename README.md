@@ -86,6 +86,8 @@ async def list_users():
         users = sf.cache_query(
             table_name="users",
             queryset=await fetch_users_from_db(),
+            # cache_key is optional. If omitted, SyncForge securely auto-generates 
+            # a unique key by hashing your exact query/queryset to prevent data collisions.
         )
     return {"users": users}
 ```
