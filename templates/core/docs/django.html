@@ -47,21 +47,43 @@
         <button onclick="copyCode(this)" data-code="import os
 from syncforge import SyncForge
 
+# Initialize the SyncForge Engine
 sf = SyncForge(
     api_key=os.environ['SYNCFORGE_API_KEY'],
-    backend='django_cache',  # Or 'in_memory' / 'redis'
-    silent=True,       # Recommended: never crash app if SyncForge is unreachable
-    async_mode=False,  # True = fire-and-forget refresh()
+    backend='django_cache',  # Automatically hooks into your existing settings.CACHES
+    silent=True,             # Never crash the app if cache is unreachable
+    async_mode=False         # Standard synchronous thread pooling for Django
 )" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">import</span> os
-<span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">import</span> os
+<span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
 
-sf <span class="text-gray-400">=</span> SyncForge(
-    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
-    silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,       <span class="text-gray-500"># Recommended: never crash app if SyncForge is unreachable</span>
-    async_mode<span class="text-gray-400">=</span><span class="text-blue-300">False</span>,  <span class="text-gray-500"># True = fire-and-forget refresh()</span>
+<span class="text-[#8B949E]"># Initialize the SyncForge Engine</span>
+sf = SyncForge(
+    api_key=os.environ[<span class="text-[#A5D6FF]">'SYNCFORGE_API_KEY'</span>],
+    backend=<span class="text-[#A5D6FF]">'django_cache'</span>,  <span class="text-[#8B949E]"># Automatically hooks into your existing settings.CACHES</span>
+    silent=<span class="text-[#79C0FF]">True</span>,             <span class="text-[#8B949E]"># Never crash the app if cache is unreachable</span>
+    async_mode=<span class="text-[#79C0FF]">False</span>         <span class="text-[#8B949E]"># Standard synchronous thread pooling for Django</span>
 )</pre>
+</div>
+
+<!-- Explanations IMMEDIATELY under the code -->
+<div class="mb-10 mt-6">
+    <h3 class="text-sm font-bold text-brand-primary mb-3">Django Connection Backends</h3>
+    <div class="space-y-3">
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='django_cache'</code> <span class="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 ml-2">Recommended for Django</span></h4>
+            <p class="text-xs text-brand-secondary">Hijacks Django's native <code class="font-mono text-xs">CACHES</code> framework (e.g., Memcached or DatabaseCache) defined in your <code class="font-mono text-xs">settings.py</code>. Transparently utilizes your existing infrastructure without spinning up a new Redis instance.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='in_memory'</code></h4>
+            <p class="text-xs text-brand-secondary">Uses an ultra-fast Python dictionary to store cached queries directly in RAM. Absolute lowest latency, but cache is wiped on server restarts.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='redis'</code></h4>
+            <p class="text-xs text-brand-secondary">Connects directly to a Redis cluster. Only use this if you want SyncForge to bypass Django's cache framework and manage its own distributed Redis pub-sub invalidation.</p>
+        </div>
+    </div>
 </div>
 
 <!-- 3 sync_model -->
@@ -74,13 +96,14 @@ sf <span class="text-gray-400">=</span> SyncForge(
     <li><span class="text-brand-accent">→</span> Immediately clears the local cache for this table (synchronous)</li>
     <li><span class="text-brand-accent">→</span> Notifies the SyncForge server in a background thread (never blocks)</li>
 </ul>
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">myapp/models.py</span>
+        <span class="text-xs font-mono text-[#8B949E]">myapp/models.py</span>
         <button onclick="copyCode(this)" data-code="from django.db import models
 from myproject.sf import sf
 from syncforge.django import sync_model
 
+# Listen to Django's native post_save/post_delete signals
 @sync_model(sf, sync_mode='event')
 class Product(models.Model):
     name   = models.CharField(max_length=200)
@@ -90,54 +113,37 @@ class Product(models.Model):
     class Meta:
         db_table = 'core_product'" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> django.db <span class="text-blue-400">import</span> models
-<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
-<span class="text-blue-400">from</span> syncforge.django <span class="text-blue-400">import</span> sync_model
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> django.db <span class="text-[#FF7B72]">import</span> models
+<span class="text-[#FF7B72]">from</span> myproject.sf <span class="text-[#FF7B72]">import</span> sf
+<span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
 
-<span class="text-yellow-300">@sync_model</span>(sf)
-<span class="text-blue-400">class</span> <span class="text-teal-300">Product</span>(models.Model):
-    name   <span class="text-gray-400">=</span> models.CharField(max_length<span class="text-gray-400">=</span><span class="text-yellow-300">200</span>)
-    price  <span class="text-gray-400">=</span> models.DecimalField(max_digits<span class="text-gray-400">=</span><span class="text-yellow-300">10</span>, decimal_places<span class="text-gray-400">=</span><span class="text-yellow-300">2</span>)
-    active <span class="text-gray-400">=</span> models.BooleanField(default<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+<span class="text-[#8B949E]"># Listen to Django's native post_save/post_delete signals</span>
+<span class="text-[#D2A8FF]">@sync_model</span>(sf, sync_mode=<span class="text-[#A5D6FF]">'event'</span>)
+<span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Product</span>(models.Model):
+    name   = models.CharField(max_length=<span class="text-[#79C0FF]">200</span>)
+    price  = models.DecimalField(max_digits=<span class="text-[#79C0FF]">10</span>, decimal_places=<span class="text-[#79C0FF]">2</span>)
+    active = models.BooleanField(default=<span class="text-[#79C0FF]">True</span>)
 
-    <span class="text-blue-400">class</span> <span class="text-teal-300">Meta</span>:
-        db_table <span class="text-gray-400">=</span> <span class="text-green-300">'core_product'</span></pre>
+    <span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Meta</span>:
+        db_table = <span class="text-[#A5D6FF]">'core_product'</span></pre>
 </div>
 
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 mb-8">
-    <p><strong>sync_mode options:</strong> <code class="font-mono text-xs">event</code> (on save/delete), <code class="font-mono text-xs">manual</code>, <code class="font-mono text-xs">schedule_5m</code>, <code class="font-mono text-xs">schedule_1h</code>, <code class="font-mono text-xs">schedule_1d</code>, <code class="font-mono text-xs">schedule_30d</code>, <code class="font-mono text-xs">hybrid</code></p>
-    <p class="mt-2"><strong>Enterprise options:</strong> <code class="font-mono text-xs">storage_mode='ram_disk'</code>, <code class="font-mono text-xs">compression='lz4'</code>, <code class="font-mono text-xs">encryption=True</code>, <code class="font-mono text-xs">priority='high'</code></p>
-</div>
-
-<!-- Enterprise Parameters -->
-<h2 id="parameters" class="text-xl font-semibold mb-3 scroll-mt-20">Enterprise Cache Parameters Explained</h2>
-<p class="text-sm text-brand-secondary mb-3">
-    The <code class="font-mono bg-gray-100 px-1 rounded text-sm text-gray-800">@sync_model</code> decorator accepts several parameters to fine-tune your enterprise caching strategy. Here is what they do and why you should use them:
-</p>
-<div class="space-y-4 mb-8">
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified to update the network.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'event'</code> (on every database write), <code>'manual'</code> (only when sf.refresh() is called), <code>'schedule_5m'</code>, <code>'schedule_1h'</code>, etc.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'event'</code> for data that needs real-time accuracy. Use <code>'schedule_1h'</code> for heavy data that is okay being up to an hour stale, reducing server load.</p>
-    </div>
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Defines where the cached data is physically stored on your server.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'ram_disk'</code> (default), <code>'disk_only'</code>, <code>'ram_only'</code>, <code>'disabled'</code>.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> <code>'ram_disk'</code> is the default. It automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up data persistently and securely.</p>
-    </div>
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption to the data stored on disk.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>True</code> (default), <code>False</code>.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Privacy and compliance. We default to <code>True</code> so that any PII or sensitive cached data is protected at rest automatically.</p>
-    </div>
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">compression</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Compresses the binary cache payload before storing it.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'none'</code> (default), <code>'lz4'</code>, <code>'zstd'</code>, <code>'gzip'</code>.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'lz4'</code> or <code>'zstd'</code> for large JSON objects or massive querysets. It dramatically reduces disk footprint and I/O wait times with very little CPU overhead.</p>
+<!-- Enterprise Parameters Explanations IMMEDIATELY under the code -->
+<div class="mt-6 mb-10">
+    <h3 class="text-sm font-bold text-brand-primary mb-3">Enterprise Decorator Parameters Explained</h3>
+    <div class="space-y-3">
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified. Values: <code>'event'</code> (on every DB write), <code>'manual'</code> (only via sf.refresh()), <code>'schedule_1h'</code>, etc.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> <code>'ram_disk'</code> (default) automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up persistently.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code> / <code class="text-brand-accent">compression</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption at rest (True by default). Use <code>compression='lz4'</code> for massive querysets to dramatically reduce I/O wait times.</p>
+        </div>
     </div>
 </div>
 
@@ -164,44 +170,46 @@ class Product(models.Model):
     </ol>
 </div>
 
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">myapp/views.py</span>
+        <span class="text-xs font-mono text-[#8B949E]">myapp/views.py</span>
         <button onclick="copyCode(this)" data-code="from django.shortcuts import render
 from myproject.sf import sf
 from .models import Product
 
 def product_list(request):
-    if sf.get_table('core_product'):
-        # 1. Cache Hit: Data found in memory! DB query skipped entirely.
-        log = sf.get_table('core_product')
+    # 1. Check RAM / Disk cache instantly
+    cached_products = sf.get_table('core_product')
+    
+    if cached_products:
+        products = cached_products
     else:
-        # 2. Cache Miss: Execute DB query and automatically save to memory
-        log = sf.cache_query(
+        # 2. Cache Miss: Query DB, SyncForge saves result automatically
+        products = sf.cache_query(
             table_name='core_product',
             queryset=Product.objects.all()
         )
         
-    # 3. Return data exactly as it came from the DB
-    return render(request, 'products/list.html', {'products': log})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    return render(request, 'products/list.html', {'products': products})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> django.shortcuts <span class="text-blue-400">import</span> render
-<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
-<span class="text-blue-400">from</span> .models <span class="text-blue-400">import</span> Product
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> django.shortcuts <span class="text-[#FF7B72]">import</span> render
+<span class="text-[#FF7B72]">from</span> myproject.sf <span class="text-[#FF7B72]">import</span> sf
+<span class="text-[#FF7B72]">from</span> .models <span class="text-[#FF7B72]">import</span> Product
 
-<span class="text-blue-400">def</span> <span class="text-yellow-300">product_list</span>(request):
-    <span class="text-blue-400">if</span> sf.get_table(<span class="text-green-300">'core_product'</span>):
-        <span class="text-gray-500"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
-        log <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">'core_product'</span>)
-    <span class="text-blue-400">else</span>:
-        <span class="text-gray-500"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
-        log <span class="text-gray-400">=</span> sf.cache_query(
-            table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_product'</span>,
-            queryset<span class="text-gray-400">=</span>Product.objects.all()
+<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">product_list</span>(request):
+    <span class="text-[#8B949E]"># 1. Check RAM / Disk cache instantly</span>
+    cached_products = sf.get_table(<span class="text-[#A5D6FF]">'core_product'</span>)
+    
+    <span class="text-[#FF7B72]">if</span> cached_products:
+        products = cached_products
+    <span class="text-[#FF7B72]">else</span>:
+        <span class="text-[#8B949E]"># 2. Cache Miss: Query DB, SyncForge saves result automatically</span>
+        products = sf.cache_query(
+            table_name=<span class="text-[#A5D6FF]">'core_product'</span>,
+            queryset=Product.objects.all()
         )
         
-    <span class="text-gray-500"># 3. Return data exactly as it came from the DB</span>
-    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'products/list.html'</span>, {<span class="text-green-300">'products'</span>: log})</pre>
+    <span class="text-[#FF7B72]">return</span> render(request, <span class="text-[#A5D6FF]">'products/list.html'</span>, {<span class="text-[#A5D6FF]">'products'</span>: products})</pre>
 </div>
 
 <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-8">

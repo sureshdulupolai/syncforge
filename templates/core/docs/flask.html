@@ -19,21 +19,40 @@
 
 <!-- 2 Client -->
 <h2 class="text-xl font-semibold mb-3">2. Initialise the extension</h2>
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> flask <span class="text-blue-400">import</span> Flask, jsonify
-<span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
-<span class="text-blue-400">from</span> syncforge.flask <span class="text-blue-400">import</span> SyncForgeFlask
-<span class="text-blue-400">import</span> os
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-[#8B949E]">app.py</span>
+    </div>
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> flask <span class="text-[#FF7B72]">import</span> Flask, jsonify
+<span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
+<span class="text-[#FF7B72]">from</span> syncforge.flask <span class="text-[#FF7B72]">import</span> SyncForgeFlask
+<span class="text-[#FF7B72]">import</span> os
 
-sf <span class="text-gray-400">=</span> SyncForge(
-    api_key<span class="text-gray-400">=</span>os.environ.get(<span class="text-green-300">"SYNCFORGE_API_KEY"</span>),
-    backend<span class="text-gray-400">=</span><span class="text-green-300">'in_memory'</span>,  <span class="text-gray-500"># Zero external dependencies required</span>
-    async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>
+<span class="text-[#8B949E]"># Initialize the SyncForge Engine</span>
+sf = SyncForge(
+    api_key=os.environ.get(<span class="text-[#A5D6FF]">"SYNCFORGE_API_KEY"</span>),
+    backend=<span class="text-[#A5D6FF]">'in_memory'</span>,  <span class="text-[#8B949E]"># Zero external dependencies required</span>
+    async_mode=<span class="text-[#79C0FF]">False</span>
 )
 
-app <span class="text-gray-400">=</span> Flask(__name__)
-sf_ext <span class="text-gray-400">=</span> SyncForgeFlask(app, sf)
+app = Flask(__name__)
+sf_ext = SyncForgeFlask(app, sf)
 </pre>
+</div>
+
+<!-- Backend Explanations IMMEDIATELY under the code -->
+<div class="mb-10 mt-6">
+    <h3 class="text-sm font-bold text-brand-primary mb-3">Which backend should you choose?</h3>
+    <div class="space-y-3">
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='in_memory'</code> <span class="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 ml-2">Recommended for Single-Node Flask</span></h4>
+            <p class="text-xs text-brand-secondary">Stores cached queries directly in your Gunicorn/uWSGI worker's RAM. Absolute lowest possible latency.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='redis'</code> <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 ml-2">Recommended for Distributed Clusters</span></h4>
+            <p class="text-xs text-brand-secondary">Connects to a Redis cluster. Use this if you are running multiple Gunicorn workers or Docker containers and need a single source of truth.</p>
+        </div>
+    </div>
 </div>
 
 <!-- 3 Routes CRUD -->
@@ -44,60 +63,51 @@ sf_ext <span class="text-gray-400">=</span> SyncForgeFlask(app, sf)
     2. If it does not exist, use <code class="font-mono bg-gray-100 px-1 rounded text-sm">sf.cache_query()</code> to hit the DB and store the result.
 </p>
 
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-yellow-300">@app.route</span>(<span class="text-green-300">"/products"</span>, methods<span class="text-gray-400">=</span>[<span class="text-green-300">"GET"</span>])
-<span class="text-blue-400">def</span> <span class="text-teal-300">list_products</span>():
-    <span class="text-gray-500"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
-    products <span class="text-gray-400">=</span> sf.get_table(<span class="text-green-300">"products"</span>)
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-[#8B949E]">routes.py</span>
+    </div>
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"GET"</span>])
+<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">list_products</span>():
+    <span class="text-[#8B949E]"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
+    products = sf.get_table(<span class="text-[#A5D6FF]">"products"</span>)
     
-    <span class="text-blue-400">if not</span> products:
-        <span class="text-gray-500"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
-        products <span class="text-gray-400">=</span> sf.cache_query(
-            table_name<span class="text-gray-400">=</span><span class="text-green-300">"products"</span>,
-            queryset<span class="text-gray-400">=</span>[<span class="text-gray-500">... fetch from db ...</span>],
-            timeout<span class="text-gray-400">=</span><span class="text-yellow-300">3600</span>
+    <span class="text-[#FF7B72]">if not</span> products:
+        <span class="text-[#8B949E]"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
+        products = sf.cache_query(
+            table_name=<span class="text-[#A5D6FF]">"products"</span>,
+            queryset=db.session.query(Product).all(),
+            timeout=<span class="text-[#79C0FF]">3600</span>
         )
         
-    <span class="text-blue-400">return</span> jsonify({<span class="text-green-300">"products"</span>: products})
+    <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"products"</span>: products})
     
-<span class="text-yellow-300">@app.route</span>(<span class="text-green-300">"/products"</span>, methods<span class="text-gray-400">=</span>[<span class="text-green-300">"POST"</span>])
-<span class="text-blue-400">def</span> <span class="text-teal-300">create_product</span>():
-    <span class="text-gray-500"># ... Write to Database ...</span>
-    <span class="text-gray-500"># 3. Refresh cache across cluster instantly</span>
-    sf.refresh(<span class="text-green-300">"products"</span>)
-    <span class="text-blue-400">return</span> jsonify({<span class="text-green-300">"status"</span>: <span class="text-green-300">"created"</span>})
+<span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"POST"</span>])
+<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">create_product</span>():
+    <span class="text-[#8B949E]"># ... Write to Database ...</span>
+    <span class="text-[#8B949E]"># 3. Refresh cache across cluster instantly</span>
+    sf.refresh(<span class="text-[#A5D6FF]">"products"</span>)
+    <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"status"</span>: <span class="text-[#A5D6FF]">"created"</span>})
 </pre>
 </div>
 
-<!-- Enterprise Parameters -->
-<h2 id="parameters" class="text-xl font-semibold mb-3 scroll-mt-20">Enterprise Cache Parameters Explained</h2>
-<p class="text-sm text-brand-secondary mb-3">
-    When registering a table via <code class="font-mono bg-gray-100 px-1 rounded text-sm text-gray-800">sf.create_table()</code> or using it within your framework, you can use these enterprise features:
-</p>
-<div class="space-y-4 mb-8">
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified to update the network.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'event'</code> (on every database write), <code>'manual'</code> (only when sf.refresh() is called), <code>'schedule_5m'</code>, <code>'schedule_1h'</code>, etc.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'event'</code> for data that needs real-time accuracy. Use <code>'schedule_1h'</code> for heavy data that is okay being up to an hour stale, reducing server load.</p>
-    </div>
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Defines where the cached data is physically stored on your server.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'ram_disk'</code> (default), <code>'disk_only'</code>, <code>'ram_only'</code>, <code>'disabled'</code>.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> <code>'ram_disk'</code> is the default. It automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up data persistently and securely.</p>
-    </div>
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption to the data stored on disk.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>True</code> (default), <code>False</code>.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Privacy and compliance. We default to <code>True</code> so that any PII or sensitive cached data is protected at rest automatically.</p>
-    </div>
-    <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-        <h3 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">compression</code></h3>
-        <p class="text-sm text-brand-secondary"><strong>What it does:</strong> Compresses the binary cache payload before storing it.</p>
-        <p class="text-sm text-brand-secondary"><strong>Values:</strong> <code>'none'</code> (default), <code>'lz4'</code>, <code>'zstd'</code>, <code>'gzip'</code>.</p>
-        <p class="text-sm text-brand-secondary"><strong>Why use it:</strong> Use <code>'lz4'</code> or <code>'zstd'</code> for large JSON objects or massive querysets. It dramatically reduces disk footprint and I/O wait times with very little CPU overhead.</p>
+<!-- Enterprise Parameters Explanations IMMEDIATELY under the code -->
+<div class="mt-6 mb-10">
+    <h3 class="text-sm font-bold text-brand-primary mb-3">Enterprise Table Parameters Explained</h3>
+    <p class="text-sm text-brand-secondary mb-3">When registering a table via <code class="font-mono bg-gray-100 px-1 rounded text-sm text-gray-800">sf.create_table()</code>, you can use these enterprise features:</p>
+    <div class="space-y-3">
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified. Values: <code>'event'</code> (on every DB write), <code>'manual'</code> (only via sf.refresh()), <code>'schedule_1h'</code>, etc.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> <code>'ram_disk'</code> (default) automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up persistently.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code> / <code class="text-brand-accent">compression</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption at rest (True by default). Use <code>compression='lz4'</code> for massive querysets to dramatically reduce I/O wait times.</p>
+        </div>
     </div>
 </div>
 

@@ -79,13 +79,35 @@ sf = SyncForge(
     backend='in_memory'
 )" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
         </div>
-        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">import</span> os
-<span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
+        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-[#FF7B72]">import</span> os
+<span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
 
-sf <span class="text-gray-400">=</span> SyncForge(
-    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
-    backend<span class="text-gray-400">=</span><span class="text-green-300">'in_memory'</span>
+<span class="text-[#8B949E]"># Initialize the SyncForge Engine</span>
+sf = SyncForge(
+    api_key=os.environ[<span class="text-[#A5D6FF]">'SYNCFORGE_API_KEY'</span>],
+    backend=<span class="text-[#A5D6FF]">'in_memory'</span>  <span class="text-[#8B949E]"># Select your storage engine</span>
 )</pre>
+    </div>
+
+    <!-- Backend Explanations IMMEDIATELY under the code -->
+    <div class="mt-6">
+        <h3 class="text-sm font-bold text-brand-primary mb-3">Which backend should you choose?</h3>
+        <div class="space-y-3">
+            <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+                <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='in_memory'</code> <span class="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 ml-2">Recommended for Single-Node</span></h4>
+                <p class="text-xs text-brand-secondary">Stores cached queries directly in your server's RAM. Zero external dependencies. Absolute lowest possible latency (sub-0.1ms). Perfect for standard deployments and VPS.</p>
+            </div>
+            
+            <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+                <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='redis'</code> <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 ml-2">Recommended for Clusters</span></h4>
+                <p class="text-xs text-brand-secondary">Connects to a Redis cluster to serve as a centralized cache for distributed environments. Use this if you are running multiple Docker containers across Kubernetes.</p>
+            </div>
+            
+            <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+                <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='django_cache'</code></h4>
+                <p class="text-xs text-brand-secondary">Hijacks Django's native <code class="font-mono text-xs">CACHES</code> framework (e.g., Memcached). Useful if you already have a massive enterprise Django setup and don't want to spin up a new Redis instance.</p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -139,11 +161,14 @@ def product_list(request):
 product = Product.objects.create(name='Widget', price=9.99)
 sf.refresh('products')   # Tell SyncForge this table changed" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
         </div>
-        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> syncforge_client <span class="text-blue-400">import</span> sf
+        <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-[#FF7B72]">from</span> syncforge_client <span class="text-[#FF7B72]">import</span> sf
 
-<span class="text-gray-500"># After any DB write</span>
-product <span class="text-gray-400">=</span> Product.objects.create(name<span class="text-gray-400">=</span><span class="text-green-300">'Widget'</span>, price<span class="text-gray-400">=</span><span class="text-yellow-300">9.99</span>)
-sf.refresh(<span class="text-green-300">'products'</span>)   <span class="text-gray-500"># Tell SyncForge this table changed</span></pre>
+<span class="text-[#8B949E]"># After any DB write</span>
+product = Product.objects.create(name=<span class="text-[#A5D6FF]">'Widget'</span>, price=<span class="text-[#79C0FF]">9.99</span>)
+
+<span class="text-[#8B949E]"># Tell SyncForge this table changed. It will instantly invalidate cache</span>
+<span class="text-[#8B949E]"># across all your servers!</span>
+sf.refresh(<span class="text-[#A5D6FF]">'products'</span>)</pre>
     </div>
 </div>
 
@@ -168,8 +193,7 @@ else:
     </div>
 </div>
 
-<!-- Client options -->
-<h2 class="text-xl font-semibold mb-3">All client options</h2>
+<h3 class="text-lg font-semibold mb-3">Additional Connection Options</h3>
 <div class="overflow-x-auto mb-10">
 <table class="w-full text-sm border-collapse">
     <thead>
@@ -181,11 +205,9 @@ else:
     </thead>
     <tbody class="divide-y divide-brand-border">
         <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">api_key</td><td class="px-4 py-2.5 text-brand-muted">required</td><td class="px-4 py-2.5 text-brand-secondary">API key from dashboard (sf_live_...)</td></tr>
-        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">base_url</td><td class="px-4 py-2.5 font-mono text-xs text-brand-muted">Optional (syncforge.dev/api)</td><td class="px-4 py-2.5 text-brand-secondary"><strong>Do not provide this</strong> unless you are self-hosting SyncForge on your own servers.</td></tr>
-        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">timeout</td><td class="px-4 py-2.5 text-brand-muted">10</td><td class="px-4 py-2.5 text-brand-secondary">HTTP timeout in seconds</td></tr>
-        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">silent</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Suppress exceptions — log warnings instead (recommended in production)</td></tr>
-        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">async_mode</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Fire-and-forget refresh() — returns None immediately</td></tr>
-        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">sign_requests</td><td class="px-4 py-2.5 text-brand-muted">True</td><td class="px-4 py-2.5 text-brand-secondary">Add HMAC-SHA256 signature headers for replay protection</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">redis_url</td><td class="px-4 py-2.5 text-brand-muted">None</td><td class="px-4 py-2.5 text-brand-secondary">Required only if `backend='redis'` (e.g. redis://localhost:6379)</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">silent</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Suppress network exceptions to gracefully fall back to DB.</td></tr>
+        <tr><td class="px-4 py-2.5 font-mono text-xs text-brand-accent">async_mode</td><td class="px-4 py-2.5 text-brand-muted">False</td><td class="px-4 py-2.5 text-brand-secondary">Enable fully asynchronous I/O loops (required for FastAPI).</td></tr>
     </tbody>
 </table>
 </div>
