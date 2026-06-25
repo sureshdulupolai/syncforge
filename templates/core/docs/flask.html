@@ -40,17 +40,55 @@ sf_ext = SyncForgeFlask(app, sf)
 </pre>
 </div>
 
-<!-- Backend Explanations IMMEDIATELY under the code -->
+<!-- Client Parameters Reference -->
 <div class="mb-10 mt-6">
-    <h3 class="text-sm font-bold text-brand-primary mb-3">Which backend should you choose?</h3>
-    <div class="space-y-3">
-        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='in_memory'</code> <span class="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 ml-2">Recommended for Single-Node Flask</span></h4>
-            <p class="text-xs text-brand-secondary">Stores cached queries directly in your Gunicorn/uWSGI worker's RAM. Absolute lowest possible latency.</p>
+    <h3 class="text-sm font-bold text-brand-primary mb-3">Client Configuration Parameters</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Required -->
+        <div class="col-span-1 md:col-span-2 border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">api_key</code> <span class="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 ml-2">Required (str)</span></h4>
+            <p class="text-xs text-brand-secondary">Your project's SyncForge API key starting with <code>sf_live_</code>.</p>
         </div>
+        
+        <!-- Networking -->
         <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
-            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">backend='redis'</code> <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 ml-2">Recommended for Distributed Clusters</span></h4>
-            <p class="text-xs text-brand-secondary">Connects to a Redis cluster. Use this if you are running multiple Gunicorn workers or Docker containers and need a single source of truth.</p>
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">timeout</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: 10 (int)</span></h4>
+            <p class="text-xs text-brand-secondary">Network timeout in seconds for reaching the central SyncForge server.</p>
+        </div>
+        
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">silent</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: False (bool)</span></h4>
+            <p class="text-xs text-brand-secondary">If True, exceptions are caught, logged, and suppressed to prevent crashing your production app.</p>
+        </div>
+
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">async_mode</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: False (bool)</span></h4>
+            <p class="text-xs text-brand-secondary">If True, all `refresh()` operations run in background daemon threads (fire-and-forget).</p>
+        </div>
+
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sign_requests</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: True (bool)</span></h4>
+            <p class="text-xs text-brand-secondary">Uses HMAC signatures to protect outgoing server signals against replay attacks.</p>
+        </div>
+
+        <!-- Security & Storage -->
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption_key</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Optional (str)</span></h4>
+            <p class="text-xs text-brand-secondary">A secret 32-byte key used to AES-256 encrypt local cache files at rest.</p>
+        </div>
+
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">cache_dir</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Optional (str)</span></h4>
+            <p class="text-xs text-brand-secondary">Overrides the default hidden OS-specific storage path where encrypted cache binaries are safely written.</p>
+        </div>
+
+        <!-- Backends -->
+        <div class="col-span-1 md:col-span-2 border border-brand-border rounded-xl p-4 bg-brand-secbg mt-2">
+            <h4 class="text-sm font-bold text-brand-primary mb-2">Connection Backends <code class="text-brand-accent ml-2">backend_type="..."</code></h4>
+            <ul class="text-xs text-brand-secondary space-y-2 list-none">
+                <li><code class="font-mono bg-white px-1 rounded border border-gray-200">'in_memory'</code>: Recommended for single-node Flask. Ultra-fast RAM dictionary. Lowest latency. Cleared on server restart.</li>
+                <li><code class="font-mono bg-white px-1 rounded border border-gray-200">'redis'</code>: Connects directly to a Redis cluster via the <code class="text-brand-accent">redis_url</code> argument.</li>
+            </ul>
         </div>
     </div>
 </div>
@@ -70,23 +108,23 @@ sf_ext = SyncForgeFlask(app, sf)
     <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"GET"</span>])
 <span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">list_products</span>():
     <span class="text-[#8B949E]"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
-    products = sf.get_table(<span class="text-[#A5D6FF]">"tbl_xxxx"</span>)
+    products = sf.get_table(<span class="text-[#A5D6FF]">"products"</span>)
     
     <span class="text-[#FF7B72]">if not</span> products:
         <span class="text-[#8B949E]"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
         products = sf.cache_query(
-            table_name=<span class="text-[#A5D6FF]">"tbl_xxxx"</span>,
+            table_name=<span class="text-[#A5D6FF]">"products"</span>,
             queryset=db.session.query(Product).all(),
             timeout=<span class="text-[#79C0FF]">3600</span>
         )
         
-    <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"tbl_xxxx"</span>: products})
+    <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"products"</span>: products})
     
 <span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"POST"</span>])
 <span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">create_product</span>():
     <span class="text-[#8B949E]"># ... Write to Database ...</span>
     <span class="text-[#8B949E]"># 3. Refresh cache across cluster instantly</span>
-    sf.refresh(<span class="text-[#A5D6FF]">"tbl_xxxx"</span>)
+    sf.refresh(<span class="text-[#A5D6FF]">"products"</span>)
     <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"status"</span>: <span class="text-[#A5D6FF]">"created"</span>})
 </pre>
 </div>

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import cmd_api
 
 urlpatterns = [
     # ── Auth ──────────────────────────────────────────────────────────────────
@@ -18,6 +19,7 @@ urlpatterns = [
     # ── AJAX data (JSON, cached by frontend) ──────────────────────────────────
     path('api/projects/',                views.ajax_projects,       name='ajax_projects'),
     path('api/projects/<slug:slug>/',    views.ajax_project_detail, name='ajax_project_detail'),
+    path('api/projects/<slug:slug>/cmd/', cmd_api.cmd_execute,      name='cmd_execute'),
 
     # ── API Keys ───────────────────────────────────────────────────────────────
     path('api/projects/<slug:slug>/keys/create/',        views.create_api_key, name='create_api_key'),

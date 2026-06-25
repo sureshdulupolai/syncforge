@@ -1,0 +1,81 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block title %}CloudShell CMD Guide — SyncForge{% endblock %}
+{% block meta_description %}Learn how to use the SyncForge CloudShell terminal inside your dashboard to view logs and verify metadata.{% endblock %}
+
+{% block docs_content %}
+
+<div class="mb-2"><span class="text-xs font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded">Dashboard Feature</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">CloudShell CMD</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    The SyncForge CloudShell is a powerful, AWS-style terminal built directly into your Project Dashboard. It allows you to monitor backend events and inspect table caching status in real-time, all without ever exposing your actual database row data.
+</p>
+
+<!-- Overview -->
+<h2 class="text-xl font-semibold mb-3">Overview</h2>
+<p class="text-brand-secondary leading-relaxed mb-6">
+    Every SyncForge project comes with a dedicated CloudShell tab. Simply open your project in the dashboard and click the <strong>CMD</strong> tab. The terminal provides a secure window into the metadata that powers your synchronised clients.
+</p>
+
+<!-- Commands -->
+<h2 class="text-xl font-semibold mb-3">Available Commands</h2>
+
+<div class="space-y-6">
+    <!-- Logs Command -->
+    <div class="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
+            <span class="font-mono text-sm font-semibold text-gray-900 bg-gray-200 px-2 rounded">logs</span>
+        </div>
+        <div class="p-5">
+            <p class="text-sm text-gray-600 mb-4">
+                Streams the chronological audit log of your project's events. This command lets you track exactly when tables are created, when API keys are generated, and most importantly, when cache <code class="font-mono bg-gray-100 px-1 rounded">refresh</code> signals are triggered by your backend.
+            </p>
+            <div class="bg-[#0D1117] rounded-xl overflow-hidden">
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#79C0FF]">$</span> logs
+<span class="text-[#8B949E]">--- SyncForge Event Logs ---
+[2026-06-25 14:00:00] [Table Created] Registered table ID: users
+[2026-06-25 14:05:30] [Sync Refresh] Manually refreshed table 'users'. New version: 2</span></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Command -->
+    <div class="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
+            <span class="font-mono text-sm font-semibold text-gray-900 bg-gray-200 px-2 rounded">table &lt;table_name&gt;</span>
+        </div>
+        <div class="p-5">
+            <p class="text-sm text-gray-600 mb-4">
+                Fetches the real-time metadata profile for a specific table. 
+                <br><br>
+                <strong>Security Note:</strong> SyncForge utilizes a Zero-Knowledge architecture. Your actual database row data is securely fetched and stored exclusively on your client environments (inside their local encrypted caches). Therefore, this command returns the performance metrics and structural profile of the cache, not the data payload itself.
+            </p>
+            <div class="bg-[#0D1117] rounded-xl overflow-hidden">
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#79C0FF]">$</span> table users
+<span class="text-[#8B949E]">--- Fetching Data Profile for 'users' ---
+Note: Actual row data is securely cached in your local environment.
+
+Database Status: Active
+Current Version: v2
+Sync Mode:       Event-driven caching
+Storage Mode:    RAM & Disk Storage
+Encryption:      Enabled (AES-256)
+Cache Hits:      1042</span></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear Command -->
+    <div class="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
+            <span class="font-mono text-sm font-semibold text-gray-900 bg-gray-200 px-2 rounded">clear</span>
+        </div>
+        <div class="p-5">
+            <p class="text-sm text-gray-600">
+                Wipes the terminal screen clean, giving you a fresh workspace.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

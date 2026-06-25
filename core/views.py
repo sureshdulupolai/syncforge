@@ -2,8 +2,6 @@ from django.shortcuts import render, redirect
 
 
 def home(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
     return render(request, 'core/home.html')
 
 
@@ -59,3 +57,7 @@ def docs_security(request):
 
 def docs_deployment(request):
     return render(request, 'core/docs/deployment.html')
+
+
+def docs_cmd(request):
+    return render(request, 'core/docs/cmd.html')

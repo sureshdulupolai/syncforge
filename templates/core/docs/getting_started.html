@@ -127,7 +127,7 @@ sf = SyncForge(
 # The cache_key is auto-generated based on the query if omitted.
 def product_list(request):
     products = sf.cache_query(
-        table_name='core_product',
+        table_name='products',
         queryset=Product.objects.filter(active=True)
     )
     return render(request, 'products.html', {'products': products})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>

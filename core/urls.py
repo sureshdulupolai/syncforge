@@ -18,4 +18,5 @@ urlpatterns = [
     path('docs/python-sdk/',      views.docs_python_sdk,      name='docs_python_sdk'),
     path('docs/security/',        views.docs_security,        name='docs_security'),
     path('docs/deployment/',      views.docs_deployment,      name='docs_deployment'),
+    path('docs/cmd/',             views.docs_cmd,             name='docs_cmd'),
 ]

@@ -8,7 +8,7 @@ from django.conf import settings
 from django.utils import timezone
 import re, json
 
-from .models import DeveloperProfile, Project, APIKey, TableSyncConfig
+from .models import DeveloperProfile, Project, APIKey, TableSyncConfig, ProjectLog
 from .jwt_utils import (generate_access_token, generate_refresh_token,
                         decode_token, is_token_expiring_soon)
 from api.rate_limit import rate_limit
@@ -366,6 +366,7 @@ def create_api_key(request, slug):
     if project.api_keys.filter(is_active=True).count() >= 5:
         return _json({'error': 'Maximum 5 active API keys per project.'}, 400)
     key_obj, raw_key = APIKey.create_new(project=project, name=name)
+    ProjectLog.objects.create(project=project, event_type='new_api', details=f"Generated new API Key: {name}")
     return _json({
         'status': 'created',
         'key':    raw_key,        # Raw key returned once — never stored plaintext.
@@ -481,6 +482,7 @@ def refresh_table(request, slug, table_id):
     # Log sync event
     from api.views import _log_sync_event
     _log_sync_event(project, t, action="refresh", status="ok")
+    ProjectLog.objects.create(project=project, event_type='refresh', details=f"Manually refreshed table '{t.table_name}'. New version: {t.cache_version}")
     
     project_prefix = project.project_prefix or "default"
     return _json({

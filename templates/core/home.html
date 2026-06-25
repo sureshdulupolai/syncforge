@@ -2,7 +2,8 @@
 {% load static %}
 
 {% block title %}SyncForge — Smart Data Sync & Security Firewall for Python{% endblock %}
-{% block meta_description %}SyncForge is a developer-first data synchronization and Web Application Firewall (WAF) framework for Django, FastAPI, and Flask. Build once. Sync smart. Scale safely.{% endblock %}
+{% block meta_description %}SyncForge is a developer-first data synchronization and Web Application Firewall (WAF)
+framework for Django, FastAPI, and Flask. Build once. Sync smart. Scale safely.{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -10,7 +11,7 @@
     <div class="absolute -left-12 -top-12 pointer-events-none select-none opacity-[0.03] blur-[2px]">
         <img src="{% static 'logo_icon.png' %}" alt="" class="w-96 h-96">
     </div>
-    
+
     <div class="max-w-container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center relative z-10">
         <!-- Left: Heading -->
         <div>
@@ -24,14 +25,15 @@
                 Scale safely.
             </h1>
             <p class="text-lg text-brand-secondary mb-10 max-w-lg leading-relaxed">
-                A modern cache-aside synchronization framework for Python. Take control of your data layer, dramatically reduce database reads, and serve responses instantly from memory.
+                A modern cache-aside synchronization framework for Python. Take control of your data layer, dramatically
+                reduce database reads, and serve responses instantly from memory.
             </p>
             <div class="flex items-center gap-4">
                 <a href="{% url 'login' %}" class="btn-primary">Start Building</a>
                 <a href="{% url 'docs' %}" class="btn-secondary">Read Documentation</a>
             </div>
         </div>
-        
+
         <!-- Right: Code Snippet -->
         <div class="card bg-[#0D1117] text-[#C9D1D9] border-[#30363D] p-6 shadow-none">
             <div class="flex gap-2 mb-4">
@@ -40,21 +42,26 @@
                 <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
             </div>
             <pre class="text-sm font-mono leading-relaxed overflow-x-auto"><code class="language-python"><span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
-<span class="text-[#FF7B72]">from</span> syncforge.decorators <span class="text-[#FF7B72]">import</span> sync_function
+<span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
 
 <span class="text-[#8B949E]"># 1. Initialize Engine</span>
-sf = SyncForge(backend=<span class="text-[#A5D6FF]">'in_memory'</span>)
+sf = SyncForge(api_key=<span class="text-[#A5D6FF]">'sf_live_...'</span>, backend_type=<span class="text-[#A5D6FF]">'django_cache'</span>)
 
-<span class="text-[#8B949E]"># 2. Smart Cache-Aside Query</span>
-users = sf.cache_query(
-    table_name=<span class="text-[#A5D6FF]">"users"</span>,
-    queryset=db.query(User).all()
-)
+<span class="text-[#8B949E]"># 2. Auto-Invalidation via ORM Hook</span>
+<span class="text-[#D2A8FF]">@sync_model</span>(sf, registered_table=<span class="text-[#A5D6FF]">"users"</span>)
+<span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">User</span>(models.Model):
+    name = models.CharField(max_length=<span class="text-[#79C0FF]">50</span>)
 
-<span class="text-[#8B949E]"># 3. Auto-Invalidation on write</span>
-<span class="text-[#D2A8FF]">@sync_function</span>(sf, table_name=<span class="text-[#A5D6FF]">"users"</span>)
-<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">update_user</span>(user_id: <span class="text-[#79C0FF]">int</span>):
-    db.execute(<span class="text-[#A5D6FF]">"UPDATE users..."</span>)</code></pre>
+<span class="text-[#8B949E]"># 3. Zero-Latency Cache-Aside Flow</span>
+<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">get_users</span>():
+    users = sf.get_table(<span class="text-[#A5D6FF]">"users"</span>) <span class="text-[#8B949E]"># Instant Memory Hit</span>
+    
+    <span class="text-[#FF7B72]">if not</span> users:
+        users = sf.cache_query(
+            registered_table=<span class="text-[#A5D6FF]">"users"</span>,
+            queryset=User.objects.all()
+        )
+    <span class="text-[#FF7B72]">return</span> users</code></pre>
         </div>
     </div>
 </section>
@@ -64,52 +71,74 @@ users = sf.cache_query(
     <div class="max-w-container mx-auto px-6">
         <div class="text-center mb-16">
             <span class="text-xs font-bold tracking-widest uppercase text-brand-accent mb-3 block">Architecture</span>
-            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 text-brand-primary">The Hybrid Cache Engine</h2>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 text-brand-primary">The Hybrid Cache
+                Engine</h2>
             <p class="text-brand-secondary text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light">
-                SyncForge combines ultra-fast RAM caching with an encrypted local disk fallback to minimize database queries while keeping data consistent.
+                SyncForge combines ultra-fast RAM caching with an encrypted local disk fallback to minimize database
+                queries while keeping data consistent.
             </p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 max-w-5xl mx-auto">
-            
+
             <!-- Left: Read Flow -->
             <div class="bg-white border border-brand-border rounded-2xl p-8 space-y-6 shadow-sm">
                 <div class="flex items-center gap-3 pb-4 border-b border-brand-border">
                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
                     </div>
                     <h3 class="text-lg font-bold text-brand-primary">Read Flow (Data Retrieval)</h3>
                 </div>
-                
+
                 <div class="relative border-l-2 border-brand-border pl-6 ml-3 space-y-8">
                     <!-- Step 1 -->
                     <div class="relative">
-                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center">
+                        <div
+                            class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                         </div>
-                        <h4 class="text-sm font-bold text-brand-primary">1. Check Memory Cache (RAM)</h4>
-                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">SyncForge checks if the requested data exists in fast server memory.</p>
-                        <span class="inline-block text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 mt-2">RAM Hit: 0.1ms latency</span>
+                        <h4 class="text-sm font-bold text-brand-primary">1. Check Memory Cache (RAM) & Version</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">SyncForge
+                            checks if data exists in fast server memory. It also silently validates the <strong>Expected
+                                Version</strong> with the central server to guarantee data isn't stale.</p>
+                        <span
+                            class="inline-block text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 mt-2">RAM
+                            Hit: 0.1ms latency</span>
                     </div>
 
                     <!-- Step 2 -->
                     <div class="relative">
-                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-indigo-500 flex items-center justify-center">
+                        <div
+                            class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-indigo-500 flex items-center justify-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
                         </div>
-                        <h4 class="text-sm font-bold text-brand-primary">2. Check Encrypted Disk Cache</h4>
-                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">If memory is empty, SyncForge reads the encrypted cache file from local disk storage.</p>
-                        <span class="inline-block text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 mt-2">Disk Hit: 2.0ms latency</span>
+                        <h4 class="text-sm font-bold text-brand-primary">2. Check Secure OS-Hidden Disk Cache</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">If memory
+                            misses, it reads from an encrypted binary file dynamically hidden deep inside the Operating
+                            System layer to protect against unauthorized access.</p>
+                        <span
+                            class="inline-block text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 mt-2">Disk
+                            Hit: 2.0ms latency</span>
                     </div>
 
                     <!-- Step 3 -->
                     <div class="relative">
-                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-red-500 flex items-center justify-center">
+                        <div
+                            class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-red-500 flex items-center justify-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                         </div>
-                        <h4 class="text-sm font-bold text-brand-primary">3. Database Fetch & Save</h4>
-                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">If both caches miss, it queries PostgreSQL/MySQL and automatically updates the cache for future reads.</p>
-                        <span class="inline-block text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 mt-2">DB Hit: 50.0ms latency</span>
+                        <h4 class="text-sm font-bold text-brand-primary">3. Database Fetch & Auto-Update</h4>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">If all caches
+                            miss or version validation fails, it queries the database and automatically writes the new
+                            version to RAM and the hidden disk cache.</p>
+                        <span
+                            class="inline-block text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 mt-2">DB
+                            Hit: 50.0ms latency</span>
                     </div>
                 </div>
             </div>
@@ -118,56 +147,77 @@ users = sf.cache_query(
             <div class="bg-white border border-brand-border rounded-2xl p-8 space-y-6 shadow-sm">
                 <div class="flex items-center gap-3 pb-4 border-b border-brand-border">
                     <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
                     </div>
                     <h3 class="text-lg font-bold text-brand-primary">Write Flow (Invalidation)</h3>
                 </div>
-                
+
                 <div class="relative border-l-2 border-brand-border pl-6 ml-3 space-y-8">
                     <!-- Step 1 -->
                     <div class="relative">
-                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                        <div
+                            class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                         </div>
                         <h4 class="text-sm font-bold text-brand-primary">1. Write to Database</h4>
-                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">Your application updates or inserts a record into the primary database.</p>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">Your
+                            application updates or inserts a record into the primary database.</p>
                     </div>
 
                     <!-- Step 2 -->
                     <div class="relative">
-                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                        <div
+                            class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                         </div>
                         <h4 class="text-sm font-bold text-brand-primary">2. Invalidation Hook</h4>
-                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">An ORM hook or explicit SDK call triggers `sf.refresh('table_name')`.</p>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">An ORM hook or
+                            explicit SDK call triggers `sf.refresh('table_name')`.</p>
                     </div>
 
                     <!-- Step 3 -->
                     <div class="relative">
-                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                        <div
+                            class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                         </div>
                         <h4 class="text-sm font-bold text-brand-primary">3. Evict Local Cache</h4>
-                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">The local server's memory is instantly wiped for the stale data.</p>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">The local
+                            server's memory is instantly wiped for the stale data.</p>
                     </div>
 
                     <!-- Step 4 -->
                     <div class="relative">
-                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
+                        <div
+                            class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                         </div>
                         <h4 class="text-sm font-bold text-brand-primary">4. Broadcast to Cluster</h4>
-                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">A light refresh signal is sent asynchronously to all other active application nodes.</p>
+                        <p class="text-brand-secondary text-xs mt-1 leading-relaxed font-light font-sans">A light
+                            refresh signal is sent asynchronously to all other active application nodes.</p>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <div class="mt-16 pt-8 border-t border-brand-border flex flex-wrap gap-6 justify-center text-sm font-semibold text-brand-secondary">
-            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Zero-Latency Reads</span>
-            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Background Parallel I/O</span>
-            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Cryptographic Wiping</span>
+        <div
+            class="mt-16 pt-8 border-t border-brand-border flex flex-wrap gap-6 justify-center text-sm font-semibold text-brand-secondary">
+            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-green-500" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg> Zero-Latency Reads</span>
+            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-blue-500" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg> Background Parallel I/O</span>
+            <span class="flex items-center gap-2 text-brand-primary"><svg class="w-4 h-4 text-purple-500" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg> Cryptographic Wiping</span>
         </div>
     </div>
 </section>
@@ -176,58 +226,101 @@ users = sf.cache_query(
 <section class="py-32 bg-white border-b border-brand-border">
     <div class="max-w-container mx-auto px-6">
         <div class="text-center mb-20">
-            <span class="text-xs font-bold tracking-widest uppercase text-brand-muted mb-3 block">Platform Features</span>
-            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight text-brand-primary">Engineered for Production</h2>
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-muted mb-3 block">Platform
+                Features</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight text-brand-primary">Engineered for Production
+            </h2>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- Feature 1 -->
-            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 group transform hover:-translate-y-1">
-                <div class="w-14 h-14 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <div
+                class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div
+                    class="w-14 h-14 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                 </div>
                 <h3 class="text-xl font-bold text-brand-primary mb-3">Intelligent Heat Engine</h3>
-                <p class="text-brand-secondary leading-relaxed font-light">SyncForge actively tracks payload access frequencies. Hot objects stay in memory, while cold data gracefully flushes, completely preventing OOM crashes.</p>
+                <p class="text-brand-secondary leading-relaxed font-light">SyncForge actively tracks payload access
+                    frequencies. Hot objects stay in memory, while cold data gracefully flushes, completely preventing
+                    OOM crashes.</p>
             </div>
             <!-- Feature 2 -->
-            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group transform hover:-translate-y-1">
-                <div class="w-14 h-14 bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            <div
+                class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div
+                    class="w-14 h-14 bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
                 </div>
                 <h3 class="text-xl font-bold text-brand-primary mb-3">Object Deduplication</h3>
-                <p class="text-brand-secondary leading-relaxed font-light">Multiple cache payloads containing identical underlying data automatically map to shared memory references, radically reducing redundant RAM overhead.</p>
+                <p class="text-brand-secondary leading-relaxed font-light">Multiple cache payloads containing identical
+                    underlying data automatically map to shared memory references, radically reducing redundant RAM
+                    overhead.</p>
             </div>
             <!-- Feature 3 -->
-            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-green-200 transition-all duration-300 group transform hover:-translate-y-1">
-                <div class="w-14 h-14 bg-gradient-to-br from-green-50 to-green-100 text-green-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <div
+                class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-green-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div
+                    class="w-14 h-14 bg-gradient-to-br from-green-50 to-green-100 text-green-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                 </div>
                 <h3 class="text-xl font-bold text-brand-primary mb-3">Smart Serialization</h3>
-                <p class="text-brand-secondary leading-relaxed font-light">Bypasses slow static pickling logic. The SDK dynamically detects primitive dicts and falls back to structural `orjson` serialization for lightning-fast reads.</p>
+                <p class="text-brand-secondary leading-relaxed font-light">Bypasses slow static pickling logic. The SDK
+                    dynamically detects primitive dicts and falls back to structural `orjson` serialization for
+                    lightning-fast reads.</p>
             </div>
             <!-- Feature 4 -->
-            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-amber-200 transition-all duration-300 group transform hover:-translate-y-1">
-                <div class="w-14 h-14 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <div
+                class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-amber-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div
+                    class="w-14 h-14 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                 </div>
                 <h3 class="text-xl font-bold text-brand-primary mb-3">Request Coalescing</h3>
-                <p class="text-brand-secondary leading-relaxed font-light">Stops backend Notification Storms. Identical concurrent validation triggers automatically merge into a single network API call to preserve server integrity.</p>
+                <p class="text-brand-secondary leading-relaxed font-light">Stops backend Notification Storms. Identical
+                    concurrent validation triggers automatically merge into a single network API call to preserve server
+                    integrity.</p>
             </div>
             <!-- Feature 5 -->
-            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-pink-200 transition-all duration-300 group transform hover:-translate-y-1">
-                <div class="w-14 h-14 bg-gradient-to-br from-pink-50 to-pink-100 text-pink-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div
+                class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-pink-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div
+                    class="w-14 h-14 bg-gradient-to-br from-pink-50 to-pink-100 text-pink-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
                 <h3 class="text-xl font-bold text-brand-primary mb-3">Stale-While-Revalidate</h3>
-                <p class="text-brand-secondary leading-relaxed font-light">Eliminates cache stampedes. When data expires, the first thread locks the fetch while all subsequent threads instantaneously read the stale payload without blocking.</p>
+                <p class="text-brand-secondary leading-relaxed font-light">Eliminates cache stampedes. When data
+                    expires, the first thread locks the fetch while all subsequent threads instantaneously read the
+                    stale payload without blocking.</p>
             </div>
             <!-- Feature 6 -->
-            <div class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-red-200 transition-all duration-300 group transform hover:-translate-y-1">
-                <div class="w-14 h-14 bg-gradient-to-br from-red-50 to-red-100 text-red-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <div
+                class="border border-brand-border rounded-2xl p-8 bg-white hover:shadow-xl hover:border-red-200 transition-all duration-300 group transform hover:-translate-y-1">
+                <div
+                    class="w-14 h-14 bg-gradient-to-br from-red-50 to-red-100 text-red-600 rounded-xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
                 </div>
                 <h3 class="text-xl font-bold text-brand-primary mb-3">Piggybacked Telemetry</h3>
-                <p class="text-brand-secondary leading-relaxed font-light">No extra network logs needed. SyncForge injects runtime analytics seamlessly into existing background HTTP headers to track bandwidth without I/O penalties.</p>
+                <p class="text-brand-secondary leading-relaxed font-light">No extra network logs needed. SyncForge
+                    injects runtime analytics seamlessly into existing background HTTP headers to track bandwidth
+                    without I/O penalties.</p>
             </div>
         </div>
     </div>
@@ -237,17 +330,21 @@ users = sf.cache_query(
 <section class="py-24 bg-white border-b border-brand-border">
     <div class="max-w-container mx-auto px-6">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            
+
             <!-- Left: Simple Explanation & Use Cases -->
             <div class="space-y-8">
                 <div>
-                    <span class="text-xs font-bold tracking-widest uppercase text-brand-accent mb-3 block">Performance Comparison</span>
-                    <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 text-brand-primary">How SyncForge Speeds Up Your Application</h2>
+                    <span class="text-xs font-bold tracking-widest uppercase text-brand-accent mb-3 block">Performance
+                        Comparison</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 text-brand-primary">How SyncForge
+                        Speeds Up Your Application</h2>
                     <p class="text-brand-secondary text-base md:text-lg leading-relaxed font-light font-sans">
-                        Normally, every request hits your database, making responses slow and increasing database server load. SyncForge stores data in RAM and encrypted disk cache to bypass the database completely for almost all requests.
+                        Normally, every request hits your database, making responses slow and increasing database server
+                        load. SyncForge stores data in RAM and encrypted disk cache to bypass the database completely
+                        for almost all requests.
                     </p>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     <div class="border-l-2 border-green-500 pl-4">
                         <strong class="text-brand-primary text-base font-bold block mb-1">99.9% Cache Hit Rate</strong>
@@ -264,35 +361,44 @@ users = sf.cache_query(
                 </div>
 
                 <div class="space-y-4 pt-6 border-t border-brand-border">
-                    <h4 class="text-xs font-bold text-brand-muted uppercase tracking-wider">Common Real-World Use Cases</h4>
+                    <h4 class="text-xs font-bold text-brand-muted uppercase tracking-wider">Common Real-World Use Cases
+                    </h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <strong class="text-brand-primary text-sm font-semibold block mb-1">E-Commerce Catalogs</strong>
+                            <strong class="text-brand-primary text-sm font-semibold block mb-1">E-Commerce
+                                Catalogs</strong>
                             <p class="text-brand-secondary text-xs leading-relaxed font-light">
-                                Keep product catalogs, categories, and inventory statuses in memory to support thousands of active buyers without saturating your PostgreSQL pool.
+                                Keep product catalogs, categories, and inventory statuses in memory to support thousands
+                                of active buyers without saturating your PostgreSQL pool.
                             </p>
                         </div>
                         <div>
-                            <strong class="text-brand-primary text-sm font-semibold block mb-1">Global Configurations</strong>
+                            <strong class="text-brand-primary text-sm font-semibold block mb-1">Global
+                                Configurations</strong>
                             <p class="text-brand-secondary text-xs leading-relaxed font-light">
-                                Store feature flags, localization data, and application settings in RAM for instant access across edge nodes.
+                                Store feature flags, localization data, and application settings in RAM for instant
+                                access across edge nodes.
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Right: Simple Path Comparison -->
             <div class="border border-brand-border rounded-2xl bg-brand-secbg p-8 md:p-10 space-y-6">
                 <h3 class="text-lg font-bold text-brand-primary mb-4">Request Flow & Response Times</h3>
-                
+
                 <div class="space-y-4">
                     <!-- Path 1: RAM -->
-                    <div class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div
+                        class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-150 uppercase tracking-wider">Option A (99.9% of Requests)</span>
+                            <span
+                                class="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-150 uppercase tracking-wider">Option
+                                A (99.9% of Requests)</span>
                             <h4 class="text-base font-bold text-brand-primary mt-1.5">RAM Cache Hit</h4>
-                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads directly from ultra-fast server memory.</p>
+                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads directly from ultra-fast
+                                server memory.</p>
                         </div>
                         <div class="text-left md:text-right shrink-0">
                             <div class="text-2xl font-black text-green-600">0.1 ms</div>
@@ -301,11 +407,15 @@ users = sf.cache_query(
                     </div>
 
                     <!-- Path 2: Disk -->
-                    <div class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div
+                        class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-150 uppercase tracking-wider">Option B (Fallback)</span>
+                            <span
+                                class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-150 uppercase tracking-wider">Option
+                                B (Fallback)</span>
                             <h4 class="text-base font-bold text-brand-primary mt-1.5">Disk Cache Hit</h4>
-                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads from local encrypted disk storage.</p>
+                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads from local encrypted disk
+                                storage.</p>
                         </div>
                         <div class="text-left md:text-right shrink-0">
                             <div class="text-2xl font-black text-brand-primary">2.0 ms</div>
@@ -314,11 +424,15 @@ users = sf.cache_query(
                     </div>
 
                     <!-- Path 3: DB Query -->
-                    <div class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div
+                        class="bg-white border border-brand-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-150 uppercase tracking-wider">Option C (Cache Miss)</span>
+                            <span
+                                class="text-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-150 uppercase tracking-wider">Option
+                                C (Cache Miss)</span>
                             <h4 class="text-base font-bold text-brand-primary mt-1.5">Direct Database Query</h4>
-                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads from database (PostgreSQL/MySQL).</p>
+                            <p class="text-brand-secondary text-xs mt-1 font-light">Loads from database
+                                (PostgreSQL/MySQL).</p>
                         </div>
                         <div class="text-left md:text-right shrink-0">
                             <div class="text-2xl font-black text-red-600">50.0 ms</div>
@@ -327,7 +441,7 @@ users = sf.cache_query(
                     </div>
                 </div>
             </div>
-            
+
         </div>
     </div>
 </section>

@@ -159,17 +159,23 @@ def smartdb_refresh(request, table_name: str):
     normalised = table_name.strip().lower()
 
     if project:
-        # Check if table config exists, otherwise auto-create/register it
+        # Enforce that the table must already be registered in the project dashboard
         config = TableSyncConfig.objects.filter(project=project, table_name=normalised).first()
         if not config:
-            config = TableSyncConfig.objects.create(
-                project=project,
-                table_name=normalised,
-                sync_mode="manual"
-            )
-            created_new = True
-        else:
-            created_new = False
+            error_msg = f"Error: Attempted to fetch or refresh unregistered table '{normalised}'."
+            from dashboard.models import ProjectLog
+            if not ProjectLog.objects.filter(project=project, event_type='error', details=error_msg).exists():
+                ProjectLog.objects.create(
+                    project=project,
+                    event_type='error',
+                    details=error_msg
+                )
+            
+            return _json({
+                "error": f"Table '{normalised}' is not registered in this project. Please register it in the SyncForge dashboard first."
+            }, 404)
+            
+        created_new = False
 
         # Cooldown rate limit check: Server-Side Request Coalescing
         COOLDOWN_SECONDS = 60
@@ -263,8 +269,17 @@ def cache_hit_report(request, table_name: str):
     if updated:
         return _json({"status": "ok", "table": normalised})
 
-    # Table not yet registered — silently ignore (SDK may call before registration).
-    return _json({"status": "ok", "table": normalised, "note": "Table not registered."})
+    # Table not registered — log it so the developer knows there's a configuration issue.
+    error_msg = f"Error: Attempted to fetch or refresh unregistered table '{normalised}'."
+    from dashboard.models import ProjectLog
+    if not ProjectLog.objects.filter(project=project, event_type='error', details=error_msg).exists():
+        ProjectLog.objects.create(
+            project=project,
+            event_type='error',
+            details=error_msg
+        )
+
+    return _json({"error": f"Table '{normalised}' is not registered."}, 404)
 
 
 @csrf_exempt

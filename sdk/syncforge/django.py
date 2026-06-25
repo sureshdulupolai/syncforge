@@ -104,7 +104,7 @@ if HAS_DJANGO:
 
 def sync_model(
     sf_client, 
-    table_name: str,
+    table_name: str = None,
     sync_mode: str = "event",
     active: bool = True,
     storage_mode: str = "ram_disk",
@@ -166,8 +166,9 @@ def sync_model(
         class Product(models.Model):
             name = models.CharField(max_length=200)
     """
+    table_name = table_name or kwargs.get("registered_table") or kwargs.get("add_table_name")
     if not table_name:
-        raise ValueError("table_name is required in @sync_model. Generate one in the SyncForge dashboard.")
+        raise ValueError("registered_table is required in @sync_model. Generate one in the SyncForge dashboard.")
 
     def decorator(cls: Type) -> Type:
         if not HAS_DJANGO:

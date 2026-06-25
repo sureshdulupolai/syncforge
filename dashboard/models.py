@@ -139,7 +139,30 @@ class APIKey(models.Model):
         return self.project.user
 
     def __str__(self):
-        return f'{self.name} ({self.project.name if self.project else "no project"})'
+        return f'{self.name} ({self.key_prefix})'
+
+# ─── Project Logs (Dashboard CMD) ─────────────────────────────────────────────
+
+class ProjectLog(models.Model):
+    EVENT_TYPES = [
+        ('refresh', 'Sync Refresh'),
+        ('create_table', 'Table Created'),
+        ('delete_table', 'Table Deleted'),
+        ('new_api', 'API Key Generated'),
+        ('update_version', 'Version Updated'),
+        ('error', 'System Error'),
+    ]
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='logs')
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    details = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"[{self.get_event_type_display()}] {self.project.name} - {self.timestamp}"
 
 
 # ─── Table Sync Config ────────────────────────────────────────────────────────

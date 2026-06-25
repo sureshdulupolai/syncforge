@@ -51,7 +51,7 @@
             <span class="text-xs font-mono text-gray-400">Example</span>
         </div>
         <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">data = sf.cache_query(
-    table_name='core_report',
+    table_name='products',
     queryset=Product.objects.filter(active=True),
     timeout=3600
 )</pre>
@@ -66,7 +66,7 @@
         Instantly fetches pre-warmed data from local memory or disk without triggering a database query.
     </p>
     <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
-        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">data = sf.get_table('core_report', cache_key='optional_dynamic_key')</pre>
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">data = sf.get_table('products', cache_key='optional_dynamic_key')</pre>
     </div>
     <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> Returns the cached <code>list</code> of model instances, or <code>None</code> if not found.</p>
 </div>

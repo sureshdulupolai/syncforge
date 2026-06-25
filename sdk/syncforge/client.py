@@ -157,6 +157,22 @@ class SyncForge:
             If ``api_key`` is empty or malformed.
     """
 
+import platform
+from pathlib import Path
+import os
+
+def _get_default_cache_dir() -> str:
+    system = platform.system()
+    if system == "Windows":
+        base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
+        return os.path.join(base, "SyncForge", "Cache")
+    elif system == "Darwin":
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "SyncForge", "Cache")
+    else:
+        # Linux / Android / UNIX fallback
+        base = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+        return os.path.join(base, "SyncForge", "Cache")
+
     def __init__(
         self,
         api_key: str,
@@ -166,7 +182,7 @@ class SyncForge:
         async_mode: bool = False,
         sign_requests: bool = True,
         encryption_key: Optional[str] = None,
-        cache_dir: str = ".syncforge_cache",
+        cache_dir: Optional[str] = None,
         backend_type: str = "memory",
         redis_url: Optional[str] = None,
     ) -> None:
@@ -192,6 +208,8 @@ class SyncForge:
         self.store_manager = StoreManager(backend_type, redis_url)
         
         # Enterprise Cache Engine
+        if cache_dir is None:
+            cache_dir = _get_default_cache_dir()
         self.engine = CacheEngine(base_dir=cache_dir, encryption_key=encryption_key)
         
         # Core Adapter (Unified Logic)
@@ -291,10 +309,11 @@ class SyncForge:
 
     def cache_query(
         self,
-        table_name: str,
+        table_name: str = None,
         cache_key: Any = None,
         queryset: Any = None,
         timeout: Optional[int] = 3600,
+        **kwargs
     ) -> List[Any]:
         """
         Fetch a queryset with intelligent cache-aside storage.
@@ -355,6 +374,9 @@ class SyncForge:
                 timeout=None,
             )
         """
+        table_name = table_name or kwargs.get("registered_table") or kwargs.get("add_table_name")
+        if not table_name:
+            raise ValueError("You must provide 'registered_table' (the name of the table registered in your dashboard).")
         self._validate_table_name(table_name)
         self._check_waf(table_name)
         
