@@ -104,6 +104,7 @@ if HAS_DJANGO:
 
 def sync_model(
     sf_client, 
+    table_name: str,
     sync_mode: str = "event",
     active: bool = True,
     storage_mode: str = "ram_disk",
@@ -161,17 +162,18 @@ def sync_model(
         from syncforge import sf
         from syncforge.django import sync_model
 
-        @sync_model(sf, sync_mode='event')
+        @sync_model(sf, table_name='tbl_xxx', sync_mode='event')
         class Product(models.Model):
             name = models.CharField(max_length=200)
     """
+    if not table_name:
+        raise ValueError("table_name is required in @sync_model. Generate one in the SyncForge dashboard.")
+
     def decorator(cls: Type) -> Type:
         if not HAS_DJANGO:
             raise ImportError(
                 "Django is not installed. The @sync_model decorator requires Django."
             )
-
-        table_name: str = cls._meta.db_table
 
         with _registration_lock:
             if table_name in _registered_tables:

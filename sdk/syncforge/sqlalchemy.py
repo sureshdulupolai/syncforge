@@ -85,6 +85,7 @@ def _trigger_sync(sf_client, table_name: str):
 
 def sync_model(
     sf_client, 
+    table_name: str,
     sync_mode: str = "event",
     active: bool = True,
     storage_mode: str = "ram_disk",
@@ -103,11 +104,12 @@ def sync_model(
     Registers the model with SyncForge and attaches event listeners for 
     after_insert, after_update, and after_delete.
     """
+    if not table_name:
+        raise ValueError("table_name is required in @sync_model. Generate one in the SyncForge dashboard.")
+
     def decorator(cls: Type) -> Type:
         if not HAS_SQLALCHEMY:
             raise ImportError("SQLAlchemy is not installed.")
-
-        table_name = getattr(cls, "__tablename__", cls.__name__.lower())
 
         with _registration_lock:
             if table_name in _registered_tables:

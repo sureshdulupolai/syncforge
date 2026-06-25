@@ -33,7 +33,7 @@ sf <span class="text-gray-400">=</span> SyncForge(
 )
 Base <span class="text-gray-400">=</span> declarative_base()
 
-<span class="text-yellow-300">@sync_model</span>(sf)
+<span class="text-yellow-300">@sync_model</span>(sf, table_name=<span class="text-[#A5D6FF]">'tbl_12345'</span>)
 <span class="text-blue-400">class</span> <span class="text-teal-300">User</span>(Base):
     __tablename__ <span class="text-gray-400">=</span> <span class="text-green-300">"users"</span>
     id <span class="text-gray-400">=</span> Column(Integer, primary_key<span class="text-gray-400">=</span><span class="text-blue-300">True</span>, index<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)

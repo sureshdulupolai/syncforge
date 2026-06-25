@@ -419,25 +419,30 @@ class CacheEngine:
         safe_key = hashlib.md5(cache_key.encode()).hexdigest()
         return f"{safe_table}_{safe_key}"
 
-    def get(self, table_name: str, cache_key: str, storage: StorageMode) -> Optional[Any]:
+    def get(self, table_name: str, cache_key: str, storage: StorageMode, expected_version: int = 1) -> Optional[Any]:
         if storage == StorageMode.DISABLED:
             return None
 
         internal_key = self._get_internal_key(table_name, cache_key)
+        payload = None
 
         # 1. Check RAM
         if storage != StorageMode.DISK_ONLY:
             payload = self.ram.get(internal_key)
-            if payload is not None:
-                return payload.data
 
         # 2. Check Disk
-        if storage in (StorageMode.RAM_DISK, StorageMode.DISK_ONLY):
-            disk_payload = self._read_disk(internal_key)
-            if disk_payload is not None:
-                if storage == StorageMode.RAM_DISK:
-                    self.ram.set(internal_key, disk_payload)
-                return disk_payload.data
+        if payload is None and storage in (StorageMode.RAM_DISK, StorageMode.DISK_ONLY):
+            payload = self._read_disk(internal_key)
+            if payload is not None and storage == StorageMode.RAM_DISK:
+                self.ram.set(internal_key, payload)
+
+        if payload is not None:
+            # 3. Time / Version Verification (Stale Cache Eviction)
+            if payload.version < expected_version:
+                logger.debug(f"[SyncForge] Stale cache detected for {table_name}. Expected version >= {expected_version}, got {payload.version}. Evicting.")
+                self.delete(table_name, cache_key)
+                return None
+            return payload.data
 
         return None
 

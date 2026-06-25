@@ -66,25 +66,25 @@ app.add_middleware(SyncForgeWAFMiddleware, sf_client=sf)
     <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#D2A8FF]">@app.get</span>(<span class="text-[#A5D6FF]">"/products"</span>)
 <span class="text-[#FF7B72]">async def</span> <span class="text-[#D2A8FF]">list_products</span>(sf_client: SyncForge = Depends(get_syncforge(sf))):
     <span class="text-[#8B949E]"># 1. Fetch from RAM Cache instantly</span>
-    data = sf_client.get_table(<span class="text-[#A5D6FF]">"products"</span>)
+    data = sf_client.get_table(<span class="text-[#A5D6FF]">"tbl_12345"</span>)
     
     <span class="text-[#FF7B72]">if not</span> data:
         <span class="text-[#8B949E]"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
         data = sf_client.cache_query(
-            table_name=<span class="text-[#A5D6FF]">"products"</span>,
+            table_name=<span class="text-[#A5D6FF]">"tbl_12345"</span>,
             cache_key=<span class="text-[#A5D6FF]">"all_products"</span>,
-            queryset=<span class="text-[#FF7B72]">await</span> db.fetch_all(<span class="text-[#A5D6FF]">"SELECT * FROM products"</span>),
+            queryset=<span class="text-[#FF7B72]">await</span> db.fetch_all(<span class="text-[#A5D6FF]">"SELECT * FROM tbl_12345"</span>),
             timeout=<span class="text-[#79C0FF]">3600</span>
         )
-    <span class="text-[#FF7B72]">return</span> {<span class="text-[#A5D6FF]">"products"</span>: data}
+    <span class="text-[#FF7B72]">return</span> {<span class="text-[#A5D6FF]">"tbl_12345"</span>: data}
     
 <span class="text-[#D2A8FF]">@app.post</span>(<span class="text-[#A5D6FF]">"/products"</span>)
 <span class="text-[#FF7B72]">async def</span> <span class="text-[#D2A8FF]">create_product</span>(payload: ProductSchema, sf_client: SyncForge = Depends(get_syncforge(sf))):
     <span class="text-[#8B949E]"># ... DB Write ...</span>
-    <span class="text-[#FF7B72]">await</span> db.execute(<span class="text-[#A5D6FF]">"INSERT INTO products..."</span>)
+    <span class="text-[#FF7B72]">await</span> db.execute(<span class="text-[#A5D6FF]">"INSERT INTO tbl_12345..."</span>)
 
     <span class="text-[#8B949E]"># 3. Refresh cache across cluster instantly</span>
-    sf_client.refresh(<span class="text-[#A5D6FF]">"products"</span>)
+    sf_client.refresh(<span class="text-[#A5D6FF]">"tbl_12345"</span>)
     <span class="text-[#FF7B72]">return</span> {<span class="text-[#A5D6FF]">"status"</span>: <span class="text-[#A5D6FF]">"created"</span>}
 </pre>
 </div>

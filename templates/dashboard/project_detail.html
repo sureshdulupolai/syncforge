@@ -215,7 +215,7 @@
                                 <span class="text-[#FF7B72]">from</span> sf_client <span class="text-[#FF7B72]">import</span> sf<br>
                                 <span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model<br><br>
                                 <span class="text-[#8B949E]"># Auto-registers table & syncs on all DB changes</span><br>
-                                <span class="text-[#D2A8FF]">@sync_model</span>(sf)<br>
+                                <span class="text-[#D2A8FF]">@sync_model</span>(sf, table_name=<span class="text-[#A5D6FF]">'tbl_12345'</span>)<br>
                                 <span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Item</span>(models.Model):<br>
                                 &nbsp;&nbsp;&nbsp;&nbsp;name = models.CharField(max_length=<span class="text-[#79C0FF]">100</span>)<br>
                                 &nbsp;&nbsp;&nbsp;&nbsp;price = models.IntegerField()
@@ -314,11 +314,7 @@
         <h3 class="text-xl font-semibold mb-2 tracking-tight">Add Table</h3>
         <p class="text-gray-500 text-sm mb-6">Configure sync mode for a database table.</p>
         <div class="space-y-5">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Table Name *</label>
-                <input type="text" id="at-name" placeholder="e.g. products, users, orders"
-                       class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-shadow">
-            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Sync Mode</label>
                 <select id="at-mode" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-shadow bg-white appearance-none">
@@ -653,24 +649,21 @@ function checkDeleteProjectInput() {
     }
 }
 
-function openAddTable()  { document.getElementById('modal-add-table').classList.remove('hidden'); document.getElementById('at-name').focus(); }
+function openAddTable()  { document.getElementById('modal-add-table').classList.remove('hidden'); }
 function closeAddTable() { document.getElementById('modal-add-table').classList.add('hidden'); document.getElementById('at-error').classList.add('hidden'); }
 
 async function submitAddTable() {
-    const name = document.getElementById('at-name').value.trim();
     const mode = document.getElementById('at-mode').value;
     const err  = document.getElementById('at-error');
-    if (!name) { err.textContent='Table name required.'; err.classList.remove('hidden'); return; }
     const fd = new FormData();
-    fd.append('table_name', name); fd.append('sync_mode', mode);
+    fd.append('sync_mode', mode);
     const res  = await fetch(`/dashboard/api/projects/${SLUG}/tables/add/`, { method:'POST', body:fd, headers:{'X-CSRFToken':CSRF()}, credentials:'same-origin' });
     const json = await res.json();
     if (json.status === 'added') {
         invalidateCache();
         closeAddTable();
         refreshData();
-        showToast(`Table "${name}" added!`);
-        document.getElementById('at-name').value = '';
+        showToast(`Table added!`);
     } else {
         err.textContent = json.error; err.classList.remove('hidden');
     }

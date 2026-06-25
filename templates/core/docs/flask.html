@@ -70,23 +70,23 @@ sf_ext = SyncForgeFlask(app, sf)
     <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"GET"</span>])
 <span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">list_products</span>():
     <span class="text-[#8B949E]"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
-    products = sf.get_table(<span class="text-[#A5D6FF]">"products"</span>)
+    products = sf.get_table(<span class="text-[#A5D6FF]">"tbl_xxxx"</span>)
     
     <span class="text-[#FF7B72]">if not</span> products:
         <span class="text-[#8B949E]"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
         products = sf.cache_query(
-            table_name=<span class="text-[#A5D6FF]">"products"</span>,
+            table_name=<span class="text-[#A5D6FF]">"tbl_xxxx"</span>,
             queryset=db.session.query(Product).all(),
             timeout=<span class="text-[#79C0FF]">3600</span>
         )
         
-    <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"products"</span>: products})
+    <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"tbl_xxxx"</span>: products})
     
 <span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"POST"</span>])
 <span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">create_product</span>():
     <span class="text-[#8B949E]"># ... Write to Database ...</span>
     <span class="text-[#8B949E]"># 3. Refresh cache across cluster instantly</span>
-    sf.refresh(<span class="text-[#A5D6FF]">"products"</span>)
+    sf.refresh(<span class="text-[#A5D6FF]">"tbl_xxxx"</span>)
     <span class="text-[#FF7B72]">return</span> jsonify({<span class="text-[#A5D6FF]">"status"</span>: <span class="text-[#A5D6FF]">"created"</span>})
 </pre>
 </div>

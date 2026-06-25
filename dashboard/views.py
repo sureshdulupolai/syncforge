@@ -391,23 +391,20 @@ def revoke_api_key(request, slug, key_id):
 @require_POST
 def add_table(request, slug):
     project = get_object_or_404(Project, slug=slug, user=request.user)
-    table_name = request.POST.get('table_name', '').strip().lower()
     sync_mode  = request.POST.get('sync_mode', 'manual')
 
-    if not table_name:
-        return _json({'error': 'Table name is required.'}, 400)
-    if TableSyncConfig.objects.filter(project=project, table_name=table_name).exists():
-        return _json({'error': f'Table "{table_name}" already exists in this project.'}, 400)
-
-    t = TableSyncConfig.objects.create(
-        project=project, table_name=table_name, sync_mode=sync_mode)
-    project_prefix = project.project_prefix or "default"
-    return _json({
-        'status': 'added', 'id': t.id, 'table_name': t.table_name,
-        'scoped_table_name': f"sf_{project_prefix}_{t.table_name}",
-        'sync_mode': t.sync_mode, 'display': t.get_sync_mode_display(),
-        'storage_mode': t.storage_mode, 'active': t.active
-    })
+    try:
+        t = TableSyncConfig.objects.create(
+            project=project, sync_mode=sync_mode)
+        project_prefix = project.project_prefix or "default"
+        return _json({
+            'status': 'added', 'id': t.id, 'table_name': t.table_name,
+            'scoped_table_name': f"sf_{project_prefix}_{t.table_name}",
+            'sync_mode': t.sync_mode, 'display': t.get_sync_mode_display(),
+            'storage_mode': t.storage_mode, 'active': t.active
+        })
+    except Exception as e:
+        return _json({'error': str(e)}, 500)
 
 
 @login_required

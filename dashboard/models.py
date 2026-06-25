@@ -159,7 +159,7 @@ class TableSyncConfig(models.Model):
         Project, on_delete=models.CASCADE,
         related_name='table_configs', null=True, blank=True,
     )
-    table_name = models.CharField(max_length=255)
+    table_name = models.CharField(max_length=255, unique=True, blank=True)
     sync_mode  = models.CharField(max_length=20, choices=SYNC_MODES, default='manual')
 
     # ── Timestamps ────────────────────────────────────────────────────────────
@@ -215,12 +215,19 @@ class TableSyncConfig(models.Model):
     duplicates_prevented = models.BigIntegerField(default=0)
 
     class Meta:
-        unique_together = ('project', 'table_name')
         ordering        = ['table_name']
 
     @property
     def user(self):
         return self.project.user
+
+    def save(self, *args, **kwargs):
+        if not self.table_name:
+            import secrets
+            self.table_name = f'tbl_{secrets.token_hex(6)}'
+            while TableSyncConfig.objects.filter(table_name=self.table_name).exists():
+                self.table_name = f'tbl_{secrets.token_hex(6)}'
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.table_name} ({self.get_sync_mode_display()}) — {self.project.name}'

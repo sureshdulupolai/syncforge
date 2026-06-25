@@ -281,11 +281,13 @@ class SyncForge:
             
         # Try to get metadata
         storage_mode = StorageMode.RAM_DISK
+        version = 1
         if self._metadata_provider:
             meta = self._metadata_provider([table_name]).get(table_name, {})
             storage_mode = StorageMode(meta.get("storage_mode", "ram_disk"))
+            version = meta.get("cache_version", 1)
             
-        return self.engine.get(table_name, cache_key, storage_mode)
+        return self.engine.get(table_name, cache_key, storage_mode, expected_version=version)
 
     def cache_query(
         self,
@@ -388,7 +390,7 @@ class SyncForge:
                 comp_type = CompressionType(meta.get("compression", "none"))
 
         # ── Fast path: cache hit ───────────────────────────────────────────────
-        data = self.engine.get(table_name, cache_key, storage_mode)
+        data = self.engine.get(table_name, cache_key, storage_mode, expected_version=version)
         if data is not None:
             logger.debug("[SyncForge] cache_query cache HIT for key=%r", cache_key)
             emit_event(SyncForgeEvent.CACHE_HIT, table=table_name, key=cache_key)
@@ -402,7 +404,7 @@ class SyncForge:
         _wait_lock_async_safe(lock)
         emit_event(SyncForgeEvent.STAMPEDE_LOCK_ACQUIRED, table=table_name, key=cache_key)
         try:
-            data = self.engine.get(table_name, cache_key, storage_mode)
+            data = self.engine.get(table_name, cache_key, storage_mode, expected_version=version)
             if data is not None:
                 logger.debug("[SyncForge] cache_query cache HIT (post-lock) for key=%r", cache_key)
                 emit_event(SyncForgeEvent.CACHE_HIT, table=table_name, key=cache_key)

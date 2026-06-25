@@ -89,7 +89,7 @@ sf = SyncForge(
 <!-- 3 sync_model -->
 <h2 id="sync-model" class="text-xl font-semibold mb-3 scroll-mt-20">3. @sync_model decorator</h2>
 <p class="text-sm text-brand-secondary mb-3">
-    Apply <code class="font-mono bg-gray-100 px-1 rounded">@sync_model(sf)</code> to any Django model.
+    Apply <code class="font-mono bg-gray-100 px-1 rounded">@sync_model(sf, table_name='tbl_xxx')</code> to any Django model.
     On every <code class="font-mono bg-gray-100 px-1 rounded">.save()</code> or <code class="font-mono bg-gray-100 px-1 rounded">.delete()</code> — including admin and shell — SyncForge:
 </p>
 <ul class="text-sm text-brand-secondary mb-4 space-y-1 ml-4 list-none">
@@ -104,7 +104,7 @@ from myproject.sf import sf
 from syncforge.django import sync_model
 
 # Listen to Django's native post_save/post_delete signals
-@sync_model(sf, sync_mode='event')
+@sync_model(sf, table_name='tbl_12345', sync_mode='event')
 class Product(models.Model):
     name   = models.CharField(max_length=200)
     price  = models.DecimalField(max_digits=10, decimal_places=2)
@@ -118,7 +118,7 @@ class Product(models.Model):
 <span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
 
 <span class="text-[#8B949E]"># Listen to Django's native post_save/post_delete signals</span>
-<span class="text-[#D2A8FF]">@sync_model</span>(sf, sync_mode=<span class="text-[#A5D6FF]">'event'</span>)
+<span class="text-[#D2A8FF]">@sync_model</span>(sf, table_name=<span class="text-[#A5D6FF]">'tbl_12345'</span>, sync_mode=<span class="text-[#A5D6FF]">'event'</span>)
 <span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Product</span>(models.Model):
     name   = models.CharField(max_length=<span class="text-[#79C0FF]">200</span>)
     price  = models.DecimalField(max_digits=<span class="text-[#79C0FF]">10</span>, decimal_places=<span class="text-[#79C0FF]">2</span>)
