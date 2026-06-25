@@ -1,1 +1,0 @@
-table name ek baad dena h databse new table name baneyaga sab dekhne ke baad unique aur voh name milega developer jise ki voh fetch kar paye data. create ke time jo view mai table name de rhe vo nhi rhanc hiaye model bane ke time table name de do sab se best

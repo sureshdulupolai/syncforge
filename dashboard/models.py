@@ -83,8 +83,8 @@ class APIKey(models.Model):
 
     # ── Hashed storage (new, secure) ──────────────────────────────────────────
     key_prefix = models.CharField(
-        max_length=20, blank=True,
-        help_text='First 18 chars of the raw key — displayed in dashboard only.',
+        max_length=100, blank=True,
+        help_text='The full raw key — displayed in dashboard.',
     )
     key_hash   = models.CharField(
         max_length=64, unique=True, null=True, blank=True,
@@ -118,7 +118,7 @@ class APIKey(models.Model):
         """
         raw    = _generate_raw_api_key()
         hashed = hash_api_key(raw)
-        prefix = raw[:18]
+        prefix = raw
         
         # Set project prefix based on the first created key
         proj_prefix = hashlib.md5(raw.encode('utf-8')).hexdigest()[:8]

@@ -491,25 +491,33 @@ function renderKeys(keys) {
     if (!keys.length) { document.getElementById('keys-empty').classList.remove('hidden'); return; }
     const list = document.getElementById('keys-list');
     list.classList.remove('hidden');
-    list.innerHTML = keys.map(k => `
-        <div class="group flex flex-col sm:flex-row sm:items-center justify-between py-5 border-b border-gray-100 last:border-0 gap-4" id="krow-${k.id}">
-            <div class="flex-1 w-full">
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="font-medium text-sm text-gray-900">${escHtml(k.name)}</span>
+    list.innerHTML = keys.map(k => {
+        const rawPrefix = k.key_prefix.replace('...', '');
+        const hiddenDots = '••••••••••••••••••••••••••••••••••••••••••••••••';
+        return `
+        <div class="py-5 border-b border-gray-100 last:border-0" id="krow-${k.id}">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                <div class="flex items-center gap-3">
+                    <span class="font-semibold text-sm text-gray-900">${escHtml(k.name)}</span>
                     <span class="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase bg-green-50 text-green-700 border border-green-200">Active</span>
                 </div>
-                <div class="flex items-center w-full gap-2 mt-3">
-                    <code id="key-display-${k.id}" onclick="toggleKeyVisibility(${k.id}, '${escHtml(k.key_prefix)}')" class="text-sm font-mono text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 tracking-wide flex-1 overflow-hidden text-ellipsis cursor-pointer select-none transition-colors" title="Click to reveal">••••••••••••••••••••••••••••••••••••••••</code>
-                    <button onclick="copyPrefix('${escHtml(k.key_prefix)}••••••••••••••••')" class="bg-white border border-gray-200 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm flex-shrink-0" title="Copy Prefix">Copy</button>
-                </div>
-                <div class="flex items-center gap-4 mt-3 text-[12px] text-gray-400 font-medium">
-                    <span>Created ${k.created_at.split('T')[0]}</span>
-                    ${k.last_used ? `<span>Last used ${k.last_used.split('T')[0]}</span>` : '<span>Never used</span>'}
+                <div class="flex items-center gap-3 text-[12px] font-medium">
+                    <span class="text-gray-400">Created ${k.created_at.split('T')[0]}</span>
+                    ${k.last_used 
+                        ? `<span class="text-green-600">Last used ${k.last_used.split('T')[0]}</span>` 
+                        : `<span class="text-red-500">Never used</span>`}
                 </div>
             </div>
-            <button onclick="confirmRegenerateKey(${k.id}, '${escHtml(k.name)}')" class="text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors bg-white px-4 py-2 rounded-lg border border-amber-200 hover:bg-amber-50 shadow-sm flex-shrink-0 sm:self-start">Roll Key</button>
+            <div class="flex flex-col sm:flex-row items-center w-full gap-2">
+                <code id="key-display-${k.id}" onclick="toggleKeyVisibility(${k.id}, '${escHtml(rawPrefix)}')" class="text-sm font-mono text-gray-500 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 tracking-widest flex-1 w-full overflow-hidden text-ellipsis cursor-pointer select-none transition-colors" title="Click to reveal">${hiddenDots}</code>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="copyPrefix('${escHtml(rawPrefix)}')" class="flex-1 sm:flex-none bg-white border border-gray-200 text-gray-700 hover:text-gray-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm" title="Copy Prefix">Copy</button>
+                    <button onclick="confirmRegenerateKey(${k.id}, '${escHtml(k.name)}')" class="flex-1 sm:flex-none text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors bg-white px-4 py-2 rounded-lg border border-amber-200 hover:bg-amber-50 shadow-sm whitespace-nowrap">Roll Key</button>
+                </div>
+            </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -566,10 +574,10 @@ function copyPrefix(text) {
 function toggleKeyVisibility(id, prefix) {
     const el = document.getElementById(`key-display-${id}`);
     if (el.textContent.trim().startsWith('••••')) {
-        el.textContent = `${prefix}••••••••••••••••`;
+        el.textContent = prefix;
         el.classList.replace('text-gray-500', 'text-gray-900');
     } else {
-        el.textContent = '••••••••••••••••••••••••••••••••••••••••';
+        el.textContent = '••••••••••••••••••••••••••••••••••••••••••••••••';
         el.classList.replace('text-gray-900', 'text-gray-500');
     }
 }
