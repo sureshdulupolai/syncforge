@@ -185,17 +185,19 @@ def _get_default_cache_dir() -> str:
         cache_dir: Optional[str] = None,
         backend_type: str = "memory",
         redis_url: Optional[str] = None,
+        dev_mode: bool = False,
     ) -> None:
         if not api_key or not isinstance(api_key, str):
             raise ConfigurationError("api_key is required and must be a non-empty string.")
         api_key = api_key.strip()
-        if not api_key.startswith("sf_"):
+        if not dev_mode and not api_key.startswith("sf_"):
             raise ConfigurationError(
                 f"api_key appears invalid (expected 'sf_live_...' prefix, got '{api_key[:8]}...'). "
                 "Obtain a valid key from your SyncForge dashboard."
             )
 
         self._api_key      = api_key
+        self._dev_mode     = dev_mode
         self._base_url     = base_url.rstrip("/")
         self._timeout      = timeout
         self._silent       = silent
@@ -477,6 +479,73 @@ def _get_default_cache_dir() -> str:
             raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
         self._register_cache_key(table_name, cache_key, timeout)
 
+    def speed(self, queryset: Any = None, registered_table: str = None, disk: bool = False) -> None:
+        """
+        Run a one-off performance benchmark comparing Database fetch time vs SyncForge Cache fetch time.
+        Does not automatically run on every query to save resources.
+        
+        Args:
+            queryset: Your database query (e.g. User.objects.all(), db.query(User).all())
+            registered_table: Optional. If not provided, it uses a highly secure dummy file 
+                              so it never conflicts with your real project tables.
+            disk: If True, benchmarks the Disk Cache instead of the RAM Cache.
+        """
+        import time
+        from .engine import StorageMode, CompressionType
+        
+        if queryset is None and not registered_table:
+            raise ValueError("You must provide either a queryset or a registered_table to benchmark.")
+            
+        table = registered_table or "__sf_internal_speed_test__"
+        cache_key = "benchmark_default"
+        
+        print(f"\n🚀 --- SyncForge Speed Benchmark ---")
+        print(f"Table Name:    {table}")
+        
+        # 1. Database Speed
+        db_ms = None
+        data = None
+        if queryset is not None:
+            start_db = time.perf_counter()
+            data = list(queryset) if hasattr(queryset, "__iter__") else queryset
+            db_ms = (time.perf_counter() - start_db) * 1000
+            print(f"Original DB:   {db_ms:.2f} ms")
+        else:
+            data = self.engine.get(table, cache_key, StorageMode.RAM_DISK, expected_version=1)
+            if data is None:
+                data = [{"dummy": "data"} for _ in range(100)]
+            print(f"Original DB:   N/A (Skipped)")
+        
+        # 2. Cache Speed
+        storage_val = StorageMode.DISK if disk else StorageMode.RAM_DISK
+        
+        # Write to cache to simulate fresh save
+        self.engine.set(
+            table_name=table,
+            cache_key=cache_key,
+            data=data,
+            storage=storage_val,
+            version=1,
+            compression=CompressionType.NONE,
+            timeout=600  # 10 minute max timeout fallback
+        )
+            
+        # Read it back to simulate get()
+        start_cache_read = time.perf_counter()
+        cached_data = self.engine.get(table, cache_key, storage_val, expected_version=1)
+        cache_ms = (time.perf_counter() - start_cache_read) * 1000
+        cache_type_name = "Disk Cache" if disk else "RAM Cache"
+        print(f"SF {cache_type_name}: {cache_ms:.2f} ms")
+        
+        # 3. Cleanup & Report
+        self.engine.delete(table, cache_key)
+        
+        if db_ms is not None:
+            factor = db_ms / cache_ms if cache_ms > 0 else 0
+            print(f"Performance:   {factor:.1f}x Faster\n")
+        else:
+            print(f"Performance:   Cache operation benchmarked successfully\n")
+
     def preload_cache(self) -> None:
         """
         Manually trigger the background disk-to-RAM cache preloading process.
@@ -712,6 +781,9 @@ def _get_default_cache_dir() -> str:
 
         Runs in a background daemon thread so it never delays the response.
         """
+        if getattr(self, "_dev_mode", False):
+            return
+
         def _report() -> None:
             try:
                 # Piggybacked telemetry: we append telemetry to headers to save payload bandwidth
@@ -751,6 +823,15 @@ def _get_default_cache_dir() -> str:
     def _sync_one(self, table: str) -> SyncResult:
         """Send a refresh signal for a single table to the SyncForge server."""
         table = table.strip().lower()
+        
+        if getattr(self, "_dev_mode", False):
+            logger.debug("[SyncForge] Dev Mode active. Bypassing network sync for table '%s'.", table)
+            return SyncResult(
+                ok=True,
+                table=table,
+                message="[Dev Mode] Simulated Sync Triggered",
+                status_code=200
+            )
         
         # Intelligent Request Coalescing
         with _refresh_coalesce_guard:

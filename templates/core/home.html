@@ -45,7 +45,7 @@ framework for Django, FastAPI, and Flask. Build once. Sync smart. Scale safely.{
 <span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
 
 <span class="text-[#8B949E]"># 1. Initialize Engine</span>
-sf = SyncForge(api_key=<span class="text-[#A5D6FF]">'sf_live_...'</span>, backend_type=<span class="text-[#A5D6FF]">'django_cache'</span>)
+sf = SyncForge(api_key, dev_mode=<span class="text-[#79C0FF]">False</span>, backend_type=<span class="text-[#A5D6FF]">'django_cache'</span>)
 
 <span class="text-[#8B949E]"># 2. Auto-Invalidation via ORM Hook</span>
 <span class="text-[#D2A8FF]">@sync_model</span>(sf, registered_table=<span class="text-[#A5D6FF]">"users"</span>)

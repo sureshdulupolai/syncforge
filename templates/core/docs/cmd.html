@@ -1,20 +1,20 @@
 {% extends 'core/docs/base_docs.html' %}
 
-{% block title %}CloudShell CMD Guide — SyncForge{% endblock %}
-{% block meta_description %}Learn how to use the SyncForge CloudShell terminal inside your dashboard to view logs and verify metadata.{% endblock %}
+{% block title %}SyncForge CMD Guide — SyncForge{% endblock %}
+{% block meta_description %}Learn how to use the SyncForge CMD terminal inside your dashboard to view logs and verify metadata.{% endblock %}
 
 {% block docs_content %}
 
 <div class="mb-2"><span class="text-xs font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded">Dashboard Feature</span></div>
-<h1 class="text-3xl font-bold tracking-tight mb-3">CloudShell CMD</h1>
+<h1 class="text-3xl font-bold tracking-tight mb-3">SyncForge CMD</h1>
 <p class="text-brand-secondary text-lg leading-relaxed mb-8">
-    The SyncForge CloudShell is a powerful, AWS-style terminal built directly into your Project Dashboard. It allows you to monitor backend events and inspect table caching status in real-time, all without ever exposing your actual database row data.
+    The SyncForge CMD is a powerful, AWS-style terminal built directly into your Project Dashboard. It allows you to monitor backend events and inspect table caching status in real-time, all without ever exposing your actual database row data.
 </p>
 
 <!-- Overview -->
 <h2 class="text-xl font-semibold mb-3">Overview</h2>
 <p class="text-brand-secondary leading-relaxed mb-6">
-    Every SyncForge project comes with a dedicated CloudShell tab. Simply open your project in the dashboard and click the <strong>CMD</strong> tab. The terminal provides a secure window into the metadata that powers your synchronised clients.
+    Every SyncForge project comes with a dedicated CMD tab. Simply open your project in the dashboard and click the <strong>CMD</strong> tab. The terminal provides a secure window into the metadata that powers your synchronised clients.
 </p>
 
 <!-- Commands -->
@@ -74,6 +74,38 @@ Cache Hits:      1042</span></pre>
             <p class="text-sm text-gray-600">
                 Wipes the terminal screen clean, giving you a fresh workspace.
             </p>
+        </div>
+    </div>
+</div>
+
+<!-- Local SDK Commands -->
+<h2 class="text-xl font-semibold mb-3 mt-12">Local Terminal Commands (SDK)</h2>
+<p class="text-brand-secondary leading-relaxed mb-6">
+    While the SyncForge CMD monitors your live metadata remotely, some commands (like speed benchmarking) require access to your physical database and are run directly in your local code/terminal.
+</p>
+
+<div class="space-y-6">
+    <div class="border border-brand-border rounded-xl bg-white shadow-sm overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
+            <span class="font-mono text-sm font-semibold text-brand-accent bg-blue-50 px-2 rounded">sf.speed(queryset, registered_table, disk)</span>
+        </div>
+        <div class="p-5">
+            <p class="text-sm text-gray-600 mb-4">
+                Runs a real-time, zero-knowledge speed benchmark comparing your Database fetch time vs the SyncForge Cache fetch time. Prints the results directly to your local server terminal.
+            </p>
+            <div class="bg-[#0D1117] rounded-xl overflow-hidden mb-4">
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"># Local Python Code
+sf.speed(User.objects.all())</pre>
+            </div>
+            <div class="bg-[#0D1117] rounded-xl overflow-hidden">
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#79C0FF]">$</span> python manage.py runserver
+<span class="text-[#8B949E]">
+🚀 --- SyncForge Speed Benchmark ---
+Table Name:    __sf_internal_speed_test__
+Original DB:   245.50 ms
+SF RAM Cache:  2.10 ms
+Performance:   116.9x Faster</span></pre>
+            </div>
         </div>
     </div>
 </div>

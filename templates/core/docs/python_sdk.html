@@ -197,6 +197,37 @@ sf_ext = SyncForgeFlask(app, sf) # Triggers preloading on first request</pre>
         <p class="text-sm text-brand-secondary mb-3">Returns a list of all tables registered in your project.</p>
         <p class="text-xs text-brand-muted"><strong class="text-green-600">Returns:</strong> <code>list[dict]</code></p>
     </div>
+    <div class="border border-brand-border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-subtle md:col-span-2">
+        <h3 class="font-bold text-brand-accent mb-2 font-mono">sf.speed(queryset=None, registered_table=None, disk=False)</h3>
+        <p class="text-sm text-brand-secondary mb-3">Runs a real-time, zero-knowledge speed benchmark comparing your Database fetch time vs the SyncForge Cache fetch time. Prints the comparison beautifully to your local terminal. <strong>The dummy cache file is automatically and instantly deleted after the benchmark runs.</strong></p>
+        
+        <div class="mt-4 space-y-4">
+            <div>
+                <h4 class="text-xs font-bold text-brand-primary uppercase tracking-wider mb-2">1. Full DB vs RAM Benchmark (Live Query)</h4>
+                <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                    <pre class="p-3 text-sm font-mono text-gray-100 overflow-x-auto"># Runs the query, saves to dummy file, calculates both speeds
+sf.speed(User.objects.all())</pre>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-brand-primary uppercase tracking-wider mb-2">2. Cache-Only Benchmark (Local Read Speed)</h4>
+                <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                    <pre class="p-3 text-sm font-mono text-gray-100 overflow-x-auto"># Skips the DB completely and only tests how fast your local cache is
+sf.speed(registered_table="users")</pre>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-brand-primary uppercase tracking-wider mb-2">3. Disk I/O Benchmark (Physical File Speed)</h4>
+                <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                    <pre class="p-3 text-sm font-mono text-gray-100 overflow-x-auto"># Bypasses RAM to test physical disk encryption & decryption speed
+sf.speed(User.objects.all(), disk=True)</pre>
+                </div>
+            </div>
+        </div>
+        <p class="text-xs text-brand-muted mt-4"><strong class="text-green-600">Returns:</strong> <code>None</code> (Outputs directly to standard out/terminal)</p>
+    </div>
     <div class="border border-brand-border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-subtle">
         <h3 class="font-bold text-brand-accent mb-2 font-mono">sf.delete_table(name)</h3>
         <p class="text-sm text-brand-secondary mb-3">Permanently removes a table from your SyncForge dashboard.</p>
