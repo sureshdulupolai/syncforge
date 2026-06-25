@@ -5,177 +5,161 @@
 {% block meta_description %}Monitor synchronized database tables, manage API credentials, track caching analytics, and view WAF middleware logs.{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-white">
+<div class="min-h-screen bg-white antialiased text-gray-900 font-sans selection:bg-blue-100 selection:text-blue-900">
 
 <!-- Top breadcrumb bar -->
-<div class="bg-white border-b border-brand-border sticky top-16 z-40">
-    <div class="max-w-container mx-auto px-6 h-14 flex items-center justify-between">
-        <div class="flex items-center gap-2 text-sm">
-            <a href="/dashboard/" class="text-brand-muted hover:text-brand-primary transition-subtle flex items-center gap-1">
+<div class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-16 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sm text-gray-500 font-medium">
+            <a href="/dashboard/" class="hover:text-gray-900 transition-colors flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                 Projects
             </a>
-            <svg class="w-4 h-4 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <span class="font-semibold text-brand-primary">{{ project.name }}</span>
+            <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="text-gray-900">{{ project.name }}</span>
         </div>
-        <div class="flex items-center gap-3">
-            <button onclick="refreshData()"
-                    class="text-xs text-brand-muted hover:text-brand-primary flex items-center gap-1 transition-subtle" id="refresh-btn">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <div class="flex items-center gap-4">
+            <button onclick="refreshData()" class="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition-colors" id="refresh-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Refresh
             </button>
-            <form method="post" action="/dashboard/projects/{{ project.slug }}/delete/"
-                  onsubmit="return confirm('Delete project {{ project.name }}? This cannot be undone.')">
-                {% csrf_token %}
-                <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium transition-subtle">Delete Project</button>
-            </form>
         </div>
     </div>
 </div>
 
 <!-- Project header -->
-<div class="bg-white border-b border-brand-border">
-    <div class="max-w-container mx-auto px-6 pt-6">
-        <div class="flex items-start gap-4">
-            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                 style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                </svg>
-            </div>
-            <div class="flex-1">
-                <h1 class="text-2xl font-bold text-brand-primary">{{ project.name }}</h1>
-                <p class="text-brand-secondary text-sm mt-1">{{ project.description|default:'No description provided.' }}</p>
-                <div class="flex items-center gap-4 mt-3">
-                    <span class="text-xs text-brand-muted">Slug: <code class="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{{ project.slug }}</code></span>
-                    <span class="text-xs text-brand-muted">Created {{ project.created_at|date:"M d, Y" }}</span>
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div>
+                <h1 class="text-3xl font-semibold tracking-tight text-gray-900">{{ project.name }}</h1>
+                <p class="text-gray-500 text-sm mt-2 max-w-xl leading-relaxed">{{ project.description|default:'No description provided.' }}</p>
+                <div class="flex items-center gap-4 mt-5">
+                    <span class="text-[13px] text-gray-500 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                        <code class="font-mono text-gray-900 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">{{ project.slug }}</code>
+                    </span>
+                    <span class="text-[13px] text-gray-500 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Created {{ project.created_at|date:"M d, Y" }}
+                    </span>
                 </div>
             </div>
-            <!-- Stats -->
-            <div class="hidden md:flex items-center gap-6">
-                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
-                    <div class="text-2xl font-bold text-green-600" id="p-stat-calls">0</div>
-                    <div class="text-xs text-brand-muted">Queries Saved</div>
+            
+            <!-- Minimal Stats -->
+            <div class="hidden md:flex items-center gap-8 self-start border border-gray-200 rounded-xl px-7 py-5 shadow-sm">
+                <div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Queries Saved</div>
+                    <div class="text-2xl font-bold text-gray-900 tracking-tight" id="p-stat-calls">0</div>
                 </div>
-                <div class="text-center card p-3 shadow-none border-l-4 border-l-blue-500 min-w-[100px]">
-                    <div class="text-2xl font-bold text-blue-600 font-mono" id="p-stat-hitratio">0%</div>
-                    <div class="text-xs text-brand-muted">Cache Efficiency</div>
+                <div class="w-px h-10 bg-gray-200"></div>
+                <div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Cache Hit Ratio</div>
+                    <div class="text-2xl font-bold text-blue-600 tracking-tight" id="p-stat-hitratio">0%</div>
                 </div>
-                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
-                    <div class="text-2xl font-bold text-purple-600 font-mono" id="p-stat-bandwidth">0 MB</div>
-                    <div class="text-xs text-brand-muted">Bandwidth Saved</div>
-                </div>
-                <div class="text-center card p-3 shadow-none border border-brand-border min-w-[100px]">
-                    <div class="text-2xl font-bold text-brand-primary" id="p-stat-dupes">0</div>
-                    <div class="text-xs text-brand-muted">Duplicates Prevented</div>
+                <div class="w-px h-10 bg-gray-200"></div>
+                <div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Bandwidth</div>
+                    <div class="text-2xl font-bold text-gray-900 tracking-tight" id="p-stat-bandwidth">0 MB</div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabs -->
-        <div class="flex gap-0 mt-6 -mb-px">
-            <button onclick="switchTab('tables')" id="tab-tables"
-                    class="tab-btn px-5 py-2.5 text-sm font-semibold border-b-2 transition-all">
-                Tables
-            </button>
-            <button onclick="switchTab('apikeys')" id="tab-apikeys"
-                    class="tab-btn px-5 py-2.5 text-sm font-semibold border-b-2 transition-all">
-                API Keys
-            </button>
-            <button onclick="switchTab('integration')" id="tab-integration"
-                    class="tab-btn px-5 py-2.5 text-sm font-semibold border-b-2 transition-all">
-                Integration
-            </button>
+        <!-- Sleek Tabs -->
+        <div class="flex gap-8 mt-10 -mb-px overflow-x-auto">
+            <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">Tables</button>
+            <button onclick="switchTab('apikeys')" id="tab-apikeys" class="tab-btn pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">API Keys</button>
+            <button onclick="switchTab('integration')" id="tab-integration" class="tab-btn pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">Integration</button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ml-auto">Settings</button>
         </div>
     </div>
 </div>
 
 <!-- Tab content -->
-<div class="max-w-container mx-auto px-6 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
     <!-- ── TABLES TAB ──────────────────────────────────────────────────────── -->
     <div id="pane-tables" class="tab-pane">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-8">
             <div>
-                <h2 class="text-lg font-bold">Database Tables</h2>
-                <p class="text-xs text-brand-muted mt-0.5">Configure sync behaviour per table</p>
+                <h2 class="text-lg font-semibold tracking-tight">Database Tables</h2>
+                <p class="text-sm text-gray-500 mt-1">Configure synchronization and caching behaviour per table.</p>
             </div>
-            <button onclick="openAddTable()"
-                    class="flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:opacity-90"
-                    style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">
+            <button onclick="openAddTable()" class="flex items-center gap-2 text-sm font-medium bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add Table
             </button>
         </div>
 
-        <div id="tables-loading" class="text-center py-12 text-brand-muted text-sm">Loading…</div>
-        <div id="tables-empty" class="hidden text-center py-12">
-            <p class="text-brand-muted text-sm mb-4">No tables configured yet. Add your first database table.</p>
-            <button onclick="openAddTable()" class="text-sm text-brand-accent font-semibold hover:underline">+ Add Table</button>
+        <div id="tables-loading" class="text-center py-12 text-gray-400 text-sm">Loading tables...</div>
+        <div id="tables-empty" class="hidden text-center py-20 border border-dashed border-gray-300 rounded-xl">
+            <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+            </div>
+            <p class="text-gray-500 text-sm mb-4">No tables configured yet.</p>
+            <button onclick="openAddTable()" class="text-sm text-black font-medium hover:underline">Add your first table</button>
         </div>
-        <div id="tables-list" class="hidden space-y-3"></div>
+        <div id="tables-list" class="hidden space-y-4"></div>
     </div>
 
     <!-- ── API KEYS TAB ───────────────────────────────────────────────────── -->
-    <div id="pane-apikeys" class="tab-pane hidden">
-        <div class="flex items-center justify-between mb-6">
+    <div id="pane-apikeys" class="tab-pane hidden max-w-4xl">
+        <div class="flex items-center justify-between mb-8">
             <div>
-                <h2 class="text-lg font-bold">API Keys</h2>
-                <p class="text-xs text-brand-muted mt-0.5">Use these keys with <code class="font-mono text-xs bg-gray-100 px-1 rounded">X-API-Key</code> header</p>
+                <h2 class="text-lg font-semibold tracking-tight">API Keys</h2>
+                <p class="text-sm text-gray-500 mt-1">Authenticate requests to the SyncForge API.</p>
             </div>
-            <button onclick="createApiKey()"
-                    class="flex items-center gap-2 text-sm font-semibold border border-brand-border px-4 py-2 rounded-xl hover:border-brand-primary transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            <button onclick="createApiKey()" class="flex items-center gap-2 text-sm font-medium border border-gray-300 px-4 py-2 rounded-lg hover:border-gray-900 hover:text-gray-900 transition-colors bg-white shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                 Generate Key
             </button>
         </div>
-        <!-- Quick usage example -->
-        <div class="mb-6 bg-[#1A1A1A] rounded-xl p-5 text-sm font-mono text-[#D4D4D4]">
-            <div class="text-[#6A9955] mb-2"># Use your API key — works with any HTTP client</div>
-            <span class="text-[#569CD6]">curl</span> -X POST https://syncforge.dev/api/v1/sync/products/ \<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#CE9178]">-H "X-API-Key: sf_live_your_key_here"</span>
-        </div>
         
-        <div class="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-900 flex items-start gap-3">
+        <div class="mb-8 bg-blue-50/50 border border-blue-100 rounded-xl p-5 text-sm text-blue-900 flex items-start gap-4">
             <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <div>
-                <strong>Collision-Proof Cache Keys:</strong> The SDK automatically hashes your active API Key to generate a unique cache prefix. Your auto-generated cache keys will look like: <code class="font-mono bg-blue-100 px-1 rounded">sf_{hash}_tablename</code>. This guarantees your data never collides with other projects.
+            <div class="leading-relaxed">
+                <strong class="font-semibold">Secure by Design:</strong> SyncForge hashes your API keys. We never store the plaintext keys. Once you generate a key, make sure to copy it immediately as you won't be able to see it again. Cache prefixes are generated from the key hash to prevent collisions.
             </div>
         </div>
 
-        <div id="keys-loading" class="text-center py-12 text-brand-muted text-sm">Loading…</div>
-        <div id="keys-empty" class="hidden text-center py-12 text-brand-muted text-sm">No active API keys. Generate one above.</div>
-        <div id="keys-list" class="hidden space-y-3"></div>
+        <div class="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="text-sm font-semibold text-gray-900">Active Keys</h3>
+            </div>
+            <div id="keys-loading" class="text-center py-12 text-gray-400 text-sm">Loading keys...</div>
+            <div id="keys-empty" class="hidden text-center py-12 text-gray-500 text-sm">No active API keys. Generate one above.</div>
+            <div id="keys-list" class="hidden divide-y divide-gray-100 px-6"></div>
+        </div>
     </div>
 
     <!-- ── INTEGRATION TAB ────────────────────────────────────────────────── -->
     <div id="pane-integration" class="tab-pane hidden">
         <div class="max-w-3xl">
-            <div class="mb-8">
-                <h2 class="text-xl font-bold tracking-tight text-brand-primary">Integration Guide</h2>
-                <p class="text-sm text-brand-secondary mt-1">Copy and paste this code to integrate SyncForge into your backend. It takes less than 2 minutes.</p>
+            <div class="mb-10">
+                <h2 class="text-xl font-semibold tracking-tight text-gray-900">Integration Guide</h2>
+                <p class="text-sm text-gray-500 mt-2">Zero-code synchronization for Django applications.</p>
             </div>
 
-            <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-brand-border before:to-transparent">
+            <div class="space-y-10 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-px before:bg-gray-200">
                 
                 <!-- Step 1 -->
-                <div class="relative flex items-start gap-6 md:justify-center">
-                    <div class="hidden md:block w-full text-right py-3 pr-6 text-sm text-brand-secondary">
-                        <span class="font-bold text-brand-primary block mb-1">Install the SDK</span>
+                <div class="relative flex items-start gap-8 md:justify-center">
+                    <div class="hidden md:block w-full text-right py-2 pr-8 text-sm text-gray-500">
+                        <span class="font-semibold text-gray-900 block mb-1">Install the SDK</span>
                         Available on PyPI. Zero external dependencies.
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-white border-[3px] border-brand-accent text-brand-accent font-bold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">1</div>
+                    <div class="w-10 h-10 rounded-full bg-white border border-gray-300 text-gray-900 font-semibold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">1</div>
                     <div class="w-full">
-                        <div class="md:hidden mb-2">
-                            <span class="font-bold text-brand-primary block text-sm">Install the SDK</span>
+                        <div class="md:hidden mb-3">
+                            <span class="font-semibold text-gray-900 block text-sm">Install the SDK</span>
                         </div>
-                        <div class="bg-[#1A1A1A] rounded-xl overflow-hidden border border-[#2d2d2d] shadow-sm">
-                            <div class="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between">
+                        <div class="bg-[#0D1117] rounded-xl overflow-hidden shadow-sm border border-gray-800">
+                            <div class="bg-[#161B22] px-4 py-2.5 flex items-center justify-between border-b border-gray-800">
                                 <span class="text-xs text-gray-400 font-mono">Terminal</span>
-                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-colors">Copy</button>
                             </div>
-                            <div class="p-4 font-mono text-sm text-[#D4D4D4]">
-                                <span class="text-[#6A9955]"># Install via pip</span><br>
+                            <div class="p-5 font-mono text-[13px] text-gray-300">
+                                <span class="text-gray-500"># Install via pip</span><br>
                                 pip install syncforge
                             </div>
                         </div>
@@ -183,67 +167,57 @@
                 </div>
 
                 <!-- Step 2 -->
-                <div class="relative flex items-start gap-6 md:justify-center">
-                    <div class="hidden md:block w-full text-right py-3 pr-6 text-sm text-brand-secondary">
-                        <span class="font-bold text-brand-primary block mb-1">Create sf_client.py</span>
-                        Put this file at the root of your project.
-                        <div class="mt-3 flex justify-end">
-                            <div class="bg-gray-50 border border-brand-border rounded-lg p-3 text-left inline-block text-xs font-mono">
-                                <div>myproject/</div>
-                                <div class="pl-4 border-l-2 border-brand-accent ml-2 my-1 py-1">sf_client.py</div>
-                                <div class="pl-4 text-brand-muted">manage.py</div>
-                                <div class="pl-4 text-brand-muted">app/</div>
-                            </div>
-                        </div>
+                <div class="relative flex items-start gap-8 md:justify-center">
+                    <div class="hidden md:block w-full text-right py-2 pr-8 text-sm text-gray-500">
+                        <span class="font-semibold text-gray-900 block mb-1">Create sf_client.py</span>
+                        Initialize the client with your key.
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-white border-[3px] border-brand-accent text-brand-accent font-bold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">2</div>
+                    <div class="w-10 h-10 rounded-full bg-white border border-gray-300 text-gray-900 font-semibold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">2</div>
                     <div class="w-full">
-                        <div class="md:hidden mb-2">
-                            <span class="font-bold text-brand-primary block text-sm">Create sf_client.py at project root</span>
+                        <div class="md:hidden mb-3">
+                            <span class="font-semibold text-gray-900 block text-sm">Create sf_client.py</span>
                         </div>
-                        <div class="bg-[#1A1A1A] rounded-xl overflow-hidden border border-[#2d2d2d] shadow-sm">
-                            <div class="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between">
+                        <div class="bg-[#0D1117] rounded-xl overflow-hidden shadow-sm border border-gray-800">
+                            <div class="bg-[#161B22] px-4 py-2.5 flex items-center justify-between border-b border-gray-800">
                                 <span class="text-xs text-gray-400 font-mono">sf_client.py</span>
-                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-colors">Copy</button>
                             </div>
-                            <div class="p-4 font-mono text-sm text-[#D4D4D4] overflow-x-auto leading-relaxed">
-                                <span class="text-[#569CD6]">import</span> os<br>
-                                <span class="text-[#569CD6]">from</span> <span class="text-[#4EC9B0]">syncforge</span> <span class="text-[#569CD6]">import</span> <span class="text-[#4EC9B0]">SyncForge</span><br><br>
-                                <span class="text-[#6A9955]"># Initialize client for {{ project.name }}</span><br>
-                                sf = <span class="text-[#4EC9B0]">SyncForge</span>(<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;api_key=os.environ.get(<span class="text-[#CE9178]">'SYNCFORGE_API_KEY'</span>, <span class="text-[#CE9178]">'{{ api_keys.first.key|default:"sf_live_YOUR_KEY" }}'</span>)<br>
-                                )<br><br>
-                                <span class="text-[#6A9955]"># Register tables programmatically (runs once)</span><br>
-                                sf.create_table(<span class="text-[#CE9178]">'items'</span>, sync_mode=<span class="text-[#CE9178]">'event'</span>)
+                            <div class="p-5 font-mono text-[13px] text-gray-300 overflow-x-auto leading-relaxed">
+                                <span class="text-[#FF7B72]">import</span> os<br>
+                                <span class="text-[#FF7B72]">from</span> <span class="text-[#D2A8FF]">syncforge</span> <span class="text-[#FF7B72]">import</span> <span class="text-[#D2A8FF]">SyncForge</span><br><br>
+                                <span class="text-[#8B949E]"># Initialize client for {{ project.name }}</span><br>
+                                sf = <span class="text-[#D2A8FF]">SyncForge</span>(<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;api_key=os.environ.get(<span class="text-[#A5D6FF]">'SYNCFORGE_API_KEY'</span>, <span class="text-[#A5D6FF]">'{{ api_keys.first.key_prefix|default:"sf_live_" }}...'</span>)<br>
+                                )
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Step 3 -->
-                <div class="relative flex items-start gap-6 md:justify-center">
-                    <div class="hidden md:block w-full text-right py-3 pr-6 text-sm text-brand-secondary">
-                        <span class="font-bold text-brand-primary block mb-1">Zero-Code Syncs 🚀</span>
-                        Add the <code class="font-mono bg-gray-100 px-1 rounded text-xs text-brand-primary">@sync_model</code> decorator to your models. SyncForge will automatically trigger on every Create, Update, and Delete!
+                <div class="relative flex items-start gap-8 md:justify-center">
+                    <div class="hidden md:block w-full text-right py-2 pr-8 text-sm text-gray-500">
+                        <span class="font-semibold text-gray-900 block mb-1">Zero-Code Syncs</span>
+                        Add the decorator to your models.
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-white border-[3px] border-brand-accent text-brand-accent font-bold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">3</div>
+                    <div class="w-10 h-10 rounded-full bg-white border border-gray-300 text-gray-900 font-semibold flex items-center justify-center flex-shrink-0 relative z-10 shadow-sm mt-1">3</div>
                     <div class="w-full">
-                        <div class="md:hidden mb-2">
-                            <span class="font-bold text-brand-primary block text-sm">Zero-Code Syncs 🚀</span>
+                        <div class="md:hidden mb-3">
+                            <span class="font-semibold text-gray-900 block text-sm">Zero-Code Syncs</span>
                         </div>
-                        <div class="bg-[#1A1A1A] rounded-xl overflow-hidden border border-[#2d2d2d] shadow-sm">
-                            <div class="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between">
+                        <div class="bg-[#0D1117] rounded-xl overflow-hidden shadow-sm border border-gray-800">
+                            <div class="bg-[#161B22] px-4 py-2.5 flex items-center justify-between border-b border-gray-800">
                                 <span class="text-xs text-gray-400 font-mono">models.py</span>
-                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+                                <button onclick="copyCode(this)" class="text-xs text-gray-400 hover:text-white transition-colors">Copy</button>
                             </div>
-                            <div class="p-4 font-mono text-sm text-[#D4D4D4] overflow-x-auto leading-relaxed">
-                                <span class="text-[#569CD6]">from</span> django.db <span class="text-[#569CD6]">import</span> models<br>
-                                <span class="text-[#569CD6]">from</span> sf_client <span class="text-[#569CD6]">import</span> sf<br>
-                                <span class="text-[#569CD6]">from</span> syncforge.django <span class="text-[#569CD6]">import</span> sync_model<br><br>
-                                <span class="text-[#6A9955]"># Auto-registers table & syncs on all DB changes ⚡</span><br>
-                                <span class="text-[#4EC9B0]">@sync_model</span>(sf)<br>
-                                <span class="text-[#569CD6]">class</span> <span class="text-[#4EC9B0]">Item</span>(models.Model):<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;name = models.CharField(max_length=<span class="text-[#B5CEA8]">100</span>)<br>
+                            <div class="p-5 font-mono text-[13px] text-gray-300 overflow-x-auto leading-relaxed">
+                                <span class="text-[#FF7B72]">from</span> django.db <span class="text-[#FF7B72]">import</span> models<br>
+                                <span class="text-[#FF7B72]">from</span> sf_client <span class="text-[#FF7B72]">import</span> sf<br>
+                                <span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model<br><br>
+                                <span class="text-[#8B949E]"># Auto-registers table & syncs on all DB changes</span><br>
+                                <span class="text-[#D2A8FF]">@sync_model</span>(sf)<br>
+                                <span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Item</span>(models.Model):<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;name = models.CharField(max_length=<span class="text-[#79C0FF]">100</span>)<br>
                                 &nbsp;&nbsp;&nbsp;&nbsp;price = models.IntegerField()
                             </div>
                         </div>
@@ -251,32 +225,64 @@
                 </div>
 
             </div>
-
-            <div class="mt-12 p-5 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3">
-                <svg class="w-5 h-5 text-brand-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <div class="text-sm text-blue-900 leading-relaxed">
-                    <strong>How it works:</strong> The <code class="font-mono px-1">sf.refresh('table')</code> command sends a lightweight signal to our servers. SyncForge handles cache invalidation and distributes the fresh data delta to all connected client devices automatically. Your database only receives 1 query, not 10,000.
+        </div>
+    </div>
+    
+    <!-- ── SETTINGS TAB ─────────────────────────────────────────────────────── -->
+    <div id="pane-settings" class="tab-pane hidden max-w-3xl">
+        <div class="mb-8 border border-red-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="bg-red-50/50 px-6 py-4 border-b border-red-200">
+                <h2 class="text-sm font-semibold text-red-900">Danger Zone</h2>
+            </div>
+            <div class="p-6 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900">Delete Project</h3>
+                    <p class="text-sm text-gray-500 mt-1 max-w-sm">Permanently delete this project and all of its data. This action cannot be undone.</p>
                 </div>
+                <form method="post" action="/dashboard/projects/{{ project.slug }}/delete/"
+                      onsubmit="return confirm('Delete project {{ project.name }}? This cannot be undone.')">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-white border border-red-300 text-red-700 hover:bg-red-50 font-medium px-4 py-2 rounded-lg text-sm transition-colors whitespace-nowrap">Delete Project</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal: Show Newly Created API Key -->
+<div id="modal-new-key" class="fixed inset-0 z-50 hidden flex items-center justify-center px-4 bg-gray-900/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl w-full max-w-md p-8 shadow-2xl border border-gray-100">
+        <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-5 border border-green-100">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2 tracking-tight">API Key Generated</h3>
+        <p class="text-gray-500 text-sm mb-6 leading-relaxed">
+            Please copy this key and store it securely. For security reasons, <strong class="text-gray-900 font-medium">it will never be shown again</strong>.
+        </p>
+        
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-1 mb-6 flex items-center">
+            <input type="text" id="new-key-value" readonly class="w-full bg-transparent px-3 py-2 text-sm font-mono text-gray-700 outline-none selection:bg-blue-100">
+            <button onclick="copyNewKey()" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm ml-1">Copy</button>
+        </div>
+        
+        <button onclick="hideKeyModal()" class="w-full py-2.5 rounded-xl bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors">I've saved it securely</button>
+    </div>
+</div>
+
 <!-- Add Table Modal -->
-<div id="modal-add-table" class="fixed inset-0 z-50 hidden flex items-center justify-center px-4"
-     style="background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);">
-    <div class="bg-white rounded-2xl w-full max-w-md p-8" style="box-shadow:0 20px 60px rgba(0,0,0,0.2);">
-        <h3 class="text-xl font-bold mb-1">Add Table</h3>
-        <p class="text-brand-secondary text-sm mb-6">Configure sync mode for a database table.</p>
-        <div class="space-y-4">
+<div id="modal-add-table" class="fixed inset-0 z-50 hidden flex items-center justify-center px-4 bg-gray-900/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl w-full max-w-md p-8 shadow-2xl border border-gray-100">
+        <h3 class="text-xl font-semibold mb-2 tracking-tight">Add Table</h3>
+        <p class="text-gray-500 text-sm mb-6">Configure sync mode for a database table.</p>
+        <div class="space-y-5">
             <div>
-                <label class="block text-sm font-semibold mb-1.5">Table Name *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Table Name *</label>
                 <input type="text" id="at-name" placeholder="e.g. products, users, orders"
-                       class="w-full border border-brand-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-accent bg-gray-50">
+                       class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-shadow">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-1.5">Sync Mode</label>
-                <select id="at-mode" class="w-full border border-brand-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-accent bg-gray-50">
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Sync Mode</label>
+                <select id="at-mode" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-shadow bg-white appearance-none">
                     <option value="manual">Manual — Refresh Button Only</option>
                     <option value="schedule_5m">Schedule — Every 5 Minutes</option>
                     <option value="schedule_1h">Schedule — Every 1 Hour</option>
@@ -285,11 +291,10 @@
                     <option value="hybrid">Hybrid — Event + 24h Verification</option>
                 </select>
             </div>
-            <div id="at-error" class="hidden text-red-500 text-sm"></div>
-            <div class="flex gap-3 pt-2">
-                <button onclick="closeAddTable()" class="flex-1 py-3 rounded-xl border border-brand-border text-sm font-semibold hover:bg-gray-50">Cancel</button>
-                <button onclick="submitAddTable()" class="flex-1 py-3 rounded-xl text-white text-sm font-semibold hover:opacity-90"
-                        style="background:linear-gradient(135deg,#1E3A8A,#3B82F6);">Add Table</button>
+            <div id="at-error" class="hidden text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-100"></div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeAddTable()" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                <button onclick="submitAddTable()" class="flex-1 py-2.5 rounded-xl bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm">Add Table</button>
             </div>
         </div>
     </div>
@@ -319,13 +324,16 @@ let currentTab = 'tables';
 function switchTab(name) {
     currentTab = name;
     document.querySelectorAll('.tab-btn').forEach(b => {
-        b.style.borderBottomColor = 'transparent';
-        b.style.color = '#888';
+        b.classList.remove('border-black', 'text-gray-900');
+        b.classList.add('border-transparent', 'text-gray-500');
     });
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+    
     const btn = document.getElementById(`tab-${name}`);
-    btn.style.borderBottomColor = '#1E3A8A';
-    btn.style.color = '#111';
+    if (btn) {
+        btn.classList.remove('border-transparent', 'text-gray-500');
+        btn.classList.add('border-black', 'text-gray-900');
+    }
     document.getElementById(`pane-${name}`).classList.remove('hidden');
 }
 switchTab('tables');
@@ -350,22 +358,20 @@ function renderData({ tables, api_keys }) {
     const totalReqs = tables.reduce((s, t) => s + (t.total_requests || 0), 0);
     const hitRatio = totalReqs > 0 ? Math.round((totalHits / totalReqs) * 100) : 0;
     const bandwidth = tables.reduce((s, t) => s + (t.bandwidth_saved_mb || 0), 0);
-    const duplicates = tables.reduce((s, t) => s + (t.duplicates_prevented || 0), 0);
     
     document.getElementById('p-stat-calls').textContent  = calls.toLocaleString();
     document.getElementById('p-stat-hitratio').textContent = hitRatio + '%';
     document.getElementById('p-stat-bandwidth').textContent = bandwidth.toFixed(1) + ' MB';
-    document.getElementById('p-stat-dupes').textContent = duplicates.toLocaleString();
 }
 
 const MODE_BADGE = {
-    manual:       'bg-amber-100 text-amber-700',
-    schedule_5m:  'bg-blue-100 text-blue-700',
-    schedule_1h:  'bg-blue-100 text-blue-700',
-    schedule_1d:  'bg-blue-100 text-blue-700',
-    schedule_30d: 'bg-blue-100 text-blue-700',
-    event:        'bg-green-100 text-green-700',
-    hybrid:       'bg-purple-100 text-purple-700',
+    manual:       'bg-amber-50 text-amber-700 border border-amber-200',
+    schedule_5m:  'bg-blue-50 text-blue-700 border border-blue-200',
+    schedule_1h:  'bg-blue-50 text-blue-700 border border-blue-200',
+    schedule_1d:  'bg-blue-50 text-blue-700 border border-blue-200',
+    schedule_30d: 'bg-blue-50 text-blue-700 border border-blue-200',
+    event:        'bg-green-50 text-green-700 border border-green-200',
+    hybrid:       'bg-purple-50 text-purple-700 border border-purple-200',
 };
 
 // ── Render tables ─────────────────────────────────────────────────────────────
@@ -375,74 +381,59 @@ function renderTables(tables) {
     const list = document.getElementById('tables-list');
     list.classList.remove('hidden');
     list.innerHTML = tables.map(t => `
-        <div class="bg-white rounded-xl border border-brand-border p-5 hover:border-brand-accent transition-all card p-6 shadow-sm" id="trow-${t.id}">
-            <div class="flex items-center gap-4 w-full">
-                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"/></svg>
-                </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-200" id="trow-${t.id}">
+            <div class="flex flex-col md:flex-row md:items-center gap-6 w-full">
                 <div class="flex-1 min-w-0">
-                    <div class="font-bold text-lg text-brand-primary mb-1">${escHtml(t.table_name)}</div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="font-semibold text-base text-gray-900">${escHtml(t.table_name)}</div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide uppercase ${MODE_BADGE[t.sync_mode] || 'bg-gray-100 text-gray-600'}">${escHtml(t.sync_mode)}</span>
+                    </div>
                     
-                    <div class="text-xs text-brand-muted mt-0.5 mb-2 flex flex-wrap gap-x-4 gap-y-1">
-                        <span>Scoped Name: <code class="font-mono bg-gray-100 px-1 py-0.5 rounded text-brand-primary">${escHtml(t.scoped_table_name || '')}</code></span>
-                        <span>Version: <code class="font-mono bg-gray-100 px-1 py-0.5 rounded">${t.cache_version}</code></span>
-                        <span>Last Sync: <code class="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-brand-secondary">${t.last_sync ? new Date(t.last_sync).toLocaleString() : 'Never'}</code></span>
+                    <div class="text-[12px] text-gray-500 mb-4 flex flex-wrap gap-x-6 gap-y-2">
+                        <span>Namespace: <code class="font-mono text-gray-900 bg-gray-50 border border-gray-100 px-1 py-0.5 rounded">${escHtml(t.scoped_table_name || '')}</code></span>
+                        <span>v<code class="font-mono">${t.cache_version}</code></span>
+                        <span>Synced: ${t.last_sync ? new Date(t.last_sync).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Never'}</span>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-4 text-xs">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md font-semibold ${MODE_BADGE[t.sync_mode] || 'bg-gray-100 text-gray-600'}">${escHtml(t.sync_mode)}</span>
-                        <span class="text-brand-muted"><strong class="text-brand-primary">${t.rows_count}</strong> rows</span>
-                        <span class="text-green-600 font-bold"><svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/></svg>${(t.database_calls_saved||0).toLocaleString()} calls saved</span>
-                        <span class="text-blue-600 font-bold"><svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>${t.avg_response_time_ms||0}ms avg response</span>
-                        <span class="text-brand-muted ml-auto font-mono">Hit Ratio: ${t.total_requests > 0 ? Math.round((t.cache_hits/t.total_requests)*100) : 0}%</span>
+                    <div class="flex flex-wrap items-center gap-6 text-[13px]">
+                        <span class="text-gray-500"><strong class="text-gray-900 font-semibold">${t.rows_count.toLocaleString()}</strong> rows</span>
+                        <span class="text-gray-500 flex items-center gap-1.5"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <strong class="text-gray-900 font-semibold">${(t.database_calls_saved||0).toLocaleString()}</strong> saved</span>
+                        <span class="text-gray-500">Hit ratio <strong class="text-gray-900 font-semibold">${t.total_requests > 0 ? Math.round((t.cache_hits/t.total_requests)*100) : 0}%</strong></span>
                     </div>
                 </div>
-                <div class="flex items-center gap-3 border-l border-brand-border pl-4">
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <select onchange="updateTableSetting(${t.id}, 'sync_mode', this.value)"
-                                class="border border-brand-border rounded-lg px-2 py-1 outline-none focus:border-brand-accent bg-gray-50">
-                            <option value="manual"      ${t.sync_mode==='manual'?'selected':''}>Manual</option>
-                            <option value="schedule_5m" ${t.sync_mode==='schedule_5m'?'selected':''}>5 min</option>
-                            <option value="schedule_1h" ${t.sync_mode==='schedule_1h'?'selected':''}>1 hour</option>
-                            <option value="schedule_1d" ${t.sync_mode==='schedule_1d'?'selected':''}>1 day</option>
-                            <option value="event"       ${t.sync_mode==='event'?'selected':''}>Event</option>
-                            <option value="hybrid"      ${t.sync_mode==='hybrid'?'selected':''}>Hybrid</option>
-                        </select>
-                        <select onchange="updateTableSetting(${t.id}, 'storage_mode', this.value)"
-                                class="border border-brand-border rounded-lg px-2 py-1 outline-none focus:border-brand-accent bg-gray-50">
-                            <option value="ram_only" ${t.storage_mode==='ram_only'?'selected':''}>RAM Only</option>
-                            <option value="ram_disk" ${t.storage_mode==='ram_disk'?'selected':''}>RAM+Disk</option>
-                            <option value="disabled" ${t.storage_mode==='disabled'?'selected':''}>Disabled</option>
-                        </select>
-                        <select onchange="updateTableSetting(${t.id}, 'compression', this.value)"
-                                class="border border-brand-border rounded-lg px-2 py-1 outline-none focus:border-brand-accent bg-gray-50">
-                            <option value="none" ${t.compression==='none'?'selected':''}>No Compression</option>
-                            <option value="lz4"  ${t.compression==='lz4'?'selected':''}>LZ4</option>
-                            <option value="zstd" ${t.compression==='zstd'?'selected':''}>Zstd</option>
-                            <option value="gzip" ${t.compression==='gzip'?'selected':''}>GZIP</option>
-                        </select>
-                        <div class="flex items-center gap-2 px-1">
-                            <label class="flex items-center gap-1 cursor-pointer">
-                                <input type="checkbox" onchange="updateTableSetting(${t.id}, 'encryption', this.checked)"
-                                    ${t.encryption ? 'checked' : ''} class="w-3 h-3 text-brand-accent rounded">
-                                <span>Encrypted</span>
-                            </label>
+                
+                <div class="flex flex-wrap items-center gap-3 md:border-l border-gray-100 md:pl-6">
+                    <div class="grid grid-cols-2 gap-3 text-sm w-full md:w-auto">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Mode</label>
+                            <select onchange="updateTableSetting(${t.id}, 'sync_mode', this.value)" class="w-full border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-black text-sm bg-gray-50 hover:bg-gray-100 transition-colors">
+                                <option value="manual"      ${t.sync_mode==='manual'?'selected':''}>Manual</option>
+                                <option value="schedule_5m" ${t.sync_mode==='schedule_5m'?'selected':''}>5 min</option>
+                                <option value="schedule_1h" ${t.sync_mode==='schedule_1h'?'selected':''}>1 hour</option>
+                                <option value="schedule_1d" ${t.sync_mode==='schedule_1d'?'selected':''}>1 day</option>
+                                <option value="event"       ${t.sync_mode==='event'?'selected':''}>Event</option>
+                                <option value="hybrid"      ${t.sync_mode==='hybrid'?'selected':''}>Hybrid</option>
+                            </select>
                         </div>
-                        <div class="flex items-center border border-brand-border rounded-lg px-2 bg-gray-50 focus-within:border-brand-accent col-span-2 mt-1">
-                            <span class="text-gray-400 mr-2 text-xs font-semibold">Timeout (s):</span>
-                            <input type="number" value="${t.timeout !== null ? t.timeout : ''}" placeholder="Infinite"
-                                   onchange="updateTableSetting(${t.id}, 'timeout', this.value === '' ? null : parseInt(this.value, 10))"
-                                   class="w-full py-1 outline-none bg-transparent text-xs" title="Set to empty for Infinite">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Storage</label>
+                            <select onchange="updateTableSetting(${t.id}, 'storage_mode', this.value)" class="w-full border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-black text-sm bg-gray-50 hover:bg-gray-100 transition-colors">
+                                <option value="ram_only" ${t.storage_mode==='ram_only'?'selected':''}>RAM Only</option>
+                                <option value="ram_disk" ${t.storage_mode==='ram_disk'?'selected':''}>RAM+Disk</option>
+                                <option value="disabled" ${t.storage_mode==='disabled'?'selected':''}>Disabled</option>
+                            </select>
                         </div>
                     </div>
-                <button onclick="refreshTable(${t.id})" id="refresh-tbl-btn-${t.id}"
-                        class="p-1.5 text-brand-accent hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all ml-2 h-fit" title="Refresh Table Cache">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                </button>
-                <button onclick="deleteTable(${t.id})"
-                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1 h-fit">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                </button>
+                    
+                    <div class="flex items-center gap-2 mt-4 md:mt-0 md:ml-2">
+                        <button onclick="refreshTable(${t.id})" id="refresh-tbl-btn-${t.id}" class="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200 shadow-sm" title="Refresh Table Cache">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                        <button onclick="deleteTable(${t.id})" class="p-2 text-red-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 shadow-sm" title="Remove Table">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     `).join('');
@@ -455,24 +446,21 @@ function renderKeys(keys) {
     const list = document.getElementById('keys-list');
     list.classList.remove('hidden');
     list.innerHTML = keys.map(k => `
-        <div class="bg-white rounded-xl border border-brand-border p-5" id="krow-${k.id}">
-            <div class="flex items-center justify-between mb-3">
-                <div class="font-semibold text-sm">${escHtml(k.name)}</div>
-                <button onclick="revokeKey(${k.id})"
-                        class="text-xs text-red-500 hover:text-red-700 font-medium transition-subtle">Revoke</button>
+        <div class="group flex items-center justify-between py-5 border-b border-gray-100 last:border-0" id="krow-${k.id}">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="font-medium text-sm text-gray-900">${escHtml(k.name)}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase bg-green-50 text-green-700 border border-green-200">Active</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <code class="text-sm font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded border border-gray-200 tracking-wide">${escHtml(k.key_prefix)}••••••••••••••••</code>
+                </div>
+                <div class="flex items-center gap-4 mt-3 text-[12px] text-gray-400 font-medium">
+                    <span>Created ${k.created_at.split('T')[0]}</span>
+                    ${k.last_used ? `<span>Last used ${k.last_used.split('T')[0]}</span>` : '<span>Never used</span>'}
+                </div>
             </div>
-            <div class="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-3 border border-brand-border">
-                <code class="text-sm font-mono text-brand-secondary flex-1 select-all" id="key-display-${k.id}">${escHtml(k.key_prefix)}</code>
-                <button onclick="revealKey(${k.id}, '${escHtml(k.key_full)}')"
-                        id="reveal-btn-${k.id}"
-                        class="text-xs text-brand-accent font-semibold hover:underline flex-shrink-0">Reveal</button>
-                <button onclick="copyKey('${escHtml(k.key_full)}')"
-                        class="flex-shrink-0 text-xs bg-brand-accent text-white px-3 py-1.5 rounded-lg font-semibold hover:opacity-90 transition-all">Copy</button>
-            </div>
-            <div class="flex items-center gap-4 mt-2 text-xs text-brand-muted">
-                <span>Created ${k.created_at.split('T')[0]}</span>
-                ${k.last_used ? `<span>Last used ${k.last_used.split('T')[0]}</span>` : '<span>Never used</span>'}
-            </div>
+            <button onclick="revokeKey(${k.id})" class="text-sm text-gray-400 hover:text-red-600 font-medium transition-colors opacity-0 group-hover:opacity-100 bg-white px-3 py-1.5 rounded-lg border border-transparent hover:border-red-200 shadow-sm">Revoke</button>
         </div>
     `).join('');
 }
@@ -482,19 +470,12 @@ function escHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function revealKey(id, fullKey) {
-    document.getElementById(`key-display-${id}`).textContent = fullKey;
-    document.getElementById(`reveal-btn-${id}`).textContent = 'Hide';
-    document.getElementById(`reveal-btn-${id}`).onclick = () => {
-        document.getElementById(`key-display-${id}`).textContent = fullKey.slice(0,18) + '...';
-        document.getElementById(`reveal-btn-${id}`).textContent = 'Reveal';
-        document.getElementById(`reveal-btn-${id}`).onclick = () => revealKey(id, fullKey);
-    };
-}
-
-function copyKey(key) {
-    navigator.clipboard.writeText(key).then(() => {
-        showToast('API key copied to clipboard!');
+function copyCode(btn) {
+    const block = btn.parentElement.nextElementSibling;
+    navigator.clipboard.writeText(block.innerText).then(() => {
+        const old = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = old, 2000);
     });
 }
 
@@ -506,11 +487,27 @@ async function createApiKey() {
     const json = await res.json();
     if (json.status === 'created') {
         invalidateCache();
-        showToast('New API key created!');
+        showKeyModal(json.key);
         refreshData();
     } else {
         showToast(json.error || 'Error', true);
     }
+}
+
+function showKeyModal(rawKey) {
+    document.getElementById('modal-new-key').classList.remove('hidden');
+    document.getElementById('new-key-value').value = rawKey;
+}
+
+function hideKeyModal() {
+    document.getElementById('modal-new-key').classList.add('hidden');
+}
+
+function copyNewKey() {
+    const key = document.getElementById('new-key-value').value;
+    navigator.clipboard.writeText(key).then(() => {
+        showToast('API key copied to clipboard!');
+    });
 }
 
 async function revokeKey(id) {
@@ -525,7 +522,7 @@ async function revokeKey(id) {
 }
 
 function openAddTable()  { document.getElementById('modal-add-table').classList.remove('hidden'); document.getElementById('at-name').focus(); }
-function closeAddTable() { document.getElementById('modal-add-table').classList.add('hidden'); }
+function closeAddTable() { document.getElementById('modal-add-table').classList.add('hidden'); document.getElementById('at-error').classList.add('hidden'); }
 
 async function submitAddTable() {
     const name = document.getElementById('at-name').value.trim();
@@ -541,6 +538,7 @@ async function submitAddTable() {
         closeAddTable();
         refreshData();
         showToast(`Table "${name}" added!`);
+        document.getElementById('at-name').value = '';
     } else {
         err.textContent = json.error; err.classList.remove('hidden');
     }
@@ -566,9 +564,7 @@ async function refreshTable(tableId) {
     try {
         const res = await fetch(`/dashboard/api/projects/${SLUG}/tables/${tableId}/refresh/`, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': CSRF()
-            },
+            headers: { 'X-CSRFToken': CSRF() },
             credentials: 'same-origin'
         });
         const json = await res.json();
@@ -599,24 +595,30 @@ async function updateTableSetting(id, field, value) {
 }
 
 async function refreshData() {
-    document.getElementById('refresh-btn').querySelector('svg').classList.add('animate-spin');
+    const btn = document.getElementById('refresh-btn');
+    if (btn) btn.querySelector('svg').classList.add('animate-spin');
     invalidateCache();
     await loadData(true);
-    document.getElementById('refresh-btn').querySelector('svg').classList.remove('animate-spin');
+    if (btn) btn.querySelector('svg').classList.remove('animate-spin');
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 function showToast(msg, isErr = false) {
     const t = document.createElement('div');
-    t.className = 'fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg transition-all';
-    t.style.cssText = `background:${isErr?'#ef4444':'#1E3A8A'}; color:white;`;
+    t.className = 'fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium shadow-xl transition-all border';
+    t.style.cssText = isErr ? 'background: #FEF2F2; color: #991B1B; border-color: #F87171;' : 'background: #111827; color: white; border-color: #374151;';
     t.textContent = msg;
     document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
+    setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(10px)';
+        setTimeout(() => t.remove(), 300);
+    }, 3000);
 }
 
 // ── Backdrop close ────────────────────────────────────────────────────────────
 document.getElementById('modal-add-table').addEventListener('click', e => { if (e.target===e.currentTarget) closeAddTable(); });
+document.getElementById('modal-new-key').addEventListener('click', e => { if (e.target===e.currentTarget) hideKeyModal(); });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadData();
