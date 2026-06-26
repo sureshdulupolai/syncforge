@@ -30,17 +30,75 @@
     </ol>
 </div>
 
-<!-- Best Practices & Speed Advantage -->
-<div class="mb-10">
-    <h2 class="text-xl font-semibold mb-4">When to use SyncForge (The Enterprise Advantage)</h2>
-    <p class="text-sm text-brand-secondary leading-relaxed mb-4">
-        SyncForge is a highly optimized, framework-agnostic caching engine that requires <strong>zero external infrastructure</strong>. It eliminates redundant database queries by keeping data securely in native RAM (or optionally Redis) and self-optimizing its own memory footprint.
-    </p>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-blue-900 leading-relaxed">
-        <strong>Benefit:</strong> A unified SDK completely abstracts away stampede protection, memory deduplication, and cross-cluster invalidation. Your read queries respond instantly from the <code>InMemoryStore</code>, vastly lowering latency and database I/O costs.
+<!-- Enterprise Features Highlight -->
+<div class="mb-12">
+    <h2 class="text-xl font-semibold mb-6">Enterprise Core Engine</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Feature 1: Heat Engine -->
+        <div class="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mb-4">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h3 class="font-bold text-indigo-900 mb-2">Intelligent Heat Engine</h3>
+            <p class="text-sm text-indigo-700/80 leading-relaxed">Dynamically profiles RAM footprint with a safe 256MB boundary, assigning heat scores to gracefully flush cold data while keeping hot data in memory.</p>
+        </div>
+
+        <!-- Feature 2: Stale-While-Revalidate -->
+        <div class="bg-gradient-to-br from-teal-50 to-white border border-teal-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 mb-4">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <h3 class="font-bold text-teal-900 mb-2">Stampede Protection</h3>
+            <p class="text-sm text-teal-700/80 leading-relaxed">Built-in Stale-While-Revalidate architecture coalesces concurrent cache misses into a single DB query, utterly bypassing P99 latency spikes.</p>
+        </div>
+
+        <!-- Feature 3: Auto-Maintenance -->
+        <div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-4">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="font-bold text-amber-900 mb-2">4 AM Auto-Cleanup</h3>
+            <p class="text-sm text-amber-700/80 leading-relaxed">An ultra-fast framework middleware that automatically garbage-collects expired memory and disk files nightly with zero performance overhead.</p>
+        </div>
     </div>
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 leading-relaxed">
-        <strong>Smart Background Scheduler:</strong> The internal daemon synchronises metadata and dynamically adjusts cache policies without blocking your web request threads.
+</div>
+
+<!-- Code at a glance -->
+<div class="mb-14 border border-brand-border rounded-2xl bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] overflow-hidden shadow-2xl">
+    <div class="grid grid-cols-1 lg:grid-cols-2">
+        <div class="p-8 lg:p-10 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-white/10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold mb-6 w-fit">
+                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                Zero boilerplate
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Just two lines of code.</h3>
+            <p class="text-gray-400 leading-relaxed mb-6 text-sm">
+                Wrap your existing models with a decorator and change your ORM call to <code class="text-gray-300 bg-white/10 px-1 rounded">sf.cache_query()</code>. SyncForge automatically handles background sync, query hashing, cache invalidation, and stampede protection.
+            </p>
+            <a href="{% url 'docs_django' %}" class="inline-flex items-center gap-2 text-brand-accent hover:text-blue-400 transition-colors text-sm font-semibold">
+                See Django integration 
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+        </div>
+        <div class="p-6 bg-[#0a0a0a]">
+            <div class="flex items-center gap-2 mb-4 px-2">
+                <div class="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_8px_rgba(234,179,8,0.5)]"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+            </div>
+            <pre class="text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed"><span class="text-purple-400">@sync_model</span>(sf, sync_mode=<span class="text-green-300">'event'</span>)
+<span class="text-blue-400">class</span> <span class="text-yellow-200">Product</span>(models.Model):
+    name = models.CharField(max_length=200)
+
+<span class="text-gray-500"># Later in your views...</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-200">get_products</span>(request):
+    <span class="text-gray-500"># Instantly serves from RAM cache</span>
+    products = sf.cache_query(
+        table_name=<span class="text-green-300">'core_product'</span>,
+        queryset=Product.objects.filter(active=<span class="text-orange-400">True</span>)
+    )
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'products.html'</span>, {<span class="text-green-300">'data'</span>: products})</pre>
+        </div>
     </div>
 </div>
 
