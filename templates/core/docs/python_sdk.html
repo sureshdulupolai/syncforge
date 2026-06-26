@@ -18,6 +18,36 @@
     </p>
 </div>
 
+<!-- Initialization -->
+<h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border mt-12">Initialization</h2>
+
+<div class="mb-10">
+    <h3 class="text-lg font-bold mb-2 flex items-center gap-2"><code class="text-brand-accent">SyncForge(**kwargs)</code></h3>
+    <p class="text-sm text-brand-secondary mb-4">
+        Initializes the main engine client.
+    </p>
+    
+    <div class="overflow-x-auto mb-4">
+        <table class="w-full text-sm border-collapse">
+            <thead>
+                <tr class="border-b border-brand-border bg-brand-secbg">
+                    <th class="text-left px-4 py-2 font-semibold">Parameter</th>
+                    <th class="text-left px-4 py-2 font-semibold">Type</th>
+                    <th class="text-left px-4 py-2 font-semibold">Description</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-border">
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">api_key</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">str (required)</td><td class="px-4 py-2 text-brand-secondary text-xs">Your SyncForge project API key starting with `sf_live_`.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">backend</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">str</td><td class="px-4 py-2 text-brand-secondary text-xs">Default `'memory'`. Supports `'django_cache'` or `'redis'`.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">silent</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">bool</td><td class="px-4 py-2 text-brand-secondary text-xs">Default `False`. If `True`, network errors are caught and logged as warnings.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">async_mode</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">bool</td><td class="px-4 py-2 text-brand-secondary text-xs">Default `False`. If `True`, refresh calls run in fire-and-forget background threads.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">encryption_key</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">str</td><td class="px-4 py-2 text-brand-secondary text-xs">Optional 32-byte secret. Enables military-grade AES-256 encryption on all local disk cache files.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">sign_requests</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">bool</td><td class="px-4 py-2 text-brand-secondary text-xs">Default `True`. Protects outgoing API requests with HMAC replay attack signatures.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <!-- Reading Data -->
 <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border">Reading Data</h2>
 
@@ -39,8 +69,7 @@
             </thead>
             <tbody class="divide-y divide-brand-border">
                 <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">table_name</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">str</td><td class="px-4 py-2 text-brand-secondary text-xs">The database table name.</td></tr>
-                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">cache_key</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">str (optional)</td><td class="px-4 py-2 text-brand-secondary text-xs">Unique identifier for parameterised queries.</td></tr>
-                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">queryset</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">Iterable</td><td class="px-4 py-2 text-brand-secondary text-xs">The Django QuerySet or SQLAlchemy query to execute on cache miss.</td></tr>
+                <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">queryset</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">Iterable</td><td class="px-4 py-2 text-brand-secondary text-xs">The Django QuerySet or SQLAlchemy query to execute on cache miss. The cache key is securely auto-generated using a SHA-256 hash of this query.</td></tr>
                 <tr><td class="px-4 py-2 font-mono text-xs text-brand-primary">timeout</td><td class="px-4 py-2 font-mono text-xs text-brand-muted">int (default 3600)</td><td class="px-4 py-2 text-brand-secondary text-xs">Time in seconds before the RAM cache expires.</td></tr>
             </tbody>
         </table>
@@ -66,7 +95,7 @@
         Instantly fetches pre-warmed data from local memory or disk without triggering a database query.
     </p>
     <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
-        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">data = sf.get_table('products', cache_key='optional_dynamic_key')</pre>
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">data = sf.get_table('products')</pre>
     </div>
     <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> Returns the cached <code>list</code> of model instances, or <code>None</code> if not found.</p>
 </div>
@@ -99,17 +128,7 @@ result = sf.refresh('products', 'categories')</pre>
     </div>
 </div>
 
-<!-- track_key -->
-<div class="mb-10">
-    <h3 class="text-lg font-bold mb-2 flex items-center gap-2"><code class="text-brand-accent">sf.track_key()</code></h3>
-    <p class="text-sm text-brand-secondary mb-4">
-        Manually register a custom cache key to be cleared when <code>sf.refresh(table_name)</code> is called. This is done automatically by <code>cache_query</code>, but useful if you set caches manually.
-    </p>
-    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-2">
-        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">sf.track_key(table_name='products', cache_key='custom_query_123')</pre>
-    </div>
-    <p class="text-sm text-brand-muted mb-4"><strong class="text-green-600">Output:</strong> <code>None</code></p>
-</div>
+
 
 <!-- Automatic Maintenance & Middleware -->
 <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-brand-border mt-12">Automatic Maintenance & Middleware</h2>
