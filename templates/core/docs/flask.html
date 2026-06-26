@@ -14,7 +14,7 @@
 <!-- 1 Install -->
 <h2 class="text-xl font-semibold mb-3">1. Install</h2>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge flask</pre>
+    <pre class="p-4 text-sm font-mono text-green-400 overflow-x-auto">pip install syncforge flask</pre>
 </div>
 
 <!-- 2 Client -->
@@ -23,7 +23,7 @@
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-[#8B949E]">app.py</span>
     </div>
-    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> flask <span class="text-[#FF7B72]">import</span> Flask, jsonify
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">from</span> flask <span class="text-[#FF7B72]">import</span> Flask, jsonify
 <span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
 <span class="text-[#FF7B72]">from</span> syncforge.flask <span class="text-[#FF7B72]">import</span> SyncForgeFlask
 <span class="text-[#FF7B72]">import</span> os
@@ -105,7 +105,7 @@ sf_ext = SyncForgeFlask(app, sf)
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-[#8B949E]">routes.py</span>
     </div>
-    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"GET"</span>])
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#D2A8FF]">@app.route</span>(<span class="text-[#A5D6FF]">"/products"</span>, methods=[<span class="text-[#A5D6FF]">"GET"</span>])
 <span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">list_products</span>():
     <span class="text-[#8B949E]"># 1. Cache Hit: Data found in memory! DB query skipped entirely.</span>
     products = sf.get_table(<span class="text-[#A5D6FF]">"products"</span>)

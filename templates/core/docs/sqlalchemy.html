@@ -14,14 +14,14 @@
 <!-- 1 Install -->
 <h2 class="text-xl font-semibold mb-3">1. Install</h2>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge sqlalchemy</pre>
+    <pre class="p-4 text-sm font-mono text-green-400 overflow-x-auto">pip install syncforge sqlalchemy</pre>
 </div>
 
 <!-- 2 Client -->
 <h2 class="text-xl font-semibold mb-3">2. Initialise the Client and Models</h2>
 <p class="text-sm text-brand-secondary mb-3">Use <code class="font-mono bg-gray-100 px-1 rounded text-sm">@sync_model</code> on your declarative base models.</p>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">from</span> sqlalchemy <span class="text-blue-400">import</span> Column, Integer, String
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> sqlalchemy <span class="text-blue-400">import</span> Column, Integer, String
 <span class="text-blue-400">from</span> sqlalchemy.orm <span class="text-blue-400">import</span> declarative_base
 <span class="text-blue-400">from</span> syncforge <span class="text-blue-400">import</span> SyncForge
 <span class="text-blue-400">from</span> syncforge.sqlalchemy <span class="text-blue-400">import</span> sync_model
@@ -133,7 +133,7 @@ Base <span class="text-gray-400">=</span> declarative_base()
 </p>
 
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-blue-400">def</span> <span class="text-teal-300">get_users</span>():
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">def</span> <span class="text-teal-300">get_users</span>():
     session <span class="text-gray-400">=</span> SessionLocal()
     <span class="text-blue-400">try</span>:
         <span class="text-gray-500"># 1. Fetch instantly from RAM Cache</span>

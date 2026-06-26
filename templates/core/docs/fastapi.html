@@ -14,7 +14,7 @@
 <!-- 1 Install -->
 <h2 id="install" class="text-xl font-semibold mb-3 scroll-mt-20">1. Installation</h2>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge fastapi uvicorn</pre>
+    <pre class="p-4 text-sm font-mono text-green-400 overflow-x-auto">pip install syncforge fastapi uvicorn</pre>
 </div>
 
 <!-- 2 Middleware and Client -->
@@ -24,7 +24,7 @@
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-[#8B949E]">main.py</span>
     </div>
-    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> fastapi <span class="text-[#FF7B72]">import</span> FastAPI, Depends
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">from</span> fastapi <span class="text-[#FF7B72]">import</span> FastAPI, Depends
 <span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
 <span class="text-[#FF7B72]">from</span> syncforge.fastapi <span class="text-[#FF7B72]">import</span> SyncForgeWAFMiddleware, SyncForgeMaintenanceMiddleware, get_syncforge
 <span class="text-[#FF7B72]">import</span> os
@@ -102,7 +102,7 @@ app.add_middleware(SyncForgeMaintenanceMiddleware, sf_client=sf) # Ultra-fast 4 
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-[#8B949E]">routers/products.py</span>
     </div>
-    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#D2A8FF]">@app.get</span>(<span class="text-[#A5D6FF]">"/products"</span>)
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#D2A8FF]">@app.get</span>(<span class="text-[#A5D6FF]">"/products"</span>)
 <span class="text-[#FF7B72]">async def</span> <span class="text-[#D2A8FF]">list_products</span>(sf_client: SyncForge = Depends(get_syncforge(sf))):
     <span class="text-[#8B949E]"># 1. Fetch from RAM Cache instantly</span>
     data = sf_client.get_table(<span class="text-[#A5D6FF]">"users"</span>)

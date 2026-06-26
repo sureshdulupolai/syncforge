@@ -34,7 +34,7 @@
         <span class="text-xs font-mono text-gray-400">terminal</span>
         <button onclick="copyCode(this)" data-code="pip install syncforge" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-green-400">pip install syncforge</pre>
+    <pre class="p-4 text-sm font-mono text-green-400 overflow-x-auto">pip install syncforge</pre>
 </div>
 
 <!-- 2 Client -->
@@ -54,7 +54,7 @@ sf = SyncForge(
     async_mode=False         # Standard synchronous thread pooling for Django
 )" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">import</span> os
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">import</span> os
 <span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
 
 <span class="text-[#8B949E]"># Initialize the SyncForge Engine</span>
@@ -147,7 +147,7 @@ class Product(models.Model):
     class Meta:
         db_table = 'core_product'" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> django.db <span class="text-[#FF7B72]">import</span> models
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">from</span> django.db <span class="text-[#FF7B72]">import</span> models
 <span class="text-[#FF7B72]">from</span> myproject.sf <span class="text-[#FF7B72]">import</span> sf
 <span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
 
@@ -226,7 +226,7 @@ def product_list(request):
         
     return render(request, 'products/list.html', {'products': products})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> django.shortcuts <span class="text-[#FF7B72]">import</span> render
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">from</span> django.shortcuts <span class="text-[#FF7B72]">import</span> render
 <span class="text-[#FF7B72]">from</span> myproject.sf <span class="text-[#FF7B72]">import</span> sf
 <span class="text-[#FF7B72]">from</span> .models <span class="text-[#FF7B72]">import</span> Product
 
@@ -316,7 +316,7 @@ def monthly_report(request):
     <p>No active products.</p>
 {% endfor %}' class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100"><span class="text-gray-500">&lt;!-- Total count --&gt;</span>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-gray-500">&lt;!-- Total count --&gt;</span>
 <span class="text-blue-300">&lt;p&gt;</span>Total products: <span class="text-yellow-300">{{ count }}</span><span class="text-blue-300">&lt;/p&gt;</span>
 
 <span class="text-green-400">{% for product in products %}</span>
@@ -413,9 +413,10 @@ def bulk_activate(request):
     # ... rest of middleware
 ]" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100">MIDDLEWARE <span class="text-gray-400">=</span> [
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">MIDDLEWARE <span class="text-gray-400">=</span> [
     <span class="text-green-300">'django.middleware.security.SecurityMiddleware'</span>,
     <span class="text-yellow-300">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,  <span class="text-gray-500"># ← Request inspection + security headers</span>
+    <span class="text-yellow-300">'syncforge.middleware.SyncForgeMaintenanceMiddleware'</span>, <span class="text-gray-500"># ← Ultra-fast 4 AM IST Auto Cleanup</span>
     <span class="text-green-300">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
     <span class="text-gray-500"># ... rest of middleware</span>
 ]</pre>
@@ -435,7 +436,7 @@ def bulk_activate(request):
     sign_requests=True,# HMAC signing for replay protection (default: True)
 )" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
     </div>
-    <pre class="p-4 text-sm font-mono text-gray-100">sf <span class="text-gray-400">=</span> SyncForge(
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">sf <span class="text-gray-400">=</span> SyncForge(
     api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
     silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,       <span class="text-gray-500"># Log warnings, never raise — keeps your app running</span>
     async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,   <span class="text-gray-500"># refresh() returns immediately, runs in background</span>

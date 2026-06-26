@@ -165,6 +165,18 @@
         .spacing-system {
             margin-bottom: 24px;
         }
+        
+        /* Custom Scrollbar for Code Snippets (Horizontal) */
+        pre::-webkit-scrollbar, .overflow-x-auto::-webkit-scrollbar {
+            height: 4px;
+        }
+        pre::-webkit-scrollbar-track, .overflow-x-auto::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        pre::-webkit-scrollbar-thumb, .overflow-x-auto::-webkit-scrollbar-thumb {
+            background-color: #3B82F6;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body class="bg-brand-bg text-brand-primary min-h-screen flex flex-col">

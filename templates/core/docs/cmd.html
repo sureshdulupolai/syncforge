@@ -31,7 +31,7 @@
                 Streams the chronological audit log of your project's events. This command lets you track exactly when tables are created, when API keys are generated, and most importantly, when cache <code class="font-mono bg-gray-100 px-1 rounded">refresh</code> signals are triggered by your backend.
             </p>
             <div class="bg-[#0D1117] rounded-xl overflow-hidden">
-                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#79C0FF]">$</span> logs
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#79C0FF]">$</span> logs
 <span class="text-[#8B949E]">--- SyncForge Event Logs ---
 [2026-06-25 14:00:00] [Table Created] Registered table ID: users
 [2026-06-25 14:05:30] [Sync Refresh] Manually refreshed table 'users'. New version: 2</span></pre>
@@ -51,7 +51,7 @@
                 <strong>Security Note:</strong> SyncForge utilizes a Zero-Knowledge architecture. Your actual database row data is securely fetched and stored exclusively on your client environments (inside their local encrypted caches). Therefore, this command returns the performance metrics and structural profile of the cache, not the data payload itself.
             </p>
             <div class="bg-[#0D1117] rounded-xl overflow-hidden">
-                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#79C0FF]">$</span> table users
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#79C0FF]">$</span> table users
 <span class="text-[#8B949E]">--- Fetching Data Profile for 'users' ---
 Note: Actual row data is securely cached in your local environment.
 
@@ -94,11 +94,11 @@ Cache Hits:      1042</span></pre>
                 Runs a real-time, zero-knowledge speed benchmark comparing your Database fetch time vs the SyncForge Cache fetch time. Prints the results directly to your local server terminal.
             </p>
             <div class="bg-[#0D1117] rounded-xl overflow-hidden mb-4">
-                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"># Local Python Code
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"># Local Python Code
 sf.speed(User.objects.all())</pre>
             </div>
             <div class="bg-[#0D1117] rounded-xl overflow-hidden">
-                <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#79C0FF]">$</span> python manage.py runserver
+                <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#79C0FF]">$</span> python manage.py runserver
 <span class="text-[#8B949E]">
 🚀 --- SyncForge Speed Benchmark ---
 Table Name:    __sf_internal_speed_test__
