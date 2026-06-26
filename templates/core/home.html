@@ -445,5 +445,57 @@ sf = SyncForge(api_key, dev_mode=<span class="text-[#79C0FF]">False</span>, back
         </div>
     </div>
 </section>
+<!-- Security & Maintenance Section -->
+<section class="py-24 bg-gradient-to-b from-white to-gray-50 border-b border-brand-border overflow-hidden relative">
+    <div class="max-w-container mx-auto px-6 relative z-10">
+        <div class="text-center mb-16">
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-accent mb-3 block">Defense in Depth</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 text-brand-primary">Built-in WAF & Auto-Maintenance</h2>
+            <p class="text-brand-secondary text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light">
+                SyncForge isn't just a cache engine. It natively protects your application against common web vulnerabilities and self-cleans its memory footprint every night.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
+            <!-- Left: Security Card -->
+            <div class="bg-[#0a0a0a] rounded-2xl p-8 shadow-2xl border border-gray-800 transform hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden flex flex-col">
+                <div class="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="flex items-center gap-4 mb-6 relative z-10">
+                    <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-red-500 border border-red-500/30">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">Security Middleware</h3>
+                </div>
+                <p class="text-gray-400 mb-8 leading-relaxed relative z-10 flex-grow">
+                    The <code class="text-red-400 font-mono text-sm">SyncForgeSecurityMiddleware</code> acts as a lightweight Web Application Firewall (WAF). It instantly blocks SQL Injection, XSS, and Path Traversal payloads while enforcing strict CSP headers.
+                </p>
+                <ul class="space-y-3 text-sm text-gray-300 font-mono relative z-10">
+                    <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Blocks SQLi & XSS signatures</li>
+                    <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Enforces strict Permissions-Policy</li>
+                    <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Validates HTTP Referrer origins</li>
+                </ul>
+            </div>
+
+            <!-- Right: Maintenance Card -->
+            <div class="bg-[#0a0a0a] rounded-2xl p-8 shadow-2xl border border-gray-800 transform hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden flex flex-col">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="flex items-center gap-4 mb-6 relative z-10">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-500 border border-blue-500/30">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">4 AM Auto-Cleanup</h3>
+                </div>
+                <p class="text-gray-400 mb-8 leading-relaxed relative z-10 flex-grow">
+                    The <code class="text-blue-400 font-mono text-sm">SyncForgeMaintenanceMiddleware</code> acts as a self-healing background daemon. Precisely at 4:00 AM IST, it garbage-collects expired memory and wipes stale AES-encrypted disk cache files.
+                </p>
+                <ul class="space-y-3 text-sm text-gray-300 font-mono relative z-10">
+                    <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Zero-latency overhead (O(1) time)</li>
+                    <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Prevents OOM memory leaks</li>
+                    <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Flushes AES-256 disk artifacts</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
 
 {% endblock %}
