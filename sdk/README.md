@@ -82,7 +82,6 @@ sf.refresh("products")   # Tell SyncForge this table changed
 # cache_query serves from cache; hits DB only on miss or after refresh
 products = sf.cache_query(
     table_name="core_product",
-    cache_key="all_active_products",
     queryset=Product.objects.filter(active=True).order_by("name"),
     timeout=3600,   # Fallback TTL in seconds (None = developer-only invalidation)
 )
@@ -127,7 +126,6 @@ from .models import Product
 def product_list(request):
     products = sf.cache_query(
         table_name="core_product",
-        cache_key="all_active_products",
         queryset=Product.objects.filter(active=True).order_by("name"),
         timeout=3600,
     )
@@ -180,6 +178,20 @@ This adds:
 > or template auto-escaping. Always validate and sanitise input in your
 > application code.
 
+### Auto Maintenance Middleware (4 AM IST Cleanup)
+
+SyncForge automatically calculates cache expiration at 4:00 AM IST. To ensure old cache files and RAM memory are safely and instantly garbage-collected at exactly 4:00 AM without relying on a sleeping background thread, add the Maintenance Middleware:
+
+```python
+# settings.py
+MIDDLEWARE = [
+    # ...
+    'syncforge.middleware.SyncForgeMaintenanceMiddleware',
+]
+```
+
+This middleware performs a single `time.time()` float comparison on every request, ensuring **zero performance overhead (a few nanoseconds)**. It performs the actual cleanup asynchronously without delaying user requests.
+
 ---
 
 ## FastAPI / Flask Integration
@@ -192,9 +204,13 @@ SyncForge works with any Python web framework:
 import os
 from fastapi import FastAPI
 from syncforge import SyncForge
+from syncforge.fastapi import SyncForgeMaintenanceMiddleware
 
 sf  = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
 app = FastAPI()
+
+# Ultra-fast auto-maintenance at 4 AM IST
+app.add_middleware(SyncForgeMaintenanceMiddleware, sf_client=sf)
 
 @app.post("/products/")
 async def create_product(name: str, price: float):
@@ -209,9 +225,13 @@ async def create_product(name: str, price: float):
 import os
 from flask import Flask
 from syncforge import SyncForge
+from syncforge.flask import SyncForgeFlask
 
 sf  = SyncForge(api_key=os.environ['SYNCFORGE_API_KEY'])
 app = Flask(__name__)
+
+# SyncForgeFlask automatically registers the WAF and Maintenance hooks
+sf_ext = SyncForgeFlask(app, sf)
 
 @app.post("/products/")
 def create_product():
@@ -266,7 +286,6 @@ Serve data from cache; query the database on miss or after invalidation.
 ```python
 data = sf.cache_query(
     table_name="core_product",
-    cache_key="active_products",
     queryset=Product.objects.filter(active=True),
     timeout=3600,    # seconds; None = no automatic expiration
 )
@@ -292,7 +311,7 @@ Register a table programmatically (called automatically by `@sync_model`).
 |---|---|
 | Standard data (changes regularly) | `timeout=3600` (1 hour) |
 | Developer-only invalidation | `timeout=None` + `sf.refresh()` after writes |
-| Monthly refresh | `timeout=None`, rotate `cache_key` by year/month |
+| Monthly refresh | `timeout=None`, rotate query dynamically by year/month |
 | Permanent static data | `timeout=None`, never call `sf.refresh()` |
 
 ### Monthly rotation example
@@ -303,8 +322,7 @@ import datetime
 now = datetime.date.today()
 data = sf.cache_query(
     table_name="core_config",
-    cache_key=f"config_{now.year}_{now.month}",  # New key each month
-    queryset=Config.objects.filter(active=True),
+    queryset=Config.objects.filter(active=True, created__year=now.year, created__month=now.month),
     timeout=None,
 )
 ```

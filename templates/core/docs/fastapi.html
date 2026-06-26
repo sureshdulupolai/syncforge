@@ -26,7 +26,7 @@
     </div>
     <pre class="p-4 text-sm font-mono text-[#C9D1D9]"><span class="text-[#FF7B72]">from</span> fastapi <span class="text-[#FF7B72]">import</span> FastAPI, Depends
 <span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
-<span class="text-[#FF7B72]">from</span> syncforge.fastapi <span class="text-[#FF7B72]">import</span> SyncForgeWAFMiddleware, get_syncforge
+<span class="text-[#FF7B72]">from</span> syncforge.fastapi <span class="text-[#FF7B72]">import</span> SyncForgeWAFMiddleware, SyncForgeMaintenanceMiddleware, get_syncforge
 <span class="text-[#FF7B72]">import</span> os
 
 <span class="text-[#8B949E]"># Initialize SyncForge once globally</span>
@@ -38,6 +38,7 @@ sf = SyncForge(
 
 app = FastAPI()
 app.add_middleware(SyncForgeWAFMiddleware, sf_client=sf)
+app.add_middleware(SyncForgeMaintenanceMiddleware, sf_client=sf) # Ultra-fast 4 AM IST Auto Cleanup
 </pre>
 </div>
 
@@ -110,7 +111,6 @@ app.add_middleware(SyncForgeWAFMiddleware, sf_client=sf)
         <span class="text-[#8B949E]"># 2. Cache Miss: Execute DB query and automatically save to memory</span>
         data = sf_client.cache_query(
             table_name=<span class="text-[#A5D6FF]">"users"</span>,
-            cache_key=<span class="text-[#A5D6FF]">"all_users"</span>,
             queryset=<span class="text-[#FF7B72]">await</span> db.fetch_all(<span class="text-[#A5D6FF]">"SELECT * FROM users"</span>),
             timeout=<span class="text-[#79C0FF]">3600</span>
         )

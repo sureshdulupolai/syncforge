@@ -56,6 +56,26 @@ class SyncForgeFlask:
             if hasattr(self.sf_client, "_local"):
                 self.sf_client._local.client_ip = ip
                 
+        @app.before_request
+        def check_maintenance():
+            import time
+            from .engine import Maintenance
+            
+            if time.time() > Maintenance.next_cleanup:
+                if Maintenance.lock.acquire(blocking=False):
+                    try:
+                        Maintenance.next_cleanup = Maintenance.compute_next()
+                        import threading
+                        def _cleanup():
+                            try:
+                                if self.sf_client:
+                                    self.sf_client.clear_syncforge_cache()
+                            except Exception as e:
+                                logger.error(f"[SyncForge Maintenance] Cleanup failed: {e}")
+                        threading.Thread(target=_cleanup, daemon=True).start()
+                    finally:
+                        Maintenance.lock.release()
+                
         @app.after_request
         def cleanup_waf(response):
             if hasattr(self.sf_client, "_local"):

@@ -23,8 +23,7 @@
         <li><a href="#refresh" class="hover:text-brand-accent">6. Manual refresh after writes</a></li>
         <li><a href="#signals" class="hover:text-brand-accent">7. How signals work</a></li>
         <li><a href="#middleware" class="hover:text-brand-accent">8. Security middleware</a></li>
-        <li><a href="#monthly" class="hover:text-brand-accent">9. Monthly / scheduled refresh</a></li>
-        <li><a href="#production" class="hover:text-brand-accent">10. Production settings</a></li>
+        <li><a href="#production" class="hover:text-brand-accent">9. Production settings</a></li>
     </ol>
 </div>
 
@@ -258,6 +257,43 @@ def product_list(request):
     </p>
 </div>
 
+<h3 class="text-lg font-bold text-brand-primary mb-3 mt-8">Monthly / Scheduled Data Refresh</h3>
+<p class="text-sm text-brand-secondary mb-3">
+    For data that changes infrequently (e.g. once a month), use <code class="font-mono bg-gray-100 px-1 rounded">timeout=None</code> and rotate the query dynamically by time period. This means the cache is only invalidated by your refresh call or by the month changing — never by a clock.
+</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">views.py — monthly cache pattern</span>
+        <button onclick="copyCode(this)" data-code="import datetime
+from myproject.sf import sf
+
+def monthly_report(request):
+    now = datetime.date.today()
+    # The query itself generates a unique auto-key for the current month
+
+    data = sf.cache_query(
+        table_name='core_report',
+        queryset=Report.objects.filter(active=True, created__year=now.year, created__month=now.month),
+        timeout=None,   # Never expires — only sf.refresh() clears it
+    )
+    return render(request, 'reports/monthly.html', {'data': data})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">import</span> datetime
+<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+
+<span class="text-blue-400">def</span> <span class="text-yellow-300">monthly_report</span>(request):
+    now <span class="text-gray-400">=</span> datetime.date.today()
+    <span class="text-gray-500"># The query itself generates a unique auto-key for the current month</span>
+
+    data <span class="text-gray-400">=</span> sf.cache_query(
+        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_report'</span>,
+        queryset<span class="text-gray-400">=</span>Report.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>, created__year<span class="text-gray-400">=</span>now.year, created__month<span class="text-gray-400">=</span>now.month),
+        timeout<span class="text-gray-400">=</span><span class="text-blue-300">None</span>,   <span class="text-gray-500"># Never expires — only sf.refresh() clears it</span>
+    )
+    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'reports/monthly.html'</span>, {<span class="text-green-300">'data'</span>: data})</pre>
+</div>
+
+
 <!-- 5 Template -->
 <h2 id="template" class="text-xl font-semibold mb-3 scroll-mt-20">5. Render data in templates</h2>
 <p class="text-sm text-brand-secondary mb-3">
@@ -372,6 +408,7 @@ def bulk_activate(request):
         <button onclick="copyCode(this)" data-code="MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'syncforge.middleware.SyncForgeSecurityMiddleware',  # ← Request inspection + security headers
+    'syncforge.middleware.SyncForgeMaintenanceMiddleware', # ← Ultra-fast 4 AM IST Auto Cleanup
     'django.contrib.sessions.middleware.SessionMiddleware',
     # ... rest of middleware
 ]" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
@@ -383,51 +420,10 @@ def bulk_activate(request):
     <span class="text-gray-500"># ... rest of middleware</span>
 ]</pre>
 </div>
-<p class="text-sm text-brand-secondary mb-8">Adds: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, basic request inspection (SQLi/XSS/path traversal scanning). See <a href="{% url 'docs_security' %}" class="text-brand-accent hover:underline">Security Middleware</a> for full docs.</p>
+<p class="text-sm text-brand-secondary mb-8">Adds: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, basic request inspection (SQLi/XSS/path traversal scanning). Also includes the <strong>Maintenance Middleware</strong> which automatically clears expired caches at exactly 4:00 AM IST with zero performance overhead (a few nanoseconds per request). See <a href="{% url 'docs_security' %}" class="text-brand-accent hover:underline">Security Middleware</a> for full docs.</p>
 
-<!-- 9 Monthly refresh -->
-<h2 id="monthly" class="text-xl font-semibold mb-3 scroll-mt-20">9. Monthly / scheduled data refresh</h2>
-<p class="text-sm text-brand-secondary mb-3">
-    For data that changes infrequently (e.g. once a month), use <code class="font-mono bg-gray-100 px-1 rounded">timeout=None</code> and rotate the <code class="font-mono bg-gray-100 px-1 rounded">cache_key</code> by time period. This means the cache is only invalidated by your refresh call — never by a clock.
-</p>
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">views.py — monthly cache pattern</span>
-        <button onclick="copyCode(this)" data-code="import datetime
-from myproject.sf import sf
-
-def monthly_report(request):
-    now = datetime.date.today()
-    # New cache_key each month = automatic rotation
-    key = f'report_{now.year}_{now.month}'
-
-    data = sf.cache_query(
-        table_name='products',
-        cache_key=key,
-        queryset=Report.objects.filter(active=True),
-        timeout=None,   # Never expires on its own — only sf.refresh() clears it
-    )
-    return render(request, 'reports/monthly.html', {'data': data})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
-    </div>
-    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">import</span> datetime
-<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
-
-<span class="text-blue-400">def</span> <span class="text-yellow-300">monthly_report</span>(request):
-    now <span class="text-gray-400">=</span> datetime.date.today()
-    <span class="text-gray-500"># New cache_key each month = automatic rotation</span>
-    key <span class="text-gray-400">=</span> <span class="text-green-300">f'report_{now.year}_{now.month}'</span>
-
-    data <span class="text-gray-400">=</span> sf.cache_query(
-        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_report'</span>,
-        cache_key<span class="text-gray-400">=</span>key,
-        queryset<span class="text-gray-400">=</span>Report.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>),
-        timeout<span class="text-gray-400">=</span><span class="text-blue-300">None</span>,   <span class="text-gray-500"># Never expires — only sf.refresh() clears it</span>
-    )
-    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'reports/monthly.html'</span>, {<span class="text-green-300">'data'</span>: data})</pre>
-</div>
-
-<!-- 10 Production -->
-<h2 id="production" class="text-xl font-semibold mb-3 scroll-mt-20">10. Production settings</h2>
+<!-- 9 Production -->
+<h2 id="production" class="text-xl font-semibold mb-3 scroll-mt-20">9. Production settings</h2>
 <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
         <span class="text-xs font-mono text-gray-400">production client</span>

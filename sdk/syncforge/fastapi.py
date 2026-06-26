@@ -90,6 +90,39 @@ def get_syncforge(sf_client) -> Callable:
         def read_items(sf=Depends(get_syncforge(sf))):
             return sf.cache_query(...)
     """
-    def _dependency():
+        def _dependency():
         return sf_client
     return _dependency
+
+class SyncForgeMaintenanceMiddleware(BaseHTTPMiddleware):
+    """
+    Ultra-fast middleware to automatically trigger daily 4 AM IST cache cleanup.
+    Performs a single float comparison per request (zero performance overhead).
+    
+    Installation:
+        app.add_middleware(SyncForgeMaintenanceMiddleware, sf_client=sf)
+    """
+    def __init__(self, app, sf_client):
+        super().__init__(app)
+        self.sf_client = sf_client
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        import time
+        from .engine import Maintenance
+        
+        if time.time() > Maintenance.next_cleanup:
+            if Maintenance.lock.acquire(blocking=False):
+                try:
+                    Maintenance.next_cleanup = Maintenance.compute_next()
+                    import threading
+                    def _cleanup():
+                        try:
+                            if self.sf_client:
+                                self.sf_client.clear_syncforge_cache()
+                        except Exception as e:
+                            logger.error(f"[SyncForge Maintenance] Cleanup failed: {e}")
+                    threading.Thread(target=_cleanup, daemon=True).start()
+                finally:
+                    Maintenance.lock.release()
+                    
+        return await call_next(request)

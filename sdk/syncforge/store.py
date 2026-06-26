@@ -33,6 +33,9 @@ class BaseStore:
         for key in keys:
             self.delete(key)
 
+    def clear_syncforge_cache(self) -> None:
+        pass
+
 class InMemoryStore(BaseStore):
     """Default fallback store. Always safe, always available."""
     def __init__(self):
@@ -58,6 +61,12 @@ class InMemoryStore(BaseStore):
         with self._lock:
             self._data.pop(key, None)
 
+    def clear_syncforge_cache(self) -> None:
+        with self._lock:
+            keys_to_delete = [k for k in self._data.keys() if k.startswith("syncforge_")]
+            for k in keys_to_delete:
+                del self._data[k]
+
 class DjangoCacheStore(BaseStore):
     """Optional store for Django users."""
     def __init__(self):
@@ -78,6 +87,24 @@ class DjangoCacheStore(BaseStore):
 
     def delete_many(self, keys: List[str]) -> None:
         self._cache.delete_many(keys)
+
+    def clear_syncforge_cache(self) -> None:
+        try:
+            if hasattr(self._cache, 'delete_pattern'):
+                self._cache.delete_pattern("syncforge_*")
+            elif hasattr(self._cache, 'keys'):
+                keys = self._cache.keys("syncforge_*")
+                if keys:
+                    self._cache.delete_many(keys)
+            elif hasattr(self._cache, '_cache'):
+                # Locmem fallback
+                keys = [k for k in self._cache._cache.keys() if str(k).split(":")[-1].startswith("syncforge_")]
+                if keys:
+                    self._cache.delete_many([str(k).split(":")[-1] for k in keys])
+            else:
+                logger.warning("Django cache backend does not support wildcard deletion. Cannot selectively clear SyncForge cache.")
+        except Exception as e:
+            logger.error(f"[SyncForge] Failed to clear Django cache: {e}")
 
 class RedisStore(BaseStore):
     """Optional store for explicit Redis configurations."""
@@ -120,6 +147,16 @@ class RedisStore(BaseStore):
         if keys:
             self._redis.delete(*keys)
 
+    def clear_syncforge_cache(self) -> None:
+        try:
+            cursor = '0'
+            while cursor != 0:
+                cursor, keys = self._redis.scan(cursor=cursor, match="syncforge_*", count=100)
+                if keys:
+                    self._redis.delete(*keys)
+        except Exception as e:
+            logger.error(f"[SyncForge Redis] Clear failed: {e}")
+
 class StoreManager:
     """
     Manages the static backend selection and fallback logic.
@@ -151,9 +188,15 @@ class StoreManager:
     def store(self) -> BaseStore:
         return self._store
 
+    def clear_syncforge_cache(self) -> None:
+        """Clears all syncforge_* prefixed keys from the active backend."""
+        self._store.clear_syncforge_cache()
+        if self._store is not self._fallback_store:
+            self._fallback_store.clear_syncforge_cache()
+
     # Helper methods for registry management (used by client.py)
     def register_cache_key(self, table_name: str, cache_key: str, timeout: Optional[int]) -> None:
-        registry_key = f"sf_registry_{table_name}"
+        registry_key = f"syncforge_registry_{table_name}"
         registry_ttl = timeout if timeout is not None else 86400
         try:
             existing_keys: set = self._store.get(registry_key) or set()
@@ -168,7 +211,7 @@ class StoreManager:
             self._fallback_store.set(registry_key, existing_keys, registry_ttl)
 
     def invalidate_table_registry(self, table_name: str) -> None:
-        registry_key = f"sf_registry_{table_name}"
+        registry_key = f"syncforge_registry_{table_name}"
         try:
             keys: set = self._store.get(registry_key) or set()
             if keys:

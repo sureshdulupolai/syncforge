@@ -244,6 +244,24 @@ class ObjectDeduplicator:
                     deduped.append(item)
         return deduped
 
+# ─── Maintenance Utils ─────────────────────────────────────────────────────────
+class Maintenance:
+    """Provides ultra-fast synchronization for middleware-based cache cleanup."""
+    next_cleanup = 0.0
+    lock = threading.Lock()
+
+    @staticmethod
+    def compute_next() -> float:
+        import datetime
+        ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+        now = datetime.datetime.now(ist_tz)
+        target = now.replace(hour=4, minute=0, second=0, microsecond=0)
+        if now >= target:
+            target += datetime.timedelta(days=1)
+        return target.timestamp()
+
+Maintenance.next_cleanup = Maintenance.compute_next()
+
 # ─── RAM Manager ───────────────────────────────────────────────────────────────
 class SmartRAMManager:
     def __init__(self, max_items: int = 1000, policy: EvictionPolicy = EvictionPolicy.LRU):
@@ -358,9 +376,12 @@ class CacheEngine:
         threading.Thread(target=self._daily_preload_job, daemon=True).start()
 
     def _daily_preload_job(self) -> None:
-        """Runs at 4:00 AM every day to clear RAM, compact disk, and preload fresh from disk."""
+        """Runs at 4:00 AM IST every day to clear RAM, compact disk, and preload fresh from disk."""
+        import datetime
         while True:
-            now = datetime.datetime.now()
+            # Calculate target time in IST (UTC+5:30)
+            ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+            now = datetime.datetime.now(ist_tz)
             target = now.replace(hour=4, minute=0, second=0, microsecond=0)
             if now >= target:
                 target += datetime.timedelta(days=1)
@@ -368,7 +389,7 @@ class CacheEngine:
             seconds_to_sleep = (target - now).total_seconds()
             time.sleep(seconds_to_sleep)
             
-            logger.info("[SyncForge] 4:00 AM reached. Executing intelligent daily maintenance.")
+            logger.info("[SyncForge] 4:00 AM IST reached. Executing intelligent daily maintenance.")
             
             # Wipe RAM entirely
             self.ram._cache.clear()
@@ -414,10 +435,25 @@ class CacheEngine:
         except Exception as e:
             logger.debug("[SyncForge] Preload error: %s", e)
 
+    def clear_syncforge_cache(self) -> None:
+        """Clears all RAM and Disk cache entries associated with SyncForge."""
+        # Clear RAM
+        self.ram._cache.clear()
+        self.ram._heat_stats.clear()
+        self.ram._current_memory = 0
+        
+        # Clear Disk
+        try:
+            for filename in os.listdir(self.base_dir):
+                if filename.startswith("syncforge_") and (filename.endswith(".sfcache") or filename.endswith(".sfcache.tmp")):
+                    os.remove(os.path.join(self.base_dir, filename))
+        except Exception as e:
+            logger.error(f"[SyncForge] Disk clear failed: {e}")
+
     def _get_internal_key(self, table_name: str, cache_key: str) -> str:
         safe_table = "".join([c for c in table_name if c.isalnum() or c == "_"])
         safe_key = hashlib.md5(cache_key.encode()).hexdigest()
-        return f"{safe_table}_{safe_key}"
+        return f"syncforge_{safe_table}_{safe_key}"
 
     def get(self, table_name: str, cache_key: str, storage: StorageMode, expected_version: int = 1) -> Optional[Any]:
         if storage == StorageMode.DISABLED:
@@ -439,8 +475,8 @@ class CacheEngine:
         if payload is not None:
             # 3. Time / Version Verification (Stale Cache Eviction)
             if payload.version < expected_version:
-                logger.debug(f"[SyncForge] Stale cache detected for {table_name}. Expected version >= {expected_version}, got {payload.version}. Evicting.")
-                self.delete(table_name, cache_key)
+                logger.debug(f"[SyncForge] Stale cache detected for {table_name}. Expected version >= {expected_version}, got {payload.version}. Evicting table cache.")
+                self.delete_table_cache(table_name)
                 return None
             return payload.data
 
@@ -492,6 +528,32 @@ class CacheEngine:
                 os.remove(disk_path)
             except OSError:
                 pass
+
+    def delete_table_cache(self, table_name: str) -> None:
+        """Deletes all cache keys associated with a table. Ensures old data is deleted when new data is fetched."""
+        safe_table = "".join([c for c in table_name if c.isalnum() or c == "_"])
+        prefix = f"syncforge_{safe_table}_"
+        
+        # RAM Cleanup
+        keys_to_delete = [k for k in self.ram._cache.keys() if k.startswith(prefix)]
+        for k in keys_to_delete:
+            self.ram.delete(k)
+            
+        # Disk Cleanup
+        try:
+            for filename in os.listdir(self.base_dir):
+                if filename.startswith(prefix) and filename.endswith(".sfcache"):
+                    disk_path = os.path.join(self.base_dir, filename)
+                    try:
+                        # Secure wipe
+                        size = os.path.getsize(disk_path)
+                        with open(disk_path, "wb") as f:
+                            f.write(os.urandom(size))
+                        os.remove(disk_path)
+                    except OSError:
+                        pass
+        except OSError:
+            pass
 
     def _write_disk(self, internal_key: str, payload: CachePayload, comp_type: CompressionType) -> None:
         path = os.path.join(self.base_dir, f"{internal_key}.sfcache")

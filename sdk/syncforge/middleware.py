@@ -242,3 +242,56 @@ class SyncForgeSecurityMiddleware(MiddlewareMixin):
         haystack = " ".join(parts)
 
         return bool(_COMBINED_PATTERN.search(haystack))
+
+class SyncForgeMaintenanceMiddleware(MiddlewareMixin):
+    """
+    Ultra-fast middleware to automatically trigger daily 4 AM IST cache cleanup.
+    Performs a single float comparison per request (zero performance overhead).
+    
+    Installation:
+        MIDDLEWARE = [
+            ...
+            'syncforge.middleware.SyncForgeMaintenanceMiddleware',
+        ]
+    """
+
+    def process_request(self, request):
+        if not HAS_DJANGO:
+            return None
+
+        from .engine import Maintenance
+        import time
+
+        if time.time() > Maintenance.next_cleanup:
+            if Maintenance.lock.acquire(blocking=False):
+                try:
+                    Maintenance.next_cleanup = Maintenance.compute_next()
+                    self._trigger_background_cleanup()
+                finally:
+                    Maintenance.lock.release()
+        return None
+
+    def _trigger_background_cleanup(self):
+        import threading
+        def _cleanup():
+            try:
+                # Attempt to find the sf client in Django settings
+                sf_client_path = getattr(_django_settings, "SYNCFORGE_CLIENT", None)
+                if sf_client_path:
+                    from django.utils.module_loading import import_string
+                    sf = import_string(sf_client_path)
+                    sf.clear_syncforge_cache()
+                else:
+                    # Fallback to direct disk cache cleanup
+                    import os
+                    from syncforge.client import _get_default_cache_dir
+                    base_dir = _get_default_cache_dir()
+                    if os.path.exists(base_dir):
+                        for filename in os.listdir(base_dir):
+                            if filename.startswith("syncforge_") and (filename.endswith(".sfcache") or filename.endswith(".sfcache.tmp")):
+                                os.remove(os.path.join(base_dir, filename))
+            except Exception as e:
+                logger.error(f"[SyncForge Maintenance] Cleanup failed: {e}")
+        
+        threading.Thread(target=_cleanup, daemon=True).start()
+

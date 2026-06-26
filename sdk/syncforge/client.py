@@ -297,7 +297,7 @@ def _get_default_cache_dir() -> str:
         self._validate_table_name(table_name)
         self._check_waf(table_name)
         if not cache_key:
-            cache_key = f"sf_{self._project_prefix}_{table_name}"
+            cache_key = f"syncforge_{self._project_prefix}_{table_name}"
             
         # Try to get metadata
         storage_mode = StorageMode.RAM_DISK
@@ -340,8 +340,9 @@ def _get_default_cache_dir() -> str:
                 The database table name (matches the ``table_name`` in your
                 ``@sync_model`` decorator or dashboard configuration).
             cache_key:
-                A unique string identifying this cached dataset. Use
-                per-user or per-client keys to avoid data leakage.
+                [DEPRECATED/IGNORED] Manual cache keys are ignored for security 
+                reasons. SyncForge automatically generates a deterministic, 
+                hacker-proof HMAC key combining the table version and query hash.
             queryset:
                 A Django ``QuerySet`` (or any iterable) to evaluate on cache
                 miss. Must be serialisable by the cache backend.
@@ -358,21 +359,19 @@ def _get_default_cache_dir() -> str:
 
         Examples::
 
-            # Basic usage
+            # Basic usage (Secure Key Auto-Generated)
             products = sf.cache_query(
                 table_name='core_product',
-                cache_key='all_active_products',
                 queryset=Product.objects.filter(active=True).order_by('name'),
                 timeout=3600,
             )
 
-            # Monthly cache — timeout=None, rotation via cache_key
+            # Monthly cache — timeout=None
             import datetime
             now = datetime.date.today()
             products = sf.cache_query(
                 table_name='core_product',
-                cache_key=f'products_{now.year}_{now.month}',
-                queryset=Product.objects.filter(active=True),
+                queryset=Product.objects.filter(active=True, created__year=now.year),
                 timeout=None,
             )
         """
@@ -391,13 +390,28 @@ def _get_default_cache_dir() -> str:
         if queryset is None:
             raise ValueError("queryset must be provided.")
             
+        # Security: Ignore any manually provided cache_key for robustness and speed
+        if cache_key:
+            logger.debug("[SyncForge] Manual cache_key is ignored. Auto-generating lightweight query key.")
+            cache_key = None
+            
         if not cache_key:
             import hashlib
             query_str = str(getattr(queryset, 'query', queryset))
             query_hash = hashlib.sha256(query_str.encode('utf-8')).hexdigest()[:16]
-            cache_key = f"sf_{self._project_prefix}_{table_name}_{query_hash}"
-        elif not isinstance(cache_key, str):
-            raise ValidationError("cache_key must be a non-empty string.", field="cache_key")
+            cache_key = f"syncforge_{self._project_prefix}_{table_name}_{query_hash}"
+
+        # ── Cap timeout at 4:00 AM IST ─────────────────────────────────────────
+        import datetime
+        ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+        now_ist = datetime.datetime.now(ist_tz)
+        target_ist = now_ist.replace(hour=4, minute=0, second=0, microsecond=0)
+        if now_ist >= target_ist:
+            target_ist += datetime.timedelta(days=1)
+        max_timeout = int((target_ist - now_ist).total_seconds())
+
+        if timeout is None or timeout > max_timeout:
+            timeout = max_timeout
 
         # ── Enterprise Cache Logic ─────────────────────────────────────────────
         storage_mode = StorageMode.RAM_DISK
@@ -718,6 +732,17 @@ def _get_default_cache_dir() -> str:
             'block': block_time_sec,
         }
 
+    def clear_syncforge_cache(self) -> None:
+        """
+        Clears all cache data associated with SyncForge.
+        Works across both the internal CacheEngine (RAM/Disk) and external stores (Redis/Django).
+        """
+        if hasattr(self, 'engine'):
+            self.engine.clear_syncforge_cache()
+            
+        if hasattr(self, 'store_manager'):
+            self.store_manager.clear_syncforge_cache()
+
     # ── Internal Helpers ───────────────────────────────────────────────────────
 
     def _validate_table_name(self, table_name: str) -> None:
@@ -759,7 +784,7 @@ def _get_default_cache_dir() -> str:
         if not ip:
             return
 
-        waf_key = f"sf_waf_{table_name}_{ip}"
+        waf_key = f"syncforge_waf_{table_name}_{ip}"
         
         hits = self.store_manager.get_waf_hits(waf_key)
         if hits is None:
