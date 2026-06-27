@@ -61,3 +61,17 @@ def docs_deployment(request):
 
 def docs_cmd(request):
     return render(request, 'core/docs/cmd.html')
+
+# -- Local Docs Views --
+
+def docs_local_django(request):
+    return render(request, 'core/docs/local_django.html')
+
+def docs_local_flask(request):
+    return render(request, 'core/docs/local_flask.html')
+
+def docs_local_fastapi(request):
+    return render(request, 'core/docs/local_fastapi.html')
+
+def docs_local_rest_api(request):
+    return render(request, 'core/docs/local_rest_api.html')

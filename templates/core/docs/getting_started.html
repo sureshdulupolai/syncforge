@@ -75,8 +75,9 @@
 from syncforge import SyncForge
 
 sf = SyncForge(
-    api_key=os.environ['SYNCFORGE_API_KEY'],
-    backend='in_memory'
+    api_key=os.environ.get('SYNCFORGE_API_KEY', ''),
+    backend='in_memory',
+    dev_mode=True  # Set to False in Production!
 )" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
         </div>
         <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-[#FF7B72]">import</span> os
@@ -84,9 +85,14 @@ sf = SyncForge(
 
 <span class="text-[#8B949E]"># Initialize the SyncForge Engine</span>
 sf = SyncForge(
-    api_key=os.environ[<span class="text-[#A5D6FF]">'SYNCFORGE_API_KEY'</span>],
-    backend=<span class="text-[#A5D6FF]">'in_memory'</span>  <span class="text-[#8B949E]"># Select your storage engine</span>
+    api_key=os.environ.get(<span class="text-[#A5D6FF]">'SYNCFORGE_API_KEY'</span>, <span class="text-[#A5D6FF]">''</span>),
+    backend=<span class="text-[#A5D6FF]">'in_memory'</span>,  <span class="text-[#8B949E]"># Select your storage engine</span>
+    dev_mode=<span class="text-[#79C0FF]">True</span>         <span class="text-[#8B949E]"># 🚀 Offline Development Mode (Bypasses API Key)</span>
 )</pre>
+    </div>
+
+    <div class="mt-4 bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm text-purple-800">
+        <strong>Dev Mode (Offline):</strong> Setting <code class="font-mono text-xs">dev_mode=True</code> completely bypasses network calls to the live server. You won't need an API key, and SyncForge will gracefully log simulated, structured JSON responses directly in your local terminal to help you debug without server load. 
     </div>
 
     <!-- Backend Explanations IMMEDIATELY under the code -->

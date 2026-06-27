@@ -1,0 +1,68 @@
+{% extends 'core/docs/base_docs.html' %}
+
+{% block title %}REST API Local Offline Dev Mode — SyncForge{% endblock %}
+{% block meta_description %}Detailed A-Z guide for testing SyncForge REST APIs locally offline. Learn about mocked endpoints, curl requests, and simulated JSON payloads.{% endblock %}
+
+{% block docs_content %}
+<div class="mb-12">
+    <h1 class="text-3xl font-extrabold text-brand-primary mb-4 tracking-tight">REST API Local (Offline) Mode</h1>
+    <p class="text-lg text-brand-secondary leading-relaxed">
+        If you are integrating SyncForge via direct HTTP calls (curl, axios, Go, Rust), you can still simulate the REST environment locally. By running the SyncForge Local Engine image, all network calls to <code class="font-mono text-sm bg-purple-100 text-purple-900 px-1.5 py-0.5 rounded">localhost:8000</code> are handled offline without touching the cloud.
+    </p>
+</div>
+
+<!-- A-Z Feature Breakdown -->
+<div class="mb-10">
+    <h2 class="text-xl font-semibold mb-4">1. A-Z Event Mocks & Terminal Logs</h2>
+    <p class="text-brand-secondary leading-relaxed mb-6">
+        When hitting the local emulator, you receive identical JSON shapes as you would in production, ensuring your code works seamlessly when deployed.
+    </p>
+
+    <!-- Feature 1 -->
+    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Feature: Trigger Sync via cURL</h3>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">POST /api/v1/sync/</span>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-4">Sending an offline request to invalidate a table.</p>
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X POST http://localhost:8000/api/v1/sync/inventory/
+
+◄ RESPONSE: {
+  "success": true,
+  "status": "ok",
+  "table": "inventory",
+  "message": "[Dev Mode Emulator] Sync Triggered",
+  "data": {
+    "action": "refresh"
+  }
+}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Switch to Live Mode -->
+<div class="mb-10 mt-12 border-t pt-8">
+    <h2 class="text-xl font-semibold mb-3 text-green-700">Switching back to Live (Cloud) Mode</h2>
+    <p class="text-brand-secondary leading-relaxed mb-4">
+        When you are ready to deploy or want to see live analytics in the SyncForge Dashboard, you must switch back to Live Mode.
+    </p>
+    
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+        <ol class="list-decimal pl-5 text-sm text-green-900 space-y-2">
+            <li>Change your base URL from <code class="font-mono text-xs">http://localhost:8000</code> to <code class="font-mono text-xs">https://syncforge.dev</code>.</li>
+            <li>Add the <code class="font-mono text-xs">Authorization: Bearer sf_live_...</code> header to all requests.</li>
+            <li>Once switched, emulator prints will stop, and all logs will instantly begin streaming to your <a href="{% url 'docs_cmd' %}" class="underline font-bold">Remote Dashboard CMD</a>.</li>
+        </ol>
+    </div>
+
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-[#8B949E]"># Back to Live Cloud Mode</span>
+curl -X POST https://syncforge.dev/api/v1/sync/inventory/ \
+  -H "Authorization: Bearer sf_live_abc123..."</pre>
+    </div>
+</div>
+
+{% endblock %}

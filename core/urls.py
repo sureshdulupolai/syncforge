@@ -19,4 +19,10 @@ urlpatterns = [
     path('docs/security/',        views.docs_security,        name='docs_security'),
     path('docs/deployment/',      views.docs_deployment,      name='docs_deployment'),
     path('docs/cmd/',             views.docs_cmd,             name='docs_cmd'),
+    
+    # Local Docs
+    path('docs/local/django/',    views.docs_local_django,    name='docs_local_django'),
+    path('docs/local/flask/',     views.docs_local_flask,     name='docs_local_flask'),
+    path('docs/local/fastapi/',   views.docs_local_fastapi,   name='docs_local_fastapi'),
+    path('docs/local/rest-api/',  views.docs_local_rest_api,  name='docs_local_rest_api'),
 ]

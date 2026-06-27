@@ -175,7 +175,7 @@ def _get_default_cache_dir() -> str:
 
     def __init__(
         self,
-        api_key: str,
+        api_key: str = "",
         base_url: str = DEFAULT_BASE_URL,
         timeout: int = DEFAULT_TIMEOUT,
         silent: bool = False,
@@ -187,6 +187,9 @@ def _get_default_cache_dir() -> str:
         redis_url: Optional[str] = None,
         dev_mode: bool = False,
     ) -> None:
+        if dev_mode:
+            api_key = api_key or "sf_local_dev_key"
+            
         if not api_key or not isinstance(api_key, str):
             raise ConfigurationError("api_key is required and must be a non-empty string.")
         api_key = api_key.strip()
@@ -849,15 +852,6 @@ def _get_default_cache_dir() -> str:
         """Send a refresh signal for a single table to the SyncForge server."""
         table = table.strip().lower()
         
-        if getattr(self, "_dev_mode", False):
-            logger.debug("[SyncForge] Dev Mode active. Bypassing network sync for table '%s'.", table)
-            return SyncResult(
-                ok=True,
-                table=table,
-                message="[Dev Mode] Simulated Sync Triggered",
-                status_code=200
-            )
-        
         # Intelligent Request Coalescing
         with _refresh_coalesce_guard:
             if table not in _refresh_coalesce_locks:
@@ -962,6 +956,51 @@ def _get_default_cache_dir() -> str:
         """
         Execute an authenticated HTTP request to the SyncForge API.
         """
+        if getattr(self, "_dev_mode", False):
+            # OFFLINE DEV MODE: Mock responses and print to terminal
+            import urllib.parse
+            path = urllib.parse.urlparse(url).path
+            
+            mock_res = {"success": True}
+            
+            if method == "POST" and "tables" in path:
+                mock_res.update({"created": True, "message": "Table created locally", "data": json_data})
+            elif method == "DELETE" and "tables" in path:
+                mock_res.update({"deleted": True, "message": "Table deleted locally"})
+            elif method == "GET" and "tables" in path:
+                mock_res.update({"tables": [], "message": "Fetched local tables"})
+            elif method == "POST" and "sync" in path:
+                table_name = path.split("/")[-2] if path.endswith("/") else path.split("/")[-1]
+                mock_res.update({
+                    "status": "ok", 
+                    "table": table_name, 
+                    "project": "local_project",
+                    "database_calls_saved": 0,
+                    "message": "[Dev Mode] Sync Triggered",
+                    "data": {"action": "refresh", "table": table_name}
+                })
+            elif method == "GET" and "project" in path:
+                mock_res.update({
+                    "project": "Local Dev Project", 
+                    "slug": "local-dev", 
+                    "tables": [], 
+                    "active_keys": 1
+                })
+            elif method == "GET" and "health" in path:
+                mock_res.update({"status": "ok"})
+            else:
+                mock_res.update({"message": f"Simulated {method} to {path}", "data": json_data})
+                
+            # Pro-level terminal print for Local Mode developers
+            print(f"\n\033[96m🌐 [SyncForge Local Dev] Simulated Network Request\033[0m")
+            print(f"\033[93m► METHOD:\033[0m {method}")
+            print(f"\033[93m► URL:\033[0m    {url}")
+            if json_data:
+                print(f"\033[93m► PAYLOAD:\033[0m {json.dumps(json_data, indent=2)}")
+            print(f"\033[92m◄ RESPONSE:\033[0m {json.dumps(mock_res, indent=2)}\n")
+            
+            return mock_res
+
         # Build request body.
         if json_data is not None:
             body = json.dumps(json_data).encode("utf-8")

@@ -149,4 +149,31 @@ sf_ext = SyncForgeFlask(app, sf)
     </div>
 </div>
 
+<!-- Switching to Local Mode -->
+<div class="mb-10 mt-12">
+    <h2 class="text-xl font-semibold mb-3">Switching to Local (Offline) Mode</h2>
+    <p class="text-brand-secondary leading-relaxed mb-4">
+        Developing against the Live Cloud ensures you see real dashboard analytics. However, if you are flying, working completely offline, or want to avoid spamming your live project with test data, you can seamlessly switch your Flask project to <strong>Local Dev Mode</strong>.
+    </p>
+    
+    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span class="text-xs font-mono text-gray-400">syncforge_client.py</span>
+            <button onclick="copyCode(this)" data-code="sf = SyncForge(dev_mode=True, backend='in_memory')" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+        </div>
+        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-[#8B949E]"># Instantly drop all network calls. No API key required.</span>
+sf = SyncForge(dev_mode=<span class="text-[#79C0FF]">True</span>, backend=<span class="text-[#A5D6FF]">'in_memory'</span>)</pre>
+    </div>
+    
+    <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 class="font-semibold text-blue-900 mb-1">What happens when you switch?</h4>
+        <ul class="list-disc pl-5 text-sm text-blue-800 space-y-1">
+            <li>SyncForge instantly stops routing requests to the cloud edge.</li>
+            <li>All Flask extensions and routes continue behaving identically.</li>
+            <li>Terminal requests and responses are perfectly mocked and logged directly to your standard output.</li>
+            <li><a href="{% url 'docs_local_flask' %}" class="font-bold underline">Click here to read the full Local Flask Guide.</a></li>
+        </ul>
+    </div>
+</div>
+
 {% endblock %}

@@ -2,70 +2,144 @@
 {% load static %}
 
 {% block content %}
+<style>
+/* Professional Custom Scrollbar for Sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #E2E8F0; 
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #CBD5E1; 
+}
+</style>
 <div class="max-w-container mx-auto px-6 flex gap-0 min-h-screen" style="padding-top:2rem;padding-bottom:4rem;">
 
     <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
-    <aside class="hidden lg:block w-64 flex-shrink-0 pr-8" style="position:sticky;top:5rem;align-self:flex-start;max-height:calc(100vh - 6rem);overflow-y:auto;">
-        <div class="text-xs font-semibold text-brand-muted uppercase tracking-widest mb-3">SyncForge Docs</div>
+    <aside class="hidden lg:block w-64 flex-shrink-0 pr-4 mr-16 custom-scrollbar" style="position:sticky;top:5rem;align-self:flex-start;max-height:calc(100vh - 6rem);overflow-y:auto; overflow-x:hidden;">
+        <div class="text-xs font-semibold text-brand-muted uppercase tracking-widest mb-4">SyncForge Docs</div>
 
-        <nav class="space-y-0.5 text-sm">
+        <nav class="space-y-6 text-sm">
 
-            <div class="pt-2 pb-1">
-                <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider">Overview</span>
+            <!-- OVERVIEW -->
+            <div>
+                <div class="pb-2">
+                    <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider">Overview</span>
+                </div>
+                <div class="space-y-0.5">
+                    <a href="{% url 'docs' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        Introduction
+                    </a>
+                    <a href="{% url 'docs_getting_started' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_getting_started' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        Getting Started
+                    </a>
+                </div>
             </div>
-            <a href="{% url 'docs' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Introduction
-            </a>
-            <a href="{% url 'docs_getting_started' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_getting_started' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Getting Started
-            </a>
 
-            <div class="pt-4 pb-1">
-                <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider">Framework Guides</span>
+            <!-- LIVE (CLOUD) SYNC -->
+            <div>
+                <div class="pb-2 flex items-center justify-between cursor-pointer group" onclick="toggleDocsNav('nav-live', this)">
+                    <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider group-hover:text-brand-primary transition-colors">Live (Cloud) Sync</span>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="nav-live" class="space-y-0.5">
+                    <a href="{% url 'docs_django' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_django' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        Django
+                    </a>
+                    <a href="{% url 'docs_flask' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_flask' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        Flask
+                    </a>
+                    <a href="{% url 'docs_fastapi' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_fastapi' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        FastAPI
+                    </a>
+                    <a href="{% url 'docs_rest_api' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_rest_api' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        REST API Reference
+                    </a>
+                </div>
             </div>
-            <a href="{% url 'docs_django' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_django' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Django
-            </a>
-            <a href="{% url 'docs_flask' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_flask' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Flask
-            </a>
-            <a href="{% url 'docs_fastapi' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_fastapi' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                FastAPI
-            </a>
-            <a href="{% url 'docs_sqlalchemy' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_sqlalchemy' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                SQLAlchemy
-            </a>
-            <a href="{% url 'docs_rest_api' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_rest_api' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                REST API Reference
-            </a>
 
-            <div class="pt-4 pb-1">
-                <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider">Core Concepts</span>
+            <!-- LOCAL (OFFLINE) DEV -->
+            <div>
+                <div class="pb-2 flex items-center justify-between cursor-pointer group" onclick="toggleDocsNav('nav-local', this)">
+                    <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider group-hover:text-purple-600 transition-colors">Local (Offline) Dev</span>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="nav-local" class="space-y-0.5">
+                    <a href="{% url 'docs_local_django' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_local_django' %}bg-purple-50 text-purple-700 font-semibold{% else %}text-brand-secondary hover:text-purple-600 hover:bg-purple-50/50{% endif %}">
+                        Django
+                    </a>
+                    <a href="{% url 'docs_local_flask' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_local_flask' %}bg-purple-50 text-purple-700 font-semibold{% else %}text-brand-secondary hover:text-purple-600 hover:bg-purple-50/50{% endif %}">
+                        Flask
+                    </a>
+                    <a href="{% url 'docs_local_fastapi' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_local_fastapi' %}bg-purple-50 text-purple-700 font-semibold{% else %}text-brand-secondary hover:text-purple-600 hover:bg-purple-50/50{% endif %}">
+                        FastAPI
+                    </a>
+                    <a href="{% url 'docs_local_rest_api' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_local_rest_api' %}bg-purple-50 text-purple-700 font-semibold{% else %}text-brand-secondary hover:text-purple-600 hover:bg-purple-50/50{% endif %}">
+                        REST API Reference
+                    </a>
+                </div>
             </div>
-            <a href="{% url 'docs_python_sdk' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_python_sdk' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Python SDK Reference
-            </a>
-            <a href="{% url 'docs_security' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_security' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Security Middleware
-            </a>
-            <a href="{% url 'docs_deployment' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_deployment' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                Deployment
-            </a>
-            <a href="{% url 'docs_cmd' %}"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_cmd' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
-                SyncForge CMD
-            </a>
+
+            <!-- CORE CONCEPTS -->
+            <div>
+                <div class="pb-2 flex items-center justify-between cursor-pointer group" onclick="toggleDocsNav('nav-core', this)">
+                    <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider group-hover:text-brand-primary transition-colors">Core Concepts</span>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="nav-core" class="space-y-0.5">
+                    <a href="{% url 'docs_sqlalchemy' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_sqlalchemy' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        SQLAlchemy
+                    </a>
+                    <a href="{% url 'docs_python_sdk' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_python_sdk' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        Python SDK Reference
+                    </a>
+                    <a href="{% url 'docs_security' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_security' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        Security Middleware
+                    </a>
+                    <a href="{% url 'docs_deployment' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_deployment' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        Deployment
+                    </a>
+                    <a href="{% url 'docs_cmd' %}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_cmd' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
+                        SyncForge CMD
+                    </a>
+                </div>
+            </div>
         </nav>
+
+        <script>
+            function toggleDocsNav(id, element) {
+                const section = document.getElementById(id);
+                const icon = element.querySelector('svg');
+                
+                if (section.classList.contains('hidden')) {
+                    section.classList.remove('hidden');
+                    icon.classList.add('rotate-180');
+                } else {
+                    section.classList.add('hidden');
+                    icon.classList.remove('rotate-180');
+                }
+            }
+        </script>
 
         <!-- Version badge -->
         <div class="mt-8 pt-6 border-t border-brand-border">

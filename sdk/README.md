@@ -117,6 +117,34 @@ db.execute("INSERT INTO core_product ...")
 sf.refresh("core_product")
 ```
 
+### 4. Local Development (Offline Mode)
+For local development, you can completely bypass network calls to the SyncForge API. This ensures zero server load and allows you to work entirely offline.
+
+```python
+# Pass dev_mode=True. API Key is automatically bypassed.
+sf = SyncForge(dev_mode=True, backend='in_memory')
+```
+
+When `dev_mode` is enabled, all requests (like `refresh` or `create_table`) are intercepted. Instead of hitting the network, SyncForge will print a clear, structured JSON response directly to your local terminal, so you can verify exactly what your application is doing:
+
+```json
+🌐 [SyncForge Local Dev] Simulated Network Request
+► METHOD: POST
+► URL:    https://syncforge.dev/api/v1/sync/core_product/
+◄ RESPONSE: {
+  "success": true,
+  "status": "ok",
+  "table": "core_product",
+  "project": "local_project",
+  "database_calls_saved": 0,
+  "message": "[Dev Mode] Sync Triggered",
+  "data": {
+    "action": "refresh",
+    "table": "core_product"
+  }
+}
+```
+
 ---
 
 ## Framework Integrations
