@@ -47,9 +47,9 @@
             <div>
                 <div class="pb-2 flex items-center justify-between cursor-pointer group" onclick="toggleDocsNav('nav-live', this)">
                     <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider group-hover:text-brand-primary transition-colors">Live (Cloud) Sync</span>
-                    <svg class="w-3.5 h-3.5 text-gray-400 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
-                <div id="nav-live" class="space-y-0.5">
+                <div id="nav-live" class="space-y-0.5 hidden">
                     <a href="{% url 'docs_django' %}"
                        class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_django' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
                         Django
@@ -73,9 +73,9 @@
             <div>
                 <div class="pb-2 flex items-center justify-between cursor-pointer group" onclick="toggleDocsNav('nav-local', this)">
                     <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider group-hover:text-purple-600 transition-colors">Local (Offline) Dev</span>
-                    <svg class="w-3.5 h-3.5 text-gray-400 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
-                <div id="nav-local" class="space-y-0.5">
+                <div id="nav-local" class="space-y-0.5 hidden">
                     <a href="{% url 'docs_local_django' %}"
                        class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_local_django' %}bg-purple-50 text-purple-700 font-semibold{% else %}text-brand-secondary hover:text-purple-600 hover:bg-purple-50/50{% endif %}">
                         Django
@@ -99,9 +99,9 @@
             <div>
                 <div class="pb-2 flex items-center justify-between cursor-pointer group" onclick="toggleDocsNav('nav-core', this)">
                     <span class="text-xs font-semibold text-brand-muted uppercase tracking-wider group-hover:text-brand-primary transition-colors">Core Concepts</span>
-                    <svg class="w-3.5 h-3.5 text-gray-400 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
-                <div id="nav-core" class="space-y-0.5">
+                <div id="nav-core" class="space-y-0.5 hidden">
                     <a href="{% url 'docs_sqlalchemy' %}"
                        class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-subtle {% if request.resolver_match.url_name == 'docs_sqlalchemy' %}bg-blue-50 text-brand-accent font-semibold{% else %}text-brand-secondary hover:text-brand-primary hover:bg-gray-50{% endif %}">
                         SQLAlchemy
@@ -127,6 +127,19 @@
         </nav>
 
         <script>
+            // Restore state on load
+            document.addEventListener('DOMContentLoaded', () => {
+                ['nav-live', 'nav-local', 'nav-core'].forEach(id => {
+                    const isOpen = localStorage.getItem('syncforge_docs_' + id) === 'open';
+                    const section = document.getElementById(id);
+                    if (isOpen && section) {
+                        section.classList.remove('hidden');
+                        const icon = section.previousElementSibling.querySelector('svg');
+                        if (icon) icon.classList.add('rotate-180');
+                    }
+                });
+            });
+
             function toggleDocsNav(id, element) {
                 const section = document.getElementById(id);
                 const icon = element.querySelector('svg');
@@ -134,9 +147,11 @@
                 if (section.classList.contains('hidden')) {
                     section.classList.remove('hidden');
                     icon.classList.add('rotate-180');
+                    localStorage.setItem('syncforge_docs_' + id, 'open');
                 } else {
                     section.classList.add('hidden');
                     icon.classList.remove('rotate-180');
+                    localStorage.setItem('syncforge_docs_' + id, 'closed');
                 }
             }
         </script>

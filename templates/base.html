@@ -193,8 +193,8 @@
                 </a>
             </div>
             
-            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-brand-secondary">
-                <a href="{% url 'docs' %}" class="hover:text-brand-primary transition-subtle">Documentation</a>
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="{% url 'docs' %}" class="transition-subtle {% if '/docs/' in request.path %}text-brand-primary font-bold border-b-2 border-brand-accent pb-0.5{% else %}text-brand-secondary hover:text-brand-primary{% endif %}">Documentation</a>
             </nav>
             
             <!-- Auth -->
@@ -218,8 +218,10 @@
                         </button>
                     </form>
                 {% else %}
-                    <a href="{% url 'login' %}" class="text-brand-secondary hover:text-brand-primary transition-subtle">Login</a>
-                    <a href="{% url 'register' %}" class="bg-brand-accent text-white px-4 py-2 rounded-[4px] hover:bg-brand-accenthover transition-subtle">Sign Up</a>
+                    {% if request.path == '/' %}
+                        <a href="{% url 'login' %}" class="text-brand-secondary hover:text-brand-primary transition-subtle">Login</a>
+                        <a href="{% url 'register' %}" class="bg-brand-accent text-white px-4 py-2 rounded-[4px] hover:bg-brand-accenthover transition-subtle">Sign Up</a>
+                    {% endif %}
                 {% endif %}
             </div>
             
