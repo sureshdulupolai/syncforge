@@ -84,6 +84,77 @@ sf = SyncForgeFlask(app, dev_mode=<span class="text-[#79C0FF]">True</span>, back
     </div>
 </div>
 
+    <!-- Feature 3 -->
+    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Feature: Register Table</h3>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.create_table()</span>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-4">When the application registers a new table structure locally.</p>
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
+► METHOD: POST
+► URL:    https://syncforge.dev/api/v1/tables/
+◄ RESPONSE: {
+  "success": true,
+  "created": true,
+  "status": "ok",
+  "message": "[Dev Mode] Table Created Locally",
+  "data": {
+    "table_name": "example_table"
+  }
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature 4 -->
+    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Feature: Project Info</h3>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.project_info()</span>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-4">When fetching configuration and active keys for the project.</p>
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
+► METHOD: GET
+► URL:    https://syncforge.dev/api/v1/project/
+◄ RESPONSE: {
+  "success": true,
+  "status": "ok",
+  "project": "Local Dev Project",
+  "slug": "local-dev",
+  "active_keys": 1,
+  "tables": [],
+  "message": "[Dev Mode] Project Info Fetched"
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature 5 -->
+    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Feature: Health Ping</h3>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.ping()</span>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-4">When checking if the SyncForge service is reachable.</p>
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
+► METHOD: GET
+► URL:    https://syncforge.dev/api/v1/health/
+◄ RESPONSE: {
+  "success": true,
+  "status": "ok",
+  "message": "SyncForge Local Service is healthy"
+}</pre>
+            </div>
+        </div>
+    </div>
+
 <!-- Switch to Live Mode -->
 <div class="mb-10 mt-12 border-t pt-8">
     <h2 class="text-xl font-semibold mb-3 text-green-700">Switching back to Live (Cloud) Mode</h2>

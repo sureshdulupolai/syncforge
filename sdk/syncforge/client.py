@@ -310,7 +310,31 @@ def _get_default_cache_dir() -> str:
             storage_mode = StorageMode(meta.get("storage_mode", "ram_disk"))
             version = meta.get("cache_version", 1)
             
-        return self.engine.get(table_name, cache_key, storage_mode, expected_version=version)
+        data = self.engine.get(table_name, cache_key, storage_mode, expected_version=version)
+        
+        if getattr(self, "_dev_mode", False):
+            import datetime, json
+            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+            
+            preview = data[:5] if isinstance(data, list) else data
+            mock_res = {
+                "success": True,
+                "status": "ok",
+                "table": table_name,
+                "message": "[Dev Mode] Table Fetched",
+                "data": {
+                    "version": version,
+                    "last_sync": now_iso,
+                    "records": preview if data is not None else []
+                }
+            }
+            
+            print(f"\n\033[96m🌐 [SyncForge Local Dev] Simulated Network Request\033[0m")
+            print(f"\033[93m► METHOD:\033[0m GET")
+            print(f"\033[93m► URL:\033[0m    {self._base_url}/v1/sync/{table_name}/")
+            print(f"\033[92m◄ RESPONSE:\033[0m {json.dumps(mock_res, indent=2, default=str)}\n")
+
+        return data
 
     def cache_query(
         self,
@@ -436,6 +460,13 @@ def _get_default_cache_dir() -> str:
             logger.debug("[SyncForge] cache_query cache HIT for key=%r", cache_key)
             emit_event(SyncForgeEvent.CACHE_HIT, table=table_name, key=cache_key)
             self._report_cache_hit_async(table_name)
+            
+            if getattr(self, "_dev_mode", False):
+                import json
+                print(f"\n\033[96m🌐 [SyncForge Local Dev] Cache HIT\033[0m")
+                print(f"\033[93m► KEY:\033[0m   {cache_key}")
+                print(f"\033[92m◄ RECORDS:\033[0m {len(data) if isinstance(data, list) else 1}\n")
+            
             return data
 
         # ── Stampede protection & Stale While Revalidate ───────────────────────
@@ -483,6 +514,26 @@ def _get_default_cache_dir() -> str:
 
         finally:
             lock.release()
+
+        if getattr(self, "_dev_mode", False):
+            import datetime, json
+            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+            preview = data[:5] if isinstance(data, list) else data
+            mock_res = {
+                "success": True,
+                "status": "ok",
+                "table": table_name,
+                "message": "[Dev Mode] Cache Query Executed & Evaluated",
+                "data": {
+                    "version": version,
+                    "last_sync": now_iso,
+                    "records": preview if data is not None else []
+                }
+            }
+            print(f"\n\033[96m🌐 [SyncForge Local Dev] Simulated Cache Query (MISS)\033[0m")
+            print(f"\033[93m► METHOD:\033[0m LOCAL_QUERY")
+            print(f"\033[93m► TABLE:\033[0m  {table_name}")
+            print(f"\033[92m◄ DATA RETRIEVED/STORED:\033[0m {json.dumps(mock_res, indent=2, default=str)}\n")
 
         return data
 
@@ -963,31 +1014,58 @@ def _get_default_cache_dir() -> str:
             
             mock_res = {"success": True}
             
+            import datetime
+            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+            
             if method == "POST" and "tables" in path:
-                mock_res.update({"created": True, "message": "Table created locally", "data": json_data})
+                mock_res.update({
+                    "created": True, 
+                    "status": "ok",
+                    "message": "[Dev Mode] Table Created Locally", 
+                    "data": json_data or {}
+                })
             elif method == "DELETE" and "tables" in path:
-                mock_res.update({"deleted": True, "message": "Table deleted locally"})
+                table_name = path.split("/")[-2] if path.endswith("/") else path.split("/")[-1]
+                mock_res.update({
+                    "deleted": True, 
+                    "status": "ok",
+                    "table": table_name,
+                    "message": f"[Dev Mode] Table {table_name} Deleted Locally"
+                })
             elif method == "GET" and "tables" in path:
-                mock_res.update({"tables": [], "message": "Fetched local tables"})
+                mock_res.update({"tables": [], "message": "[Dev Mode] Fetched Local Tables"})
             elif method == "POST" and "sync" in path:
                 table_name = path.split("/")[-2] if path.endswith("/") else path.split("/")[-1]
                 mock_res.update({
                     "status": "ok", 
                     "table": table_name, 
-                    "project": "local_project",
+                    "project": "local_dev_project",
                     "database_calls_saved": 0,
                     "message": "[Dev Mode] Sync Triggered",
-                    "data": {"action": "refresh", "table": table_name}
+                    "data": {"action": "refresh", "table": table_name, "django_signal": "post_save"}
+                })
+            elif method == "GET" and "sync" in path:
+                table_name = path.split("/")[-2] if path.endswith("/") else path.split("/")[-1]
+                mock_res.update({
+                    "status": "ok", 
+                    "table": table_name, 
+                    "message": "[Dev Mode] Table Fetched",
+                    "data": {
+                        "version": 1,
+                        "last_sync": now_iso
+                    }
                 })
             elif method == "GET" and "project" in path:
                 mock_res.update({
+                    "status": "ok",
                     "project": "Local Dev Project", 
                     "slug": "local-dev", 
-                    "tables": [], 
-                    "active_keys": 1
+                    "active_keys": 1,
+                    "tables": [],
+                    "message": "[Dev Mode] Project Info Fetched"
                 })
             elif method == "GET" and "health" in path:
-                mock_res.update({"status": "ok"})
+                mock_res.update({"status": "ok", "message": "SyncForge Local Service is healthy"})
             else:
                 mock_res.update({"message": f"Simulated {method} to {path}", "data": json_data})
                 
