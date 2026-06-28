@@ -445,6 +445,78 @@ sf = SyncForge(api_key, dev_mode=<span class="text-[#79C0FF]">False</span>, back
         </div>
     </div>
 </section>
+
+<!-- Seamless Framework Integration -->
+<section class="py-24 bg-brand-secbg border-b border-brand-border relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] opacity-30 pointer-events-none">
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-100/50 to-transparent blur-3xl rounded-full"></div>
+    </div>
+    
+    <div class="max-w-container mx-auto px-6 relative z-10">
+        <div class="text-center mb-16">
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-accent mb-3 block">Integrations</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight text-brand-primary mb-4">Native Support for Your Stack</h2>
+            <p class="text-brand-secondary text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light">
+                SyncForge is built from the ground up to integrate flawlessly with Python's most popular web frameworks. Zero boilerplate.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Django -->
+            <a href="{% url 'docs_django' %}" class="group block relative rounded-2xl bg-white border border-brand-border p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 bg-green-100 text-green-700 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-green-200">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-brand-primary mb-3">Django</h3>
+                    <p class="text-brand-secondary leading-relaxed font-light mb-6">
+                        Seamlessly hooks into Django's ORM via signals. Decorate your models with <code class="text-xs bg-gray-100 px-1 py-0.5 rounded text-pink-600">@sync_model</code> and you're done.
+                    </p>
+                    <div class="text-green-600 font-semibold text-sm flex items-center gap-2 group-hover:gap-3 transition-all">
+                        Read Django Docs <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- FastAPI -->
+            <a href="{% url 'docs_fastapi' %}" class="group block relative rounded-2xl bg-white border border-brand-border p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-teal-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-teal-200">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-brand-primary mb-3">FastAPI</h3>
+                    <p class="text-brand-secondary leading-relaxed font-light mb-6">
+                        Fully asynchronous native support. Inject SyncForge as an <code class="text-xs bg-gray-100 px-1 py-0.5 rounded text-teal-600">async Depends()</code> for lightning-fast non-blocking reads.
+                    </p>
+                    <div class="text-teal-600 font-semibold text-sm flex items-center gap-2 group-hover:gap-3 transition-all">
+                        Read FastAPI Docs <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Flask -->
+            <a href="{% url 'docs_flask' %}" class="group block relative rounded-2xl bg-white border border-brand-border p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-gray-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 bg-gray-100 text-gray-800 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-gray-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-brand-primary mb-3">Flask</h3>
+                    <p class="text-brand-secondary leading-relaxed font-light mb-6">
+                        Hook into SQLAlchemy events or use standard decorators. Easily wrap your blueprints for complete control over microservice caching.
+                    </p>
+                    <div class="text-gray-800 font-semibold text-sm flex items-center gap-2 group-hover:gap-3 transition-all">
+                        Read Flask Docs <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
 <!-- Security & Maintenance Section -->
 <section class="py-24 bg-gradient-to-b from-white to-gray-50 border-b border-brand-border overflow-hidden relative">
     <div class="max-w-container mx-auto px-6 relative z-10">
