@@ -204,7 +204,7 @@ def sync_model(
 
             # ── Inject Physical Name into Model Class ──────────────────────
             try:
-                mapping = sf_client.table_mapping()
+                mapping = sf_client.listed_table().get('data', {})
                 if table_name in mapping.get("client_table", []):
                     idx = mapping["client_table"].index(table_name)
                     physical_name = mapping["created_table"][idx]

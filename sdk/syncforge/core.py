@@ -26,6 +26,7 @@ class SyncForgeCoreAdapter:
     def __init__(self, sf_client: Any):
         self.sf_client = sf_client
         self._registered_tables = set()
+        self._cleanup_timer = None
 
     def register_model(
         self,
@@ -140,6 +141,28 @@ class SyncForgeCoreAdapter:
             self.sf_client.scheduler.add_table(table_name)
 
         self._registered_tables.add(table_name)
+
+        # 4. Debounced Auto-Garbage Collection
+        if self._cleanup_timer is not None:
+            self._cleanup_timer.cancel()
+        self._cleanup_timer = threading.Timer(3.0, self._auto_cleanup_orphans)
+        self._cleanup_timer.daemon = True
+        self._cleanup_timer.start()
+
+    def _auto_cleanup_orphans(self) -> None:
+        """
+        Automatically deletes tables from the SyncForge server that exist there 
+        but were not registered in the current local session (meaning the decorator was removed).
+        """
+        try:
+            live_tables = self.sf_client.list_tables()
+            for t in live_tables:
+                name = t.get("table_name")
+                if name and name not in self._registered_tables:
+                    self.sf_client.delete_table(name)
+                    logger.info(f"[SyncForge Core] Auto-GC: Removed orphaned table '{name}' from Live server.")
+        except Exception as e:
+            logger.debug(f"[SyncForge Core] Auto-GC failed: {e}")
 
     def trigger_sync(self, table_name: str) -> None:
         """
