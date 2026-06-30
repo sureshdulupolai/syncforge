@@ -157,6 +157,87 @@ class RedisStore(BaseStore):
         except Exception as e:
             logger.error(f"[SyncForge Redis] Clear failed: {e}")
 
+class SQLiteStore(BaseStore):
+    """
+    Local persistence backend using SQLite.
+    Survives server restarts and hot-reloads during local development.
+    """
+    def __init__(self, db_path: str = ".syncforge_cache.db"):
+        import sqlite3
+        self.db_path = db_path
+        self._lock = threading.Lock()
+        self._init_db()
+
+    def _init_db(self):
+        import sqlite3
+        with self._lock:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute('''CREATE TABLE IF NOT EXISTS sf_cache
+                         (key TEXT PRIMARY KEY, value BLOB, expire_time REAL)''')
+            conn.commit()
+            conn.close()
+
+    def get(self, key: str, default: Any = None) -> Any:
+        import sqlite3
+        import pickle
+        with self._lock:
+            try:
+                conn = sqlite3.connect(self.db_path)
+                c = conn.cursor()
+                c.execute("SELECT value, expire_time FROM sf_cache WHERE key = ?", (key,))
+                row = c.fetchone()
+                conn.close()
+                if row:
+                    val_bytes, exp = row
+                    if exp and time.time() > exp:
+                        self.delete(key)
+                        return default
+                    return pickle.loads(val_bytes)
+            except Exception:
+                pass
+            return default
+
+    def set(self, key: str, value: Any, timeout: Optional[int] = None) -> None:
+        import sqlite3
+        import pickle
+        with self._lock:
+            try:
+                exp = time.time() + timeout if timeout else 0
+                val_bytes = pickle.dumps(value)
+                conn = sqlite3.connect(self.db_path)
+                c = conn.cursor()
+                c.execute("REPLACE INTO sf_cache (key, value, expire_time) VALUES (?, ?, ?)",
+                          (key, val_bytes, exp))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+
+    def delete(self, key: str) -> None:
+        import sqlite3
+        with self._lock:
+            try:
+                conn = sqlite3.connect(self.db_path)
+                c = conn.cursor()
+                c.execute("DELETE FROM sf_cache WHERE key = ?", (key,))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+
+    def clear_syncforge_cache(self) -> None:
+        import sqlite3
+        with self._lock:
+            try:
+                conn = sqlite3.connect(self.db_path)
+                c = conn.cursor()
+                c.execute("DELETE FROM sf_cache")
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+
 class StoreManager:
     """
     Manages the static backend selection and fallback logic.
@@ -175,6 +256,9 @@ class StoreManager:
             elif backend_type == "django":
                 self._store = DjangoCacheStore()
                 logger.info("[SyncForge] Hooked into Django Cache Backend.")
+            elif backend_type == "sqlite":
+                self._store = SQLiteStore()
+                logger.info("[SyncForge] Connected to SQLite Backend successfully.")
             else:
                 self._store = self._fallback_store
                 logger.info("[SyncForge] Using default InMemoryStore.")

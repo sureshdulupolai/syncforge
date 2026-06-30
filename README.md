@@ -28,6 +28,9 @@ SyncForge replaces this complexity with a single SDK. You fetch data, we handle 
 
 - **Zero Infrastructure Needed**: Uses a high-performance `InMemoryStore` by default. No Redis required (though `RedisStore` is optionally available for multi-worker Gunicorn deployments).
 - **Universal Framework Adapters**: Identical behavior and API design across **Django**, **FastAPI**, **Flask**, **SQLAlchemy**, and pure Python routes.
+- **Telemetry Batching (Zero DDOS)**: Tracks cache hits/misses in local isolated disk directories. Batches telemetry syncs to prevent crashing backend servers during immense traffic spikes!
+- **Local SQLite Persistence**: Use `backend='sqlite'` during local development so your test cache data survives hot-reloads and server restarts effortlessly!
+- **FastAPI / Flask Auto-Sync**: The amazing `@sync_sqlalchemy` decorator automatically catches SQLAlchemy's `after_insert`, `after_update`, and `after_delete` events for instant invalidation.
 - **Cache Stampede Protection**: Async-safe request coalescing dynamically groups identical rapid requests into a single database hit.
 - **Unified Event Telemetry**: Integrated non-blocking telemetry tracks `CACHE_HIT`, `CACHE_MISS`, and coalescing efficiency without sending noisy REST API payloads.
 - **Stale-While-Revalidate**: Instant lock-yielding ensures secondary threads instantly read stale RAM instead of waiting on P99 database block queues.

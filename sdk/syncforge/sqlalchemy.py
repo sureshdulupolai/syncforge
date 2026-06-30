@@ -83,7 +83,7 @@ if HAS_SQLALCHEMY:
 def _trigger_sync(sf_client, table_name: str):
     sf_client.core.trigger_sync(table_name)
 
-def sync_model(
+def sync_sqlalchemy(
     sf_client, 
     table_name: str,
     sync_mode: str = "event",
