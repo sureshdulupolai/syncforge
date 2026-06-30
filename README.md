@@ -28,9 +28,9 @@ SyncForge replaces this complexity with a single SDK. You fetch data, we handle 
 
 - **Zero Infrastructure Needed**: Uses a high-performance `InMemoryStore` by default. No Redis required (though `RedisStore` is optionally available for multi-worker Gunicorn deployments).
 - **Universal Framework Adapters**: Identical behavior and API design across **Django**, **FastAPI**, **Flask**, **SQLAlchemy**, and pure Python routes.
-- **Telemetry Batching (Zero DDOS)**: Tracks cache hits/misses in local isolated disk directories. Batches telemetry syncs to prevent crashing backend servers during immense traffic spikes!
-- **Local SQLite Persistence**: Use `backend='sqlite'` during local development so your test cache data survives hot-reloads and server restarts effortlessly!
-- **FastAPI / Flask Auto-Sync**: The amazing `@sync_sqlalchemy` decorator automatically catches SQLAlchemy's `after_insert`, `after_update`, and `after_delete` events for instant invalidation.
+- **Telemetry Batching (Zero DDOS)**: Tracks cache hits and misses in local isolated disk directories. Batches telemetry syncs to minimize backend server load during traffic spikes.
+- **Local SQLite Persistence**: Set `backend_type='sqlite'` during local development to persist test cache data across hot-reloads and server restarts.
+- **FastAPI / Flask Auto-Sync**: The `@sync_sqlalchemy` decorator automatically hooks into SQLAlchemy's `after_insert`, `after_update`, and `after_delete` events for instant cache invalidation.
 - **Cache Stampede Protection**: Async-safe request coalescing dynamically groups identical rapid requests into a single database hit.
 - **Unified Event Telemetry**: Integrated non-blocking telemetry tracks `CACHE_HIT`, `CACHE_MISS`, and coalescing efficiency without sending noisy REST API payloads.
 - **Stale-While-Revalidate**: Instant lock-yielding ensures secondary threads instantly read stale RAM instead of waiting on P99 database block queues.
@@ -61,7 +61,7 @@ from syncforge import SyncForge
 # Initialize ONCE. Zero external dependencies required.
 sf = SyncForge(
     api_key=os.environ.get('SYNCFORGE_API_KEY'),
-    backend='in_memory',  # Statically select your backend
+    backend_type='memory',  # Statically select your backend
     async_mode=True
 )
 ```
@@ -117,9 +117,10 @@ SyncForge ensures **100% environment parity** for your developers. By initializi
 - **Zero Load Development**: When `@sync_model` is executed locally, it automatically creates a fully structured Mock Cache Table in your local RAM/Disk registry.
 - **Professional API Responses**: Features like `create_table` and `get_table` will return professional API dictionaries (e.g. `{"success": True, "status": "ok"}`) that perfectly mirror the live cluster responses.
 - **Local Utilities**: 
+  - `sf.listed_table()`: Returns the exact mapping between your logical table names and the auto-generated physical table names.
   - `sf.all_table()`: Returns a list of all tables registered in your current environment (Live or Local).
   - `sf.filter_table(names)`: Quickly verifies the existence of tables, returning a smart `Dict[str, bool]` mapping.
-  - `sf.clear_local_table()`: Wipes the local cache and table registry, cleanly resetting your local state. (Subsequent `get_table` calls will accurately return `not_found`).
+  - `sf.clear_local_table()`: Wipes the local cache and table registry, cleanly resetting your local state.
 
 These tools guarantee that testing your backend caching logic locally behaves exactly identical to your production deployment!
 
