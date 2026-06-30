@@ -183,32 +183,6 @@ sf_ext = SyncForgeFlask(app, sf)
     </div>
 </div>
 
-<div class="mb-6 border border-gray-200 rounded-lg bg-white overflow-hidden">
-    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-        <h3 class="font-bold text-gray-800">Check Table Existence</h3>
-        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.filter_table(names)</span>
-    </div>
-    <div class="p-4">
-        <p class="text-sm text-gray-600 mb-4">Quickly verifies the existence of tables without throwing errors.</p>
-        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
-            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
-                <span class="text-xs font-mono text-gray-400">python</span>
-            </div>
-<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">exists_map = sf.filter_table(['core_product', 'fake_table'])
-<span class="text-[#8B949E]"># Returns: {'core_product': True, 'fake_table': False}</span></pre>
-        </div>
-
-<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D] ">
-    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
-        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
-    </div>
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
-  "core_product": true,
-  "fake_table": false
-}</pre>
-</div>
-
-    </div>
 </div>
 
 <div class="mb-10 border border-gray-200 rounded-lg bg-white overflow-hidden">

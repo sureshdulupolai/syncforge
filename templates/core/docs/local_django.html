@@ -174,29 +174,18 @@ class Product(models.Model):
         db_table = <span class="text-[#A5D6FF]">'core_product'</span></pre>
 </div>
 
-<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
-    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
-        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
-    </div>
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
-  "success": true,
-  "status": "ok",
-  "table": "users",
-  "sync_id": "sync_8a7f43b2c",
-  "created": true,
-  "message": "Table 'users' created locally.",
-  "data": {
-    "sync_mode": "event",
-    "storage_mode": "ram_disk",
-    "active": true
-  }
-}</pre>
-</div>
+
 
 
 <!-- Enterprise Parameters Explanations IMMEDIATELY under the code -->
 <div class="mt-6 mb-10">
-    <h3 class="text-sm font-bold text-brand-primary mb-3">Enterprise Decorator Parameters Explained</h3>
+    
+<div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 mt-4">
+    <h3 class="text-sm font-bold text-blue-800">Viewing the Registration Response</h3>
+    <p class="mt-1 text-sm text-blue-700">Because <code class="font-mono bg-blue-100 px-1 rounded">@sync_model</code> is a class decorator, it executes automatically on server startup and does not return a JSON dictionary to your code. Instead, <strong>SyncForge automatically prints a clear success message to your terminal</strong> when the table is registered. If you want to programmatically verify that your tables are registered, you can easily call <code class="font-mono bg-blue-100 px-1 rounded">sf.all_table()</code> to view your active tables, or check a specific table using <code class="font-mono bg-blue-100 px-1 rounded">sf.filter_table(['table_name'])</code>.</p>
+</div>
+
+<h3 class="text-sm font-bold text-brand-primary mb-3">Enterprise Decorator Parameters Explained</h3>
     <div class="space-y-3">
         <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
             <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h4>
@@ -468,32 +457,6 @@ def bulk_activate(request):
     </div>
 </div>
 
-<div class="mb-6 border border-gray-200 rounded-lg bg-white overflow-hidden">
-    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-        <h3 class="font-bold text-gray-800">Check Table Existence</h3>
-        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.filter_table(names)</span>
-    </div>
-    <div class="p-4">
-        <p class="text-sm text-gray-600 mb-4">Quickly verifies the existence of tables without throwing errors.</p>
-        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
-            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
-                <span class="text-xs font-mono text-gray-400">python</span>
-            </div>
-<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">exists_map = sf.filter_table(['core_product', 'fake_table'])
-<span class="text-[#8B949E]"># Returns: {'core_product': True, 'fake_table': False}</span></pre>
-        </div>
-
-<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D] ">
-    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
-        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
-    </div>
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
-  "core_product": true,
-  "fake_table": false
-}</pre>
-</div>
-
-    </div>
 </div>
 
 <div class="mb-10 border border-gray-200 rounded-lg bg-white overflow-hidden">

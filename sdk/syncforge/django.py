@@ -202,6 +202,16 @@ def sync_model(
             # ── Connect ORM signals ────────────────────────────────────────
             _connect_signals(sf_client, cls, table_name)
 
+            # ── Inject Physical Name into Model Class ──────────────────────
+            try:
+                mapping = sf_client.table_mapping()
+                if table_name in mapping.get("client_table", []):
+                    idx = mapping["client_table"].index(table_name)
+                    physical_name = mapping["created_table"][idx]
+                    setattr(cls, 'syncforge_table_name', physical_name)
+            except Exception:
+                pass
+
             _registered_tables.add(table_name)
 
         return cls
