@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "syncforge"
-version = "1.2.1"
+version = "1.4.0"
 description = "Official Python SDK for SyncForge — control exactly when data syncs between your database and clients."
 readme = "README.md"
 license = "MIT"
