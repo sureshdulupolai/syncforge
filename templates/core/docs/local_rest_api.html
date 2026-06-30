@@ -13,7 +13,7 @@
 
 <!-- A-Z Feature Breakdown -->
 <div class="mb-10">
-    <h2 class="text-xl font-semibold mb-4">1. A-Z Event Mocks & Terminal Logs</h2>
+    <h2 class="text-xl font-semibold mb-4">1. A-Z Event Mocks & API Responses</h2>
     <p class="text-brand-secondary leading-relaxed mb-6">
         When hitting the local emulator, you receive identical JSON shapes as you would in production, ensuring your code works seamlessly when deployed.
     </p>
@@ -26,10 +26,19 @@
         </div>
         <div class="p-4">
             <p class="text-sm text-gray-600 mb-4">Sending an offline request to invalidate a table.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X POST http://localhost:8000/api/v1/sync/inventory/
-
-◄ RESPONSE: {
+                        <!-- NEW: Code Snippet UI -->
+            <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                    <span class="text-xs font-mono text-gray-400">bash</span>
+                </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X POST http://localhost:8000/api/v1/sync/inventory/</pre>
+            </div>
+            
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+                    <span class="text-xs font-mono text-gray-400">Response</span>
+                </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
   "success": true,
   "status": "ok",
   "table": "inventory",
@@ -47,15 +56,25 @@
     <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
         <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
             <h3 class="font-bold text-gray-800">Feature: Register Table</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.create_table()</span>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">POST /api/v1/tables/</span>
         </div>
         <div class="p-4">
             <p class="text-sm text-gray-600 mb-4">When the application registers a new table structure locally.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: POST
-► URL:    https://syncforge.dev/api/v1/tables/
-◄ RESPONSE: {
+                        <!-- NEW: Code Snippet UI -->
+            <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                    <span class="text-xs font-mono text-gray-400">bash</span>
+                </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X POST http://localhost:8000/api/v1/tables/ \
+  -H "Content-Type: application/json" \
+  -d '{"table_name": "example_table"}'</pre>
+            </div>
+            
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+                    <span class="text-xs font-mono text-gray-400">Response</span>
+                </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
   "success": true,
   "created": true,
   "status": "ok",
@@ -72,15 +91,23 @@
     <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
         <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
             <h3 class="font-bold text-gray-800">Feature: Project Info</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.project_info()</span>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">GET /api/v1/project/</span>
         </div>
         <div class="p-4">
             <p class="text-sm text-gray-600 mb-4">When fetching configuration and active keys for the project.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: GET
-► URL:    https://syncforge.dev/api/v1/project/
-◄ RESPONSE: {
+                        <!-- NEW: Code Snippet UI -->
+            <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                    <span class="text-xs font-mono text-gray-400">bash</span>
+                </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X GET http://localhost:8000/api/v1/project/</pre>
+            </div>
+            
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+                    <span class="text-xs font-mono text-gray-400">Response</span>
+                </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
   "success": true,
   "status": "ok",
   "project": "Local Dev Project",
@@ -97,21 +124,118 @@
     <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
         <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
             <h3 class="font-bold text-gray-800">Feature: Health Ping</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.ping()</span>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">GET /api/v1/health/</span>
         </div>
         <div class="p-4">
             <p class="text-sm text-gray-600 mb-4">When checking if the SyncForge service is reachable.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: GET
-► URL:    https://syncforge.dev/api/v1/health/
-◄ RESPONSE: {
+                        <!-- NEW: Code Snippet UI -->
+            <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                    <span class="text-xs font-mono text-gray-400">bash</span>
+                </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X GET http://localhost:8000/api/v1/health/</pre>
+            </div>
+            
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+                    <span class="text-xs font-mono text-gray-400">Response</span>
+                </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
   "success": true,
   "status": "ok",
   "message": "SyncForge Local Service is healthy"
 }</pre>
             </div>
         </div>
+
+    <!-- Feature: all_table -->
+    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Feature: Fetch All Tables</h3>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">GET /api/v1/tables/all/</span>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-4">Returns a list of all tables registered in your current environment (Live or Local).</p>
+                        <!-- NEW: Code Snippet UI -->
+            <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                    <span class="text-xs font-mono text-gray-400">bash</span>
+                </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X GET http://localhost:8000/api/v1/tables/all/</pre>
+            </div>
+            
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+                    <span class="text-xs font-mono text-gray-400">Response</span>
+                </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: [
+  "core_product",
+  "auth_user",
+  "inventory"
+]</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature: filter_table -->
+    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Feature: Check Table Existence</h3>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">POST /api/v1/tables/filter/</span>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-4">Quickly verifies the existence of tables, returning a smart Dict[str, bool] mapping.</p>
+                        <!-- NEW: Code Snippet UI -->
+            <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                    <span class="text-xs font-mono text-gray-400">bash</span>
+                </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X POST http://localhost:8000/api/v1/tables/filter/ \
+  -H "Content-Type: application/json" \
+  -d '{"names": ["core_product", "fake_table"]}'</pre>
+            </div>
+            
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+                    <span class="text-xs font-mono text-gray-400">Response</span>
+                </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
+  "core_product": true,
+  "fake_table": false
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature: clear_local_table -->
+    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Feature: Clear Local Cache Tracker</h3>
+            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">DELETE /api/v1/tables/clear/</span>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-4">Wipes the local cache and table registry, cleanly resetting your local state.</p>
+                        <!-- NEW: Code Snippet UI -->
+            <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                    <span class="text-xs font-mono text-gray-400">bash</span>
+                </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">$ curl -X DELETE http://localhost:8000/api/v1/tables/clear/</pre>
+            </div>
+            
+            <div class="bg-[#0D1117] rounded-lg overflow-hidden border border-[#30363D]">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+                    <span class="text-xs font-mono text-gray-400">Response</span>
+                </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
+  "success": true,
+  "status": "ok",
+  "message": "[Dev Mode] Local tables cleared."
+}</pre>
+            </div>
+        </div>
+    </div>
+
     </div>
 
 <!-- Switch to Live Mode -->

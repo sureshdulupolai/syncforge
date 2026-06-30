@@ -19,11 +19,11 @@
         <li><a href="#client" class="hover:text-brand-accent">2. Create the client</a></li>
         <li><a href="#sync-model" class="hover:text-brand-accent">3. @sync_model decorator</a></li>
         <li><a href="#cache-query" class="hover:text-brand-accent">4. cache_query() in views</a></li>
-        <li><a href="#template" class="hover:text-brand-accent">5. Render data in templates</a></li>
         <li><a href="#refresh" class="hover:text-brand-accent">6. Manual refresh after writes</a></li>
         <li><a href="#signals" class="hover:text-brand-accent">7. How signals work</a></li>
         <li><a href="#middleware" class="hover:text-brand-accent">8. Security middleware</a></li>
         <li><a href="#production" class="hover:text-brand-accent">9. Production settings</a></li>
+        <li><a href="#utilities" class="hover:text-brand-accent">10. Table Utility Methods</a></li>
     </ol>
 </div>
 
@@ -201,6 +201,7 @@ class Product(models.Model):
             <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
             <div><strong>Combine Both</strong>: Use a simple <code class="font-mono bg-white px-1 rounded border border-brand-border text-xs">if/else</code> block to ensure only the very first user triggers a database query.</div>
         </li>
+        <li><a href="#utilities" class="hover:text-brand-accent">10. Table Utility Methods</a></li>
     </ol>
 </div>
 
@@ -255,81 +256,6 @@ def product_list(request):
     <p class="text-sm text-indigo-700 leading-relaxed mb-0">
         You never have to manually define <code>max_items</code> again. The engine dynamically profiles active RAM footprint against a safe 256MB boundary, assigning "Heat Scores" to payloads based on hits and recency. If memory peaks, cold objects gracefully flush themselves.
     </p>
-</div>
-
-<h3 class="text-lg font-bold text-brand-primary mb-3 mt-8">Monthly / Scheduled Data Refresh</h3>
-<p class="text-sm text-brand-secondary mb-3">
-    For data that changes infrequently (e.g. once a month), use <code class="font-mono bg-gray-100 px-1 rounded">timeout=None</code> and rotate the query dynamically by time period. This means the cache is only invalidated by your refresh call or by the month changing — never by a clock.
-</p>
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">views.py — monthly cache pattern</span>
-        <button onclick="copyCode(this)" data-code="import datetime
-from myproject.sf import sf
-
-def monthly_report(request):
-    now = datetime.date.today()
-    # The query itself generates a unique auto-key for the current month
-
-    data = sf.cache_query(
-        table_name='core_report',
-        queryset=Report.objects.filter(active=True, created__year=now.year, created__month=now.month),
-        timeout=None,   # Never expires — only sf.refresh() clears it
-    )
-    return render(request, 'reports/monthly.html', {'data': data})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
-    </div>
-    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">import</span> datetime
-<span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
-
-<span class="text-blue-400">def</span> <span class="text-yellow-300">monthly_report</span>(request):
-    now <span class="text-gray-400">=</span> datetime.date.today()
-    <span class="text-gray-500"># The query itself generates a unique auto-key for the current month</span>
-
-    data <span class="text-gray-400">=</span> sf.cache_query(
-        table_name<span class="text-gray-400">=</span><span class="text-green-300">'core_report'</span>,
-        queryset<span class="text-gray-400">=</span>Report.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>, created__year<span class="text-gray-400">=</span>now.year, created__month<span class="text-gray-400">=</span>now.month),
-        timeout<span class="text-gray-400">=</span><span class="text-blue-300">None</span>,   <span class="text-gray-500"># Never expires — only sf.refresh() clears it</span>
-    )
-    <span class="text-blue-400">return</span> render(request, <span class="text-green-300">'reports/monthly.html'</span>, {<span class="text-green-300">'data'</span>: data})</pre>
-</div>
-
-
-<!-- 5 Template -->
-<h2 id="template" class="text-xl font-semibold mb-3 scroll-mt-20">5. Render data in templates</h2>
-<p class="text-sm text-brand-secondary mb-3">
-    <code class="font-mono bg-gray-100 px-1 rounded">cache_query()</code> returns a standard Python <code class="font-mono bg-gray-100 px-1 rounded">list</code> of Django model instances — identical to <code class="font-mono bg-gray-100 px-1 rounded">list(queryset)</code>. All model fields and methods work normally in templates.
-</p>
-<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-8">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-        <span class="text-xs font-mono text-gray-400">templates/products/list.html</span>
-        <button onclick="copyCode(this)" data-code='<p>Total products: {{ count }}</p>
-
-{% for product in products %}
-    <div class="product-card">
-        <h3>{{ product.name }}</h3>
-        <p>Price: ₹{{ product.price }}</p>
-        {% if product.active %}
-            <span>Active</span>
-        {% endif %}
-    </div>
-{% empty %}
-    <p>No active products.</p>
-{% endfor %}' class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
-    </div>
-    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-gray-500">&lt;!-- Total count --&gt;</span>
-<span class="text-blue-300">&lt;p&gt;</span>Total products: <span class="text-yellow-300">{{ count }}</span><span class="text-blue-300">&lt;/p&gt;</span>
-
-<span class="text-green-400">{% for product in products %}</span>
-    <span class="text-blue-300">&lt;div</span> <span class="text-teal-300">class</span><span class="text-gray-400">=</span><span class="text-green-300">"product-card"</span><span class="text-blue-300">&gt;</span>
-        <span class="text-blue-300">&lt;h3&gt;</span><span class="text-yellow-300">{{ product.name }}</span><span class="text-blue-300">&lt;/h3&gt;</span>
-        <span class="text-blue-300">&lt;p&gt;</span>Price: ₹<span class="text-yellow-300">{{ product.price }}</span><span class="text-blue-300">&lt;/p&gt;</span>
-        <span class="text-green-400">{% if product.active %}</span>
-            <span class="text-blue-300">&lt;span&gt;</span>Active<span class="text-blue-300">&lt;/span&gt;</span>
-        <span class="text-green-400">{% endif %}</span>
-    <span class="text-blue-300">&lt;/div&gt;</span>
-<span class="text-green-400">{% empty %}</span>
-    <span class="text-blue-300">&lt;p&gt;</span>No active products.<span class="text-blue-300">&lt;/p&gt;</span>
-<span class="text-green-400">{% endfor %}</span></pre>
 </div>
 
 <!-- 6 Manual refresh -->
@@ -454,6 +380,62 @@ def bulk_activate(request):
         Flask Guide
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     </a>
+</div>
+
+
+<!-- 10 Utilities -->
+<h2 id="utilities" class="text-xl font-semibold mb-3 scroll-mt-20 mt-10">10. Table Utility Methods</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    SyncForge provides helper methods to inspect and manage your table registry dynamically. These work identically across Live and Local modes.
+</p>
+
+<div class="mb-6 border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800">Fetch All Tables</h3>
+        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.all_table()</span>
+    </div>
+    <div class="p-4">
+        <p class="text-sm text-gray-600 mb-4">Returns a list of all tables registered in your current project environment.</p>
+        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                <span class="text-xs font-mono text-gray-400">python</span>
+            </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">registered_tables = sf.all_table()</pre>
+        </div>
+    </div>
+</div>
+
+<div class="mb-6 border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800">Check Table Existence</h3>
+        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.filter_table(names)</span>
+    </div>
+    <div class="p-4">
+        <p class="text-sm text-gray-600 mb-4">Quickly verifies the existence of tables without throwing errors.</p>
+        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                <span class="text-xs font-mono text-gray-400">python</span>
+            </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">exists_map = sf.filter_table(['core_product', 'fake_table'])
+<span class="text-[#8B949E]"># Returns: {'core_product': True, 'fake_table': False}</span></pre>
+        </div>
+    </div>
+</div>
+
+<div class="mb-10 border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800">Clear Local Cache Tracker</h3>
+        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.clear_local_table()</span>
+    </div>
+    <div class="p-4">
+        <p class="text-sm text-gray-600 mb-4">Wipes the local cache and table registry. Primarily used to cleanly reset state during unit tests or local dev cycles.</p>
+        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                <span class="text-xs font-mono text-gray-400">python</span>
+            </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">sf.clear_local_table()</pre>
+        </div>
+    </div>
 </div>
 
 <!-- Switching to Local Mode -->

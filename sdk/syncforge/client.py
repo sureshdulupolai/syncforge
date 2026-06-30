@@ -112,6 +112,21 @@ def _wait_lock_async_safe(lock: threading.Lock) -> None:
             time.sleep(0.005)
     except RuntimeError:
         lock.acquire(blocking=True)
+import platform
+from pathlib import Path
+import os
+
+def _get_default_cache_dir() -> str:
+    system = platform.system()
+    if system == "Windows":
+        base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
+        return os.path.join(base, "SyncForge", "Cache")
+    elif system == "Darwin":
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "SyncForge", "Cache")
+    else:
+        # Linux / Android / UNIX fallback
+        base = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+        return os.path.join(base, "SyncForge", "Cache")
 
 
 # ── Main Client ───────────────────────────────────────────────────────────────
@@ -157,22 +172,6 @@ class SyncForge:
             If ``api_key`` is empty or malformed.
     """
 
-import platform
-from pathlib import Path
-import os
-
-def _get_default_cache_dir() -> str:
-    system = platform.system()
-    if system == "Windows":
-        base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
-        return os.path.join(base, "SyncForge", "Cache")
-    elif system == "Darwin":
-        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "SyncForge", "Cache")
-    else:
-        # Linux / Android / UNIX fallback
-        base = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
-        return os.path.join(base, "SyncForge", "Cache")
-
     def __init__(
         self,
         api_key: str = "",
@@ -208,6 +207,8 @@ def _get_default_cache_dir() -> str:
         self._sign_requests = sign_requests
         self._local         = threading.local()
         self._waf_configs: Dict[str, dict] = {}
+        
+        self._local_tables = set()
         
         # Static Store Selection
         self.store_manager = StoreManager(backend_type, redis_url)
@@ -312,29 +313,35 @@ def _get_default_cache_dir() -> str:
             
         data = self.engine.get(table_name, cache_key, storage_mode, expected_version=version)
         
-        if getattr(self, "_dev_mode", False):
-            import datetime, json
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
-            
-            preview = data[:5] if isinstance(data, list) else data
-            mock_res = {
-                "success": True,
-                "status": "ok",
+        if getattr(self, "_dev_mode", False) and table_name not in getattr(self, "_local_tables", set()):
+            return {
+                "success": False,
+                "status": "not_found",
                 "table": table_name,
-                "message": "[Dev Mode] Table Fetched",
-                "data": {
-                    "version": version,
-                    "last_sync": now_iso,
-                    "records": preview if data is not None else []
-                }
+                "message": f"[Dev Mode] Table '{table_name}' not found locally. It might not be registered or was cleared."
             }
-            
-            print(f"\n\033[96m🌐 [SyncForge Local Dev] Simulated Network Request\033[0m")
-            print(f"\033[93m► METHOD:\033[0m GET")
-            print(f"\033[93m► URL:\033[0m    {self._base_url}/v1/sync/{table_name}/")
-            print(f"\033[92m◄ RESPONSE:\033[0m {json.dumps(mock_res, indent=2, default=str)}\n")
 
-        return data
+        if data is None:
+            return {
+                "success": False,
+                "status": "not_found",
+                "table": table_name,
+                "message": f"Table '{table_name}' data not found in cache."
+            }
+
+        import datetime
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+        return {
+            "success": True,
+            "status": "ok",
+            "table": table_name,
+            "message": "[Dev Mode] Table Fetched" if getattr(self, "_dev_mode", False) else "Table Fetched",
+            "data": {
+                "version": version,
+                "last_sync": now_iso,
+                "records": data
+            }
+        }
 
     def cache_query(
         self,
@@ -462,10 +469,7 @@ def _get_default_cache_dir() -> str:
             self._report_cache_hit_async(table_name)
             
             if getattr(self, "_dev_mode", False):
-                import json
-                print(f"\n\033[96m🌐 [SyncForge Local Dev] Cache HIT\033[0m")
-                print(f"\033[93m► KEY:\033[0m   {cache_key}")
-                print(f"\033[92m◄ RECORDS:\033[0m {len(data) if isinstance(data, list) else 1}\n")
+                pass
             
             return data
 
@@ -516,24 +520,7 @@ def _get_default_cache_dir() -> str:
             lock.release()
 
         if getattr(self, "_dev_mode", False):
-            import datetime, json
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
-            preview = data[:5] if isinstance(data, list) else data
-            mock_res = {
-                "success": True,
-                "status": "ok",
-                "table": table_name,
-                "message": "[Dev Mode] Cache Query Executed & Evaluated",
-                "data": {
-                    "version": version,
-                    "last_sync": now_iso,
-                    "records": preview if data is not None else []
-                }
-            }
-            print(f"\n\033[96m🌐 [SyncForge Local Dev] Simulated Cache Query (MISS)\033[0m")
-            print(f"\033[93m► METHOD:\033[0m LOCAL_QUERY")
-            print(f"\033[93m► TABLE:\033[0m  {table_name}")
-            print(f"\033[92m◄ DATA RETRIEVED/STORED:\033[0m {json.dumps(mock_res, indent=2, default=str)}\n")
+            pass
 
         return data
 
@@ -687,7 +674,7 @@ def _get_default_cache_dir() -> str:
         priority: str = "medium",
         refresh_interval: int = 0,
         timeout: Optional[int] = 3600
-    ) -> bool:
+    ) -> Dict[str, Any]:
         """
         Register a new table in this project programmatically.
 
@@ -710,8 +697,7 @@ def _get_default_cache_dir() -> str:
             timeout: Default cache timeout for this table.
 
         Returns:
-            ``True`` if the table was newly created.
-            ``False`` if it already existed.
+            A professional API response dictionary containing table metadata.
 
         Raises:
             :class:`~syncforge.exceptions.ValidationError`:
@@ -720,6 +706,35 @@ def _get_default_cache_dir() -> str:
         """
         self._validate_table_name(table_name)
         table_name = table_name.strip().lower()
+        
+        if self._dev_mode:
+            created = False
+            if not hasattr(self, "_local_tables"):
+                self._local_tables = {}
+                
+            if table_name not in self._local_tables:
+                import uuid
+                self._local_tables[table_name] = f"sync_{uuid.uuid4().hex[:12]}"
+                created = True
+                
+            sync_id = self._local_tables[table_name]
+                
+            return {
+                "success": True,
+                "status": "ok",
+                "table": table_name,
+                "sync_id": sync_id,
+                "created": created,
+                "message": f"Table '{table_name}' {'created locally' if created else 'already exists locally'}.",
+                "data": {
+                    "sync_mode": sync_mode,
+                    "storage_mode": storage_mode,
+                    "active": active,
+                    "rows_count": 0,
+                    "database_calls_saved": 0
+                }
+            }
+            
         url = f"{self._base_url}/v1/tables/"
         try:
             payload = {
@@ -734,15 +749,55 @@ def _get_default_cache_dir() -> str:
                 "timeout": timeout
             }
             res = self._request("POST", url, json_data=payload)
-            return bool(res.get("created", False))
+            return res
         except SyncForgeError as exc:
             if self._silent:
                 warnings.warn(
                     f"[SyncForge] create_table failed for '{table_name}': {exc}",
                     stacklevel=2,
                 )
-                return False
+                return {"success": False, "status": "error", "message": str(exc)}
             raise
+
+    def all_table(self) -> List[str]:
+        """
+        Return a list of all table names registered.
+        In local/dev mode, returns the local table registry.
+        In live mode, fetches from the server.
+        """
+        if self._dev_mode:
+            return list(self._local_tables)
+        else:
+            return [t.get("table_name") for t in self.list_tables() if "table_name" in t]
+
+    def filter_table(self, names: Union[str, List[str]]) -> Union[bool, Dict[str, bool]]:
+        """
+        Check if the given table name(s) exist in the current project.
+        Works in both local and live environments.
+        
+        Args:
+            names: A single table name (str) or a list of table names (List[str]).
+            
+        Returns:
+            If `names` is a str, returns True if it exists, False otherwise.
+            If `names` is a List[str], returns a Dict mapping each name to its existence status.
+        """
+        all_tables = set(self.all_table())
+        if isinstance(names, str):
+            return names in all_tables
+        elif isinstance(names, list):
+            return {name: (name in all_tables) for name in names}
+        return False
+
+    def clear_local_table(self) -> None:
+        """
+        Clear all locally created tables.
+        This function is exclusively for local testing environments and will wipe
+        out all local tables tracked by the SDK.
+        """
+        if self._dev_mode:
+            self._local_tables.clear()
+            self.clear_syncforge_cache()
 
     def delete_table(self, table_name: str) -> bool:
         """

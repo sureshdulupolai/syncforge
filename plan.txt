@@ -1,0 +1,48 @@
+# Implementation Plan: Local Table Management in SyncForge SDK
+
+This plan outlines the required modifications to the `SyncForge` Python SDK to support local table registries, checking table existence, fetching all table names, and clearing local tables as requested.
+
+## Open Questions
+- For `filter_table(names)`, if a user passes a list of 5 names and 3 exist, should it return a `Dict` like `{"table1": True, "table2": False}`, or just a `List` of the ones that exist? I plan to return a `Dict[str, bool]` mapping each name to its existence status, but if a single string is passed, it will return a single boolean. Let me know if this sounds good!
+
+## Proposed Changes
+
+### 1. `sdk/syncforge/client.py`
+
+#### [MODIFY] `client.py`
+We will modify the core `SyncForge` class to implement these features.
+
+- **Initialization (`__init__`)**:
+  - Add `self._local_tables = set()` to store the names of tables created locally.
+
+- **`create_table`**:
+  - Add logic at the beginning: If `self._dev_mode` is `True`, check if `table_name` is already in `self._local_tables`.
+  - If it exists, return `False` (already exists). If not, add it to `self._local_tables` and return `True`. 
+
+- **[NEW] `all_table(self) -> List[str]`**:
+  - A new function that returns a list of all table names.
+  - If `self._dev_mode` is `True`, it will return `list(self._local_tables)`.
+  - If live (production), it will call the existing `self.list_tables()` API and extract the table names from the server response.
+
+- **[NEW] `filter_table(self, names: Union[str, List[str]]) -> Union[bool, Dict[str, bool]]`**:
+  - A new function to check if specific tables exist.
+  - Fetches the available tables using `self.all_table()`.
+  - If the user provides a single string, returns `True` or `False`.
+  - If the user provides a list of names, returns a dictionary mapping each name to its boolean status (e.g., `{"users": True, "products": False}`).
+
+- **[NEW] `clear_local_table(self) -> None`**:
+  - A new function exclusively for local testing.
+  - Clears `self._local_tables` completely (`self._local_tables.clear()`).
+  - Automatically triggers `self.clear_syncforge_cache()` to wipe out any mocked cache associated with those tables.
+
+## Verification Plan
+
+### Manual Verification
+- Start a local python shell.
+- Initialize `SyncForge(dev_mode=True)`.
+- Create a few tables using `create_table()`.
+- Ensure duplicate creation is caught.
+- Run `sf.all_table()` and verify it lists them.
+- Run `sf.filter_table(['users', 'fake_table'])` and verify correct boolean mappings.
+- Run `sf.clear_local_table()` and verify `sf.all_table()` is now empty.
+- Ask the user to verify the updated documentation flows well with their existing project structure.

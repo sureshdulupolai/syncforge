@@ -79,13 +79,11 @@ class SyncForgeCoreAdapter:
                 )
             
             logger.info(f"[SyncForge Core] Registered table '{table_name}' (mode={sync_mode}).")
-            print(f"\033[92m🚀 [SyncForge] Successfully registered table '{table_name}' (mode={sync_mode}, storage={storage_mode}, enc={encryption})\033[0m")
         except Exception as exc:
             logger.warning(
                 f"[SyncForge Core] Could not register table '{table_name}' on server: {exc}. "
                 "Local cache invalidation will still work."
             )
-            print(f"\033[91m❌ [SyncForge] Failed to register table '{table_name}': {exc}\033[0m")
 
         # 3. Configure Background Scheduler for Remote Invalidation Checks
         if self.sf_client.scheduler is None and local_metadata_updater and local_metadata_fetcher:

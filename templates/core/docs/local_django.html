@@ -1,188 +1,526 @@
 {% extends 'core/docs/base_docs.html' %}
 
-{% block title %}Django Local Offline Dev Mode — SyncForge{% endblock %}
-{% block meta_description %}Detailed A-Z guide for using SyncForge locally offline in Django. Learn about mocked terminal JSON responses, decorators, and simulated features.{% endblock %}
+{% block title %}Django Cache Integration & Signal Synchronization — SyncForge{% endblock %}
+{% block meta_description %}Detailed guide to caching Django models using the @sync_model decorator. Sync caches instantly on .save() or .delete() database updates.{% endblock %}
 
 {% block docs_content %}
-<div class="mb-12">
-    <h1 class="text-3xl font-extrabold text-brand-primary mb-4 tracking-tight">Django Local (Offline) Mode</h1>
-    <p class="text-lg text-brand-secondary leading-relaxed">
-        Develop your Django application offline without ever hitting SyncForge cloud servers. 
-        In <code class="font-mono text-sm bg-purple-100 text-purple-900 px-1.5 py-0.5 rounded">dev_mode=True</code>, SyncForge mocks every single network call and prints the A-Z request and response lifecycle directly to your local terminal.
-    </p>
-</div>
 
-<!-- Initialization -->
-<div class="mb-10">
-    <h2 class="text-xl font-semibold mb-3">1. Enabling Dev Mode</h2>
-    <p class="text-brand-secondary leading-relaxed mb-4">
-        To start mocking, simply set <code class="font-mono text-xs">dev_mode=True</code>. You do <strong>not</strong> need to provide an API key.
-    </p>
-    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
-        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
+<div class="mb-2"><span class="text-xs font-mono text-green-700 bg-green-50 px-2 py-0.5 rounded">Framework Guide</span></div>
+<h1 class="text-3xl font-bold tracking-tight mb-3">Local Offline Mode: Django</h1>
+<p class="text-brand-secondary text-lg leading-relaxed mb-8">
+    Complete guide to using SyncForge with Django — from installation to templates, signals, views, and production setup.
+</p>
 
-<span class="text-[#8B949E]"># api_key is ignored in dev_mode</span>
-sf = SyncForge(dev_mode=<span class="text-[#79C0FF]">True</span>, backend=<span class="text-[#A5D6FF]">'in_memory'</span>)</pre>
-    </div>
-</div>
-
-<!-- A-Z Feature Breakdown -->
-<div class="mb-10">
-    <h2 class="text-xl font-semibold mb-4">2. A-Z Event Mocks & Terminal Logs</h2>
-    <p class="text-brand-secondary leading-relaxed mb-6">
-        Because SyncForge intercepts every Django hook (like <code class="font-mono text-xs">@sync_model</code>), it will generate mocked JSON payloads in your console. Here is the comprehensive breakdown of every feature's request and response log.
-    </p>
-
-    <!-- Feature 1 -->
-    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
-        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-            <h3 class="font-bold text-gray-800">Feature: Model Save Intercept (Refresh)</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.refresh()</span>
+<div class="bg-purple-50 border-l-4 border-purple-500 p-4 mb-8 rounded-r-lg">
+    <div class="flex items-start">
+        <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-purple-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
         </div>
-        <div class="p-4">
-            <p class="text-sm text-gray-600 mb-4">Triggered automatically when a Django model decorated with <code class="font-mono text-xs">@sync_model</code> is saved or deleted.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: POST
-► URL:    https://syncforge.dev/api/v1/sync/core_product/
-◄ RESPONSE: {
-  "success": true,
-  "status": "ok",
-  "table": "core_product",
-  "project": "local_mock_project",
-  "message": "[Dev Mode] Sync Triggered",
-  "data": {
-    "action": "refresh",
-    "table": "core_product",
-    "django_signal": "post_save"
-  }
-}</pre>
+        <div class="ml-3">
+            <h3 class="text-sm font-bold text-purple-800">You are viewing the Local Offline Guide</h3>
+            <div class="mt-1 text-sm text-purple-700">
+                <p>This guide demonstrates how to use the exact same Django code you'd write for production, but completely offline using <code class="font-mono bg-purple-100 px-1 rounded">dev_mode=True</code>. The responses below show the mocked JSON that SyncForge instantly generates in your terminal.</p>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Feature 2 -->
-    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
-        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-            <h3 class="font-bold text-gray-800">Feature: Fetch Table Metadata</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.get_table()</span>
+<!-- TOC -->
+<div class="border border-brand-border rounded-xl p-5 mb-10 bg-brand-secbg">
+    <h2 class="text-sm font-semibold mb-3">On this page</h2>
+    <ol class="space-y-1 text-sm text-brand-secondary list-none">
+        <li><a href="#install" class="hover:text-brand-accent">1. Installation</a></li>
+        <li><a href="#client" class="hover:text-brand-accent">2. Create the client</a></li>
+        <li><a href="#sync-model" class="hover:text-brand-accent">3. @sync_model decorator</a></li>
+        <li><a href="#cache-query" class="hover:text-brand-accent">4. cache_query() in views</a></li>
+        <li><a href="#refresh" class="hover:text-brand-accent">6. Manual refresh after writes</a></li>
+        <li><a href="#signals" class="hover:text-brand-accent">7. How signals work</a></li>
+        <li><a href="#middleware" class="hover:text-brand-accent">8. Security middleware</a></li>
+        <li><a href="#production" class="hover:text-brand-accent">9. Production settings</a></li>
+        <li><a href="#utilities" class="hover:text-brand-accent">10. Table Utility Methods</a></li>
+    </ol>
+</div>
+
+<!-- 1 Install -->
+<h2 id="install" class="text-xl font-semibold mb-3 scroll-mt-20">1. Installation</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">terminal</span>
+        <button onclick="copyCode(this)" data-code="pip install syncforge" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-green-400 overflow-x-auto">pip install syncforge</pre>
+</div>
+
+<!-- 2 Client -->
+<h2 id="client" class="text-xl font-semibold mb-3 scroll-mt-20">2. Create the client</h2>
+<p class="text-sm text-brand-secondary mb-3">Create a dedicated file at your project root — import <code class="font-mono bg-gray-100 px-1 rounded">sf</code> from it everywhere.</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">myproject/sf.py</span>
+        <button onclick="copyCode(this)" data-code="import os
+from syncforge import SyncForge
+
+# Initialize the SyncForge Engine
+sf = SyncForge(
+    dev_mode=True,          # Instantly drop all network calls
+    backend='in_memory',    # Use RAM for local testing
+)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">import</span> os
+<span class="text-[#FF7B72]">from</span> syncforge <span class="text-[#FF7B72]">import</span> SyncForge
+
+<span class="text-[#8B949E]"># Initialize the SyncForge Engine</span>
+sf = SyncForge(
+    dev_mode=<span class="text-[#79C0FF]">True</span>,          <span class="text-[#8B949E]"># Instantly drop all network calls</span>
+    backend=<span class="text-[#A5D6FF]">'in_memory'</span>,    <span class="text-[#8B949E]"># Use RAM for local testing</span>
+)</pre>
+</div>
+
+<!-- Client Parameters Reference -->
+<div class="mb-10 mt-6">
+    <h3 class="text-sm font-bold text-brand-primary mb-3">Client Configuration Parameters</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Required -->
+        <div class="col-span-1 md:col-span-2 border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">api_key</code> <span class="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 ml-2">Required (str)</span></h4>
+            <p class="text-xs text-brand-secondary">Your project's SyncForge API key starting with <code>sf_live_</code>.</p>
         </div>
-        <div class="p-4">
-            <p class="text-sm text-gray-600 mb-4">When Django requests the latest cache version for a specific table.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: GET
-► URL:    https://syncforge.dev/api/v1/sync/auth_user/
-◄ RESPONSE: {
+        
+        <!-- Networking -->
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">timeout</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: 10 (int)</span></h4>
+            <p class="text-xs text-brand-secondary">Network timeout in seconds for reaching the central SyncForge server.</p>
+        </div>
+        
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">silent</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: False (bool)</span></h4>
+            <p class="text-xs text-brand-secondary">If True, exceptions are caught, logged, and suppressed to prevent crashing your production app.</p>
+        </div>
+
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">async_mode</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: False (bool)</span></h4>
+            <p class="text-xs text-brand-secondary">If True, all `refresh()` operations run in background daemon threads (fire-and-forget).</p>
+        </div>
+
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sign_requests</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Default: True (bool)</span></h4>
+            <p class="text-xs text-brand-secondary">Uses HMAC signatures to protect outgoing server signals against replay attacks.</p>
+        </div>
+
+        <!-- Security & Storage -->
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption_key</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Optional (str)</span></h4>
+            <p class="text-xs text-brand-secondary">A secret 32-byte key used to AES-256 encrypt local cache files at rest.</p>
+        </div>
+
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">cache_dir</code> <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 ml-2">Optional (str)</span></h4>
+            <p class="text-xs text-brand-secondary">Overrides the default hidden OS-specific storage path where encrypted cache binaries are safely written.</p>
+        </div>
+
+        <!-- Backends -->
+        <div class="col-span-1 md:col-span-2 border border-brand-border rounded-xl p-4 bg-brand-secbg mt-2">
+            <h4 class="text-sm font-bold text-brand-primary mb-2">Connection Backends <code class="text-brand-accent ml-2">backend_type="..."</code></h4>
+            <ul class="text-xs text-brand-secondary space-y-2 list-none">
+                <li><code class="font-mono bg-white px-1 rounded border border-gray-200">'django_cache'</code>: Transparently hijacks Django's native CACHES setup (Memcached/DatabaseCache).</li>
+                <li><code class="font-mono bg-white px-1 rounded border border-gray-200">'memory'</code>: Ultra-fast RAM dictionary. Lowest latency. Cleared on server restart.</li>
+                <li><code class="font-mono bg-white px-1 rounded border border-gray-200">'redis'</code>: Bypasses Django cache framework; connects directly to a Redis cluster via the <code class="text-brand-accent">redis_url</code> argument.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 3 sync_model -->
+<h2 id="sync-model" class="text-xl font-semibold mb-3 scroll-mt-20">3. @sync_model decorator</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    Apply <code class="font-mono bg-gray-100 px-1 rounded">@sync_model(sf, table_name='users')</code> to any Django model.
+    On every <code class="font-mono bg-gray-100 px-1 rounded">.save()</code> or <code class="font-mono bg-gray-100 px-1 rounded">.delete()</code> — including admin and shell — SyncForge:
+</p>
+<ul class="text-sm text-brand-secondary mb-4 space-y-1 ml-4 list-none">
+    <li><span class="text-brand-accent">→</span> Immediately clears the local cache for this table (synchronous)</li>
+    <li><span class="text-brand-accent">→</span> Notifies the SyncForge server in a background thread (never blocks)</li>
+</ul>
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-[#8B949E]">myapp/models.py</span>
+        <button onclick="copyCode(this)" data-code="from django.db import models
+from myproject.sf import sf
+from syncforge.django import sync_model
+
+# Listen to Django's native post_save/post_delete signals
+@sync_model(sf, table_name='users', sync_mode='event')
+class Product(models.Model):
+    name   = models.CharField(max_length=200)
+    price  = models.DecimalField(max_digits=10, decimal_places=2)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'core_product'" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">from</span> django.db <span class="text-[#FF7B72]">import</span> models
+<span class="text-[#FF7B72]">from</span> myproject.sf <span class="text-[#FF7B72]">import</span> sf
+<span class="text-[#FF7B72]">from</span> syncforge.django <span class="text-[#FF7B72]">import</span> sync_model
+
+<span class="text-[#8B949E]"># Listen to Django's native post_save/post_delete signals</span>
+<span class="text-[#D2A8FF]">@sync_model</span>(sf, table_name=<span class="text-[#A5D6FF]">'users'</span>, sync_mode=<span class="text-[#A5D6FF]">'event'</span>)
+<span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Product</span>(models.Model):
+    name   = models.CharField(max_length=<span class="text-[#79C0FF]">200</span>)
+    price  = models.DecimalField(max_digits=<span class="text-[#79C0FF]">10</span>, decimal_places=<span class="text-[#79C0FF]">2</span>)
+    active = models.BooleanField(default=<span class="text-[#79C0FF]">True</span>)
+
+    <span class="text-[#FF7B72]">class</span> <span class="text-[#D2A8FF]">Meta</span>:
+        db_table = <span class="text-[#A5D6FF]">'core_product'</span></pre>
+</div>
+
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
+    </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
   "success": true,
   "status": "ok",
-  "table": "auth_user",
+  "table": "users",
+  "sync_id": "sync_8a7f43b2c",
+  "created": true,
+  "message": "Table 'users' created locally.",
+  "data": {
+    "sync_mode": "event",
+    "storage_mode": "ram_disk",
+    "active": true
+  }
+}</pre>
+</div>
+
+
+<!-- Enterprise Parameters Explanations IMMEDIATELY under the code -->
+<div class="mt-6 mb-10">
+    <h3 class="text-sm font-bold text-brand-primary mb-3">Enterprise Decorator Parameters Explained</h3>
+    <div class="space-y-3">
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">sync_mode</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> Determines when the SyncForge server is notified. Values: <code>'event'</code> (on every DB write), <code>'manual'</code> (only via sf.refresh()), <code>'schedule_1h'</code>, etc.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">storage_mode</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> <code>'ram_disk'</code> (default) automatically preloads data from the encrypted disk cache into RAM via background threads, providing zero-latency reads while backing up persistently.</p>
+        </div>
+        <div class="border border-brand-border rounded-xl p-4 bg-brand-secbg">
+            <h4 class="text-sm font-bold text-brand-primary mb-1"><code class="text-brand-accent">encryption</code> / <code class="text-brand-accent">compression</code></h4>
+            <p class="text-xs text-brand-secondary"><strong>What it does:</strong> Applies AES-256 encryption at rest (True by default). Use <code>compression='lz4'</code> for massive querysets to dramatically reduce I/O wait times.</p>
+        </div>
+    </div>
+</div>
+
+<!-- 4 Reading Data -->
+<h2 id="cache-aside" class="text-xl font-semibold mb-3 scroll-mt-20">4. Reading Data (Cache-Aside Pattern)</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    SyncForge uses a smart cache-aside pattern to protect your database. Follow these 3 steps in your views:
+</p>
+
+<div class="border border-brand-border rounded-xl p-5 mb-4 bg-brand-secbg text-sm text-brand-secondary">
+    <ol class="space-y-3 list-none">
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+            <div><strong>get_table()</strong>: Instantly fetches pre-warmed data from local memory. Zero database hits.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+            <div><strong>cache_query()</strong>: If memory is empty (cache miss), executes the DB query and automatically saves the result back to memory.</div>
+        </li>
+        <li class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+            <div><strong>Combine Both</strong>: Use a simple <code class="font-mono bg-white px-1 rounded border border-brand-border text-xs">if/else</code> block to ensure only the very first user triggers a database query.</div>
+        </li>
+        <li><a href="#utilities" class="hover:text-brand-accent">10. Table Utility Methods</a></li>
+    </ol>
+</div>
+
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-[#8B949E]">myapp/views.py</span>
+        <button onclick="copyCode(this)" data-code="from django.shortcuts import render
+from myproject.sf import sf
+from .models import Product
+
+def product_list(request):
+    # 1. Check RAM / Disk cache instantly
+    cached_products = sf.get_table('core_product')
+    
+    if cached_products:
+        products = cached_products
+    else:
+        # 2. Cache Miss: Query DB, SyncForge saves result automatically
+        products = sf.cache_query(
+            table_name='products',
+            queryset=Product.objects.all()
+        )
+        
+    return render(request, 'products/list.html', {'products': products})" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto"><span class="text-[#FF7B72]">from</span> django.shortcuts <span class="text-[#FF7B72]">import</span> render
+<span class="text-[#FF7B72]">from</span> myproject.sf <span class="text-[#FF7B72]">import</span> sf
+<span class="text-[#FF7B72]">from</span> .models <span class="text-[#FF7B72]">import</span> Product
+
+<span class="text-[#FF7B72]">def</span> <span class="text-[#D2A8FF]">product_list</span>(request):
+    <span class="text-[#8B949E]"># 1. Check RAM / Disk cache instantly</span>
+    cached_products = sf.get_table(<span class="text-[#A5D6FF]">'core_product'</span>)
+    
+    <span class="text-[#FF7B72]">if</span> cached_products:
+        products = cached_products
+    <span class="text-[#FF7B72]">else</span>:
+        <span class="text-[#8B949E]"># 2. Cache Miss: Query DB, SyncForge saves result automatically</span>
+        products = sf.cache_query(
+            table_name=<span class="text-[#A5D6FF]">'products'</span>,
+            queryset=Product.objects.all()
+        )
+        
+    <span class="text-[#FF7B72]">return</span> render(request, <span class="text-[#A5D6FF]">'products/list.html'</span>, {<span class="text-[#A5D6FF]">'products'</span>: products})</pre>
+</div>
+
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D]">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
+    </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
+  "success": true,
+  "status": "ok",
+  "table": "core_product",
   "message": "[Dev Mode] Table Fetched",
   "data": {
     "version": 1,
     "last_sync": "2026-06-27T12:00:00Z",
     "records": [
-      {"id": 1, "_mock": "Simulated data fetch for auth_user"}
+      {"id": 1, "_mock": "Simulated data"}
     ]
   }
 }</pre>
+</div>
+
+
+<div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-8">
+    <h3 class="text-lg font-bold text-indigo-800 mb-2 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Enterprise: Stale-While-Revalidate</h3>
+    <p class="text-sm text-indigo-700 leading-relaxed mb-3">
+        SyncForge naturally eliminates cache stampedes during sudden traffic spikes. When an object expires during peak load, the very first thread automatically locks the background DB fetch. <strong>Every other simultaneous user thread instantaneously receives the stale payload from RAM</strong>, utterly bypassing P99 block latency and keeping your app fully responsive.
+    </p>
+    <h3 class="text-lg font-bold text-indigo-800 mb-2 flex items-center gap-2 mt-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Enterprise: Intelligent Heat Engine</h3>
+    <p class="text-sm text-indigo-700 leading-relaxed mb-0">
+        You never have to manually define <code>max_items</code> again. The engine dynamically profiles active RAM footprint against a safe 256MB boundary, assigning "Heat Scores" to payloads based on hits and recency. If memory peaks, cold objects gracefully flush themselves.
+    </p>
+</div>
+
+<!-- 6 Manual refresh -->
+<h2 id="refresh" class="text-xl font-semibold mb-3 scroll-mt-20">6. Manual refresh after writes</h2>
+<p class="text-sm text-brand-secondary mb-3">When you're not using <code class="font-mono bg-gray-100 px-1 rounded">@sync_model</code>, call <code class="font-mono bg-gray-100 px-1 rounded">sf.refresh()</code> manually after any database write.</p>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">views.py — create, update, delete</span>
+        <button onclick="copyCode(this)" data-code="from myproject.sf import sf
+from .models import Product
+
+# CREATE
+def add_product(request):
+    Product.objects.create(name=request.POST['name'], price=request.POST['price'])
+    sf.refresh('core_product')   # ← always refresh after write
+    return redirect('product_list')
+
+# UPDATE
+def update_product(request, pk):
+    Product.objects.filter(pk=pk).update(price=request.POST['price'])
+    sf.refresh('core_product')
+    return redirect('product_list')
+
+# DELETE
+def delete_product(request, pk):
+    Product.objects.filter(pk=pk).delete()
+    sf.refresh('core_product')
+    return redirect('product_list')
+
+# BULK
+def bulk_activate(request):
+    Product.objects.filter(active=False).update(active=True)
+    sf.refresh('core_product')   # One call refreshes all cached keys for this table
+    return redirect('product_list')" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-blue-400">from</span> myproject.sf <span class="text-blue-400">import</span> sf
+<span class="text-blue-400">from</span> .models <span class="text-blue-400">import</span> Product
+
+<span class="text-gray-500"># CREATE</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-300">add_product</span>(request):
+    Product.objects.create(name<span class="text-gray-400">=</span>request.POST[<span class="text-green-300">'name'</span>], price<span class="text-gray-400">=</span>request.POST[<span class="text-green-300">'price'</span>])
+    sf.refresh(<span class="text-green-300">'core_product'</span>)   <span class="text-gray-500"># ← always refresh after write</span>
+    <span class="text-blue-400">return</span> redirect(<span class="text-green-300">'product_list'</span>)
+
+<span class="text-gray-500"># UPDATE</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-300">update_product</span>(request, pk):
+    Product.objects.filter(pk<span class="text-gray-400">=</span>pk).update(price<span class="text-gray-400">=</span>request.POST[<span class="text-green-300">'price'</span>])
+    sf.refresh(<span class="text-green-300">'core_product'</span>)
+    <span class="text-blue-400">return</span> redirect(<span class="text-green-300">'product_list'</span>)
+
+<span class="text-gray-500"># BULK</span>
+<span class="text-blue-400">def</span> <span class="text-yellow-300">bulk_activate</span>(request):
+    Product.objects.filter(active<span class="text-gray-400">=</span><span class="text-blue-300">False</span>).update(active<span class="text-gray-400">=</span><span class="text-blue-300">True</span>)
+    sf.refresh(<span class="text-green-300">'core_product'</span>)   <span class="text-gray-500"># One call clears all cache keys for this table</span>
+    <span class="text-blue-400">return</span> redirect(<span class="text-green-300">'product_list'</span>)</pre>
+</div>
+
+<!-- 7 Signals -->
+<h2 id="signals" class="text-xl font-semibold mb-3 scroll-mt-20">7. How signals work internally</h2>
+<div class="border border-brand-border rounded-xl p-5 mb-8 bg-brand-secbg text-sm text-brand-secondary">
+    <p class="mb-3">When <code class="font-mono bg-white px-1 rounded border border-brand-border">Product.save()</code> is called, Django fires <code class="font-mono bg-white px-1 rounded border border-brand-border">post_save</code>. SyncForge intercepts it:</p>
+    <ol class="space-y-2 list-none">
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">1.</span> <strong>Instantly</strong> deletes all cache keys registered for <code class="font-mono bg-white px-1 rounded border border-brand-border">core_product</code> from Django's cache</li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">2.</span> <strong>Spawns a daemon thread</strong> → sends POST to <code class="font-mono bg-white px-1 rounded border border-brand-border">/api/v1/sync/core_product/</code></li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">3.</span> Server increments <code class="font-mono bg-white px-1 rounded border border-brand-border">version_number</code> atomically and logs a <code class="font-mono bg-white px-1 rounded border border-brand-border">SyncEvent</code></li>
+        <li class="flex items-start gap-2"><span class="text-brand-accent font-bold">4.</span> Next <code class="font-mono bg-white px-1 rounded border border-brand-border">cache_query()</code> call: cache miss → fresh DB query → store → return</li>
+    </ol>
+    <p class="mt-3 text-brand-muted">The HTTP call <strong>never blocks</strong> the request/response cycle.</p>
+</div>
+
+<!-- 8 Middleware -->
+<h2 id="middleware" class="text-xl font-semibold mb-3 scroll-mt-20">8. Security middleware</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">settings.py</span>
+        <button onclick="copyCode(this)" data-code="MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'syncforge.middleware.SyncForgeSecurityMiddleware',  # ← Request inspection + security headers
+    'syncforge.middleware.SyncForgeMaintenanceMiddleware', # ← Ultra-fast 4 AM IST Auto Cleanup
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    # ... rest of middleware
+]" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">MIDDLEWARE <span class="text-gray-400">=</span> [
+    <span class="text-green-300">'django.middleware.security.SecurityMiddleware'</span>,
+    <span class="text-yellow-300">'syncforge.middleware.SyncForgeSecurityMiddleware'</span>,  <span class="text-gray-500"># ← Request inspection + security headers</span>
+    <span class="text-yellow-300">'syncforge.middleware.SyncForgeMaintenanceMiddleware'</span>, <span class="text-gray-500"># ← Ultra-fast 4 AM IST Auto Cleanup</span>
+    <span class="text-green-300">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
+    <span class="text-gray-500"># ... rest of middleware</span>
+]</pre>
+</div>
+<p class="text-sm text-brand-secondary mb-8">Adds: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, basic request inspection (SQLi/XSS/path traversal scanning). Also includes the <strong>Maintenance Middleware</strong> which automatically clears expired caches at exactly 4:00 AM IST with zero performance overhead (a few nanoseconds per request). See <a href="{% url 'docs_security' %}" class="text-brand-accent hover:underline">Security Middleware</a> for full docs.</p>
+
+<!-- 9 Production -->
+<h2 id="production" class="text-xl font-semibold mb-3 scroll-mt-20">9. Production settings</h2>
+<div class="bg-[#1A1A1A] rounded-xl overflow-hidden mb-4">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+        <span class="text-xs font-mono text-gray-400">production client</span>
+        <button onclick="copyCode(this)" data-code="sf = SyncForge(
+    api_key=os.environ['SYNCFORGE_API_KEY'],
+    backend='django_cache',
+    silent=True,       # Log warnings, never raise — keeps your app running
+    async_mode=True,   # refresh() returns immediately, runs in background
+    sign_requests=True,# HMAC signing for replay protection (default: True)
+)" class="text-xs text-gray-400 hover:text-white transition-subtle">Copy</button>
+    </div>
+    <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto">sf <span class="text-gray-400">=</span> SyncForge(
+    api_key<span class="text-gray-400">=</span>os.environ[<span class="text-green-300">'SYNCFORGE_API_KEY'</span>],
+    silent<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,       <span class="text-gray-500"># Log warnings, never raise — keeps your app running</span>
+    async_mode<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,   <span class="text-gray-500"># refresh() returns immediately, runs in background</span>
+    sign_requests<span class="text-gray-400">=</span><span class="text-blue-300">True</span>,<span class="text-gray-500"># HMAC signing for replay protection (default: True)</span>
+)</pre>
+</div>
+
+<!-- Nav -->
+<div class="flex justify-between pt-6 border-t border-brand-border mt-10">
+    <a href="{% url 'docs_getting_started' %}" class="flex items-center gap-2 text-sm font-medium text-brand-secondary hover:text-brand-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Getting Started
+    </a>
+    <a href="{% url 'docs_flask' %}" class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
+        Flask Guide
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+</div>
+
+
+<!-- 10 Utilities -->
+<h2 id="utilities" class="text-xl font-semibold mb-3 scroll-mt-20 mt-10">10. Table Utility Methods</h2>
+<p class="text-sm text-brand-secondary mb-3">
+    SyncForge provides helper methods to inspect and manage your table registry dynamically. These work identically across Live and Local modes.
+</p>
+
+<div class="mb-6 border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800">Fetch All Tables</h3>
+        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.all_table()</span>
+    </div>
+    <div class="p-4">
+        <p class="text-sm text-gray-600 mb-4">Returns a list of all tables registered in your current project environment.</p>
+        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                <span class="text-xs font-mono text-gray-400">python</span>
             </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">registered_tables = sf.all_table()</pre>
         </div>
+
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D] ">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
+    </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: [
+  "core_product",
+  "auth_user"
+]</pre>
+</div>
+
     </div>
 </div>
 
-    <!-- Feature 3 -->
-    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
-        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-            <h3 class="font-bold text-gray-800">Feature: Register Table</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.create_table()</span>
-        </div>
-        <div class="p-4">
-            <p class="text-sm text-gray-600 mb-4">When the application registers a new table structure locally.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: POST
-► URL:    https://syncforge.dev/api/v1/tables/
-◄ RESPONSE: {
-  "success": true,
-  "created": true,
-  "status": "ok",
-  "message": "[Dev Mode] Table Created Locally",
-  "data": {
-    "table_name": "example_table"
-  }
-}</pre>
-            </div>
-        </div>
+<div class="mb-6 border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800">Check Table Existence</h3>
+        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.filter_table(names)</span>
     </div>
-
-    <!-- Feature 4 -->
-    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
-        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-            <h3 class="font-bold text-gray-800">Feature: Project Info</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.project_info()</span>
-        </div>
-        <div class="p-4">
-            <p class="text-sm text-gray-600 mb-4">When fetching configuration and active keys for the project.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: GET
-► URL:    https://syncforge.dev/api/v1/project/
-◄ RESPONSE: {
-  "success": true,
-  "status": "ok",
-  "project": "Local Dev Project",
-  "slug": "local-dev",
-  "active_keys": 1,
-  "tables": [],
-  "message": "[Dev Mode] Project Info Fetched"
-}</pre>
+    <div class="p-4">
+        <p class="text-sm text-gray-600 mb-4">Quickly verifies the existence of tables without throwing errors.</p>
+        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                <span class="text-xs font-mono text-gray-400">python</span>
             </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">exists_map = sf.filter_table(['core_product', 'fake_table'])
+<span class="text-[#8B949E]"># Returns: {'core_product': True, 'fake_table': False}</span></pre>
         </div>
-    </div>
 
-    <!-- Feature 5 -->
-    <div class="border border-gray-200 rounded-lg bg-white overflow-hidden mb-6">
-        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-            <h3 class="font-bold text-gray-800">Feature: Health Ping</h3>
-            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.ping()</span>
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D] ">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
+    </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
+  "core_product": true,
+  "fake_table": false
+}</pre>
+</div>
+
+    </div>
+</div>
+
+<div class="mb-10 border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800">Clear Local Cache Tracker</h3>
+        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-mono">sf.clear_local_table()</span>
+    </div>
+    <div class="p-4">
+        <p class="text-sm text-gray-600 mb-4">Wipes the local cache and table registry. Primarily used to cleanly reset state during unit tests or local dev cycles.</p>
+        <div class="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-[#30363D]">
+            <div class="flex items-center justify-between px-4 py-2 border-b border-white/10">
+                <span class="text-xs font-mono text-gray-400">python</span>
+            </div>
+<pre class="p-4 text-sm font-mono text-[#C9D1D9] overflow-x-auto">sf.clear_local_table()</pre>
         </div>
-        <div class="p-4">
-            <p class="text-sm text-gray-600 mb-4">When checking if the SyncForge service is reachable.</p>
-            <div class="bg-[#0D1117] rounded-lg overflow-hidden">
-<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">🌐 [SyncForge Local Dev] Simulated Network Request
-► METHOD: GET
-► URL:    https://syncforge.dev/api/v1/health/
-◄ RESPONSE: {
+
+<div class="bg-[#0D1117] rounded-xl overflow-hidden mb-6 border border-[#30363D] ">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#06080A]">
+        <span class="text-xs font-mono text-gray-400">Response (Mocked Locally)</span>
+    </div>
+<pre class="p-4 text-xs font-mono text-[#C9D1D9] overflow-x-auto">RETURNS: {
   "success": true,
   "status": "ok",
-  "message": "SyncForge Local Service is healthy"
+  "message": "[Dev Mode] Local tables cleared."
 }</pre>
-            </div>
-        </div>
-    </div>
+</div>
 
-<!-- Switch to Live Mode -->
-<div class="mb-10 mt-12 border-t pt-8">
-    <h2 class="text-xl font-semibold mb-3 text-green-700">Switching back to Live (Cloud) Mode</h2>
-    <p class="text-brand-secondary leading-relaxed mb-4">
-        When you are ready to deploy or want to see live analytics in the SyncForge Dashboard, you must switch back to Live Mode.
-    </p>
-    
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-        <ol class="list-decimal pl-5 text-sm text-green-900 space-y-2">
-            <li>Remove <code class="font-mono text-xs">dev_mode=True</code> from your initialization.</li>
-            <li>Provide your valid <strong>SYNCFORGE_API_KEY</strong> (starting with <code class="font-mono text-xs">sf_live_</code>).</li>
-            <li>Once switched, terminal prints will stop, and all logs will instantly begin streaming to your <a href="{% url 'docs_cmd' %}" class="underline font-bold">Remote Dashboard CMD</a>.</li>
-        </ol>
-    </div>
-
-    <div class="bg-[#1A1A1A] rounded-xl overflow-hidden">
-        <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><span class="text-[#8B949E]"># Back to Live Cloud Mode</span>
-sf = SyncForge(
-    api_key=os.environ.get(<span class="text-[#A5D6FF]">'SYNCFORGE_API_KEY'</span>),
-    backend=<span class="text-[#A5D6FF]">'redis'</span>
-)</pre>
     </div>
 </div>
 
